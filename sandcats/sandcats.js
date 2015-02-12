@@ -52,17 +52,50 @@ if (Meteor.isServer) {
     return true;
   });
 
-  // Create Mesosphere.registerForm validator
+  // We need to calculate a hostname that this user is authorized to
+  // use. The rules are a little complicated. They are:
+  //
+  // - The hostname should be >= 1 character. We delegate checking
+  //   this to Mesosphere.
+  //
+  // - If the hostname is not taken, then sure, the user can have it.
+  //
+  // That's all for now. This means that with this implementation, the
+  // user can't change the IP address they register. We'll add that
+  // later.
+  //
+  // Doing the future version will require more information than just
+  // the hostname, so we would then stop using rawHostname and start
+  // presumably using a Mesosophere aggregate called validatedHostname.
+  Mesosphere.registerRule('hostnameUnused', function (fieldValue, ruleValue) {
+    if (! ruleValue) {
+      // if the user includes us but sets the validation to false,
+      // they don't need us to validate.
+      return true;
+    }
+
+    // FIXME: query Mongo to find out if this hostname is available. If so, then
+    // great! Allow it to be allocated.
+    //
+    // This is in theory race-condition-able. For now I think that's
+    // life.
+    return true;
+  });
+
+  // Create Mesosphere.registerForm validator. The use of custom
+  // validation rules combimes the Sancats-specific logic with the
+  // data validation so that we can do it all in one call.
   Mesosphere({
     name: 'registerForm',
     fields: {
-      hostname: {
+      rawHostname: {
         required: true,
         format: /^[0-9a-zA-Z]+$/,
         transforms: ["clean", "toLowerCase"],
         rules: {
           minLength: 1,
-          maxLength: 20
+          maxLength: 20,
+          hostnameUnused: true
         }
       },
       ipAddress: {
