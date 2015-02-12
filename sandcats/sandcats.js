@@ -49,6 +49,18 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
+  BASE_DOMAIN = process.env.BASE_DOMAIN;
+  if (! BASE_DOMAIN) {
+    throw "Need to provide BASE_DOMAIN as environment variable.";
+  }
+  NS1_HOSTNAME = process.env.NS1_HOSTNAME;
+  if (! NS1_HOSTNAME) {
+    throw "Need to provide fully-qualified hostname for first nameserver as NS1_HOSTNAME environment variable.";
+  }
+  NS2_HOSTNAME = process.env.NS1_HOSTNAME;
+  if (! NS2_HOSTNAME) {
+    throw "Need to provide fully-qualified hostname for second nameserver as NS2_HOSTNAME environment variable.";
+  }
 
   // Provide a "public key must be unique" rule, for validating
   // the public key.
@@ -227,11 +239,10 @@ if (Meteor.isServer) {
     // (configurable) before it actually queries the SQL database to
     // find out what the new value is. This is on top of any TTL in
     // the DNS record itself, as I understand it.
-    deleteRecordIfExists(mysqlConnection, 'sandcats.io', hostname + '.sandcats.io', 'A');
-    deleteRecordIfExists(mysqlConnection, 'sandcats.io', '*.' + hostname + '.sandcats.io', 'A');
+    deleteRecordIfExists(mysqlConnection, BASE_DOMAIN, hostname);
 
-    createRecord(mysqlConnection, 'sandcats.io', hostname + '.sandcats.io', 'A', ipAddress);
-    createRecord(mysqlConnection, 'sandcats.io', '*.' + hostname + '.sandcats.io', 'A', ipAddress);
+    createRecord(mysqlConnection, BASE_DOMAIN, hostname + '.' + BASE_DOMAIN, 'A', ipAddress);
+    createRecord(mysqlConnection, BASE_DOMAIN, '*.' + hostname + '.' + BASE_DOMAIN, 'A', ipAddress);
   };
 
   function registerPostHandler(clientIp, request, response) {
@@ -261,23 +272,24 @@ if (Meteor.isServer) {
       "INSERT INTO `domains` (name, type) VALUES (?, 'NATIVE');",
       [domain],
       function (error, result) {
-        if (error) throw err;
+        if (error) throw error;
 
         console.log("Created domain; it received ID #" + result.insertId);
         console.log("Creating records for top level...");
-        createRecord(mysqlConnection, 'sandcats.io', 'sandcats.io', 'A', '127.0.0.1');
-        createRecord(mysqlConnection, 'sandcats.io', 'www.sandcats.io', 'A', '127.0.0.1');
-        createRecord(mysqlConnection, 'sandcats.io', 'ns1.sandcats.io', 'A', '127.0.0.1');
-        createRecord(mysqlConnection, 'sandcats.io', 'sandcats.io', 'SOA', formatSoaRecord(
-          'sandcats-ns1.sandstorm.io',
-          'sandcats-admin.sandstorm.io',
+        createRecord(mysqlConnection, BASE_DOMAIN, BASE_DOMAIN, 'A', '127.0.0.1');
+        createRecord(mysqlConnection, BASE_DOMAIN, BASE_DOMAIN, 'SOA', formatSoaRecord(
+          // The SOA advertises the first nameserver.
+          NS1_HOSTNAME,
+          // It advertises hostmaster@BASE_DOMAIN as a contact email address.
+          'hostmaster.' + BASE_DOMAIN,
+          // For the rest of these, see formatSoaRecord()'s variable names.
           1,
           60,
           60,
           604800,
           60));
-        createRecord(mysqlConnection, 'sandcats.io', 'sandcats.io', 'NS', 'sandcats-ns1.sandstorm.io');
-        createRecord(mysqlConnection, 'sandcats.io', 'sandcats.io', 'NS', 'sandcats-ns2.sandstorm.io');
+        createRecord(mysqlConnection, BASE_DOMAIN, BASE_DOMAIN, 'NS', NS1_HOSTNAME);
+        createRecord(mysqlConnection, BASE_DOMAIN, BASE_DOMAIN, 'NS', NS2_HOSTNAME);
       });
 
   };
@@ -300,13 +312,13 @@ if (Meteor.isServer) {
 
     connection.query(
       "SELECT name FROM `domains` WHERE name = ?",
-      ["sandcats.io"],
+      [BASE_DOMAIN],
       function(err, rows, fields) {
         if (err) throw Error(err);
 
         if (rows.length === 0) {
-          console.log("Creating sandcats.io...");
-          createDomain(connection, "sandcats.io");
+          console.log("Creating " + BASE_DOMAIN + "...");
+          createDomain(connection, BASE_DOMAIN);
         }
       });
 
