@@ -1,8 +1,11 @@
 UserRegistrations = new Mongo.Collection("userRegistrations");
-UserRegistrations.attachSchema(SimpleSchema({
+Schemas = {};
+SimpleSchema.debug = true;
+Schemas.UserRegistrations = new SimpleSchema({
   hostname: {
     type: String,
-    max: 20
+    max: 20,
+    min: 1
   },
   ipAddress: {
     // We use a String here for convenience. We rely on Mesosphere to
@@ -10,7 +13,8 @@ UserRegistrations.attachSchema(SimpleSchema({
     //
     // Note that we currently only support IPv4.
     type: String,
-    max: 15
+    max: 15,
+    min: 1
     // FIXME: Somewhere we might want to make sure this is not a
     // "private IP"? Or not. Maybe we don't care.
   },
@@ -28,7 +32,9 @@ UserRegistrations.attachSchema(SimpleSchema({
     // validate that this is actually an email address.
     type: String
   }
-}));
+});
+
+UserRegistrations.attachSchema(Schemas.UserRegistrations);
 
 if (Meteor.isServer) {
   BASE_DOMAIN = process.env.BASE_DOMAIN;
@@ -150,8 +156,8 @@ if (Meteor.isServer) {
     //
     // It takes care of deleting the wildcard record, too.
 
-    if (bareHost.match(/[.]/)) {
-      throw "bareHost needs to have no dot inside it.";
+    if (! bareHost || bareHost.match(/[.]/)) {
+      throw "bareHost needs to be a string with no dot inside it.";
     }
 
     var hosts = [
@@ -197,7 +203,7 @@ if (Meteor.isServer) {
     // now we calculated as deadbeaf.
     var publicKeyId = 'deadbeef';
 
-    var userRegistration = UserRegistrations.insert({
+    var userRegistrationId = UserRegistrations.insert({
       hostname: formData.rawHostname,
       ipAddress: formData.ipAddress,
       fullPublicKeyPem: formData.pubkey,
@@ -205,10 +211,13 @@ if (Meteor.isServer) {
       emailAddress: formData.email
     });
 
+    var userRegistration = UserRegistrations.findOne({_id: userRegistrationId});
+
     // We also probably want to send a confirmation URL. FIXME.
     // Arguably we should do this with Meteor accounts. Hmm.
 
     // Now, publish the UserRegistration to DNS.
+    console.log(JSON.stringify(userRegistration));
     publishOneUserRegistrationToDns(userRegistration.hostname,
                                     userRegistration.ipAddress);
   };
@@ -221,10 +230,10 @@ if (Meteor.isServer) {
     // (configurable) before it actually queries the SQL database to
     // find out what the new value is. This is on top of any TTL in
     // the DNS record itself, as I understand it.
-    deleteRecordIfExists(mysqlConnection, BASE_DOMAIN, hostname);
+    deleteRecordIfExists(connection, BASE_DOMAIN, hostname);
 
-    createRecord(mysqlConnection, BASE_DOMAIN, hostname + '.' + BASE_DOMAIN, 'A', ipAddress);
-    createRecord(mysqlConnection, BASE_DOMAIN, '*.' + hostname + '.' + BASE_DOMAIN, 'A', ipAddress);
+    createRecord(connection, BASE_DOMAIN, hostname + '.' + BASE_DOMAIN, 'A', ipAddress);
+    createRecord(connection, BASE_DOMAIN, '*.' + hostname + '.' + BASE_DOMAIN, 'A', ipAddress);
   };
 
   function registerPostHandler(clientIp, request, response) {
