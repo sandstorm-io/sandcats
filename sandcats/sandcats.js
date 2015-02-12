@@ -18,6 +18,32 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
+    // Create Mesosphere.registerForm validator
+    Mesosphere({
+      name: 'registerForm',
+      fields: {
+        hostname: {
+          required: true,
+          format: "alphanumeric",
+          rules: {
+            maxLength: 20
+          }
+        },
+        ipAddress: {
+          required: true,
+          format: "ipv4"
+        },
+        email: {
+          required: true,
+          format: "email"
+        },
+        pubkey: {
+          required: true
+          // FIXME: Add ursa's validation here?
+        }
+      }
+    });
+
   createRecord = function(mysqlConnection, domain, host, type, content) {
     mysqlConnection.query(
       "INSERT INTO records (domain_id, name, type, content) VALUES ((SELECT id FROM domains WHERE domains.name = ?), ?, ?, ?);",
@@ -35,6 +61,30 @@ if (Meteor.isServer) {
     return [primaryNameServer, adminEmailUsingDots, secondsBeforeRefresh,
             secondsBeforeRefreshRetry, secondsBeforeDiscardStaleCache,
             negativeResultTtl].join(" ");
+  };
+
+  function registerPostHandler(clientIp, request, response) {
+    response.writeHead(200, {'Content-Type': 'text/json'});
+    // Before validating the form, we add an IP address field to it.
+    console.log("woweee, " + clientIp);
+    var formData = JSON.parse(JSON.stringify(request.body)); // copy
+    formData.ipAddress = clientIp;
+
+    var formData = Mesosphere.registerForm.validate(formData);
+    if (formData.errors) {
+      response.end(JSON.stringify(formData.errors));
+      return;
+    }
+
+    // Great! We have a valid registration attempt. Let's store it, so
+    // long as:
+    //
+    // - The IP address isn't registered >= 2 times (FIXME: 2 -> 20)
+    // - The public key has never been used (FIXME: impl)
+    // - The name is not used.
+
+    // in request.body, we will find a Javascript object
+    response.end('<html><body>Your request body was a ' + JSON.stringify(formData.formData) + '</body></html>');
   };
 
   function createDomain(mysqlConnection, domain) {
@@ -91,6 +141,22 @@ if (Meteor.isServer) {
         }
       });
 
+    Router.map(function() {
+      this.route('placeHolderName', {
+        path: '/register',
+        where: 'server',
+        action: function() {
+          // GET, POST, PUT, DELETE
+          var requestMethod = this.request.method;
+          if (this.request.method == 'PUT' ||
+              this.request.method == 'POST') {
+            var clientIp = this.request.connection.remoteAddress;
+            registerPostHandler(clientIp, this.request, this.response);
+          }
+        }
+      });
     // code to run on server at startup
   });
+
+  })
 }
