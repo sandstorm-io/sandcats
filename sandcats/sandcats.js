@@ -24,8 +24,9 @@ Schemas.UserRegistrations = new SimpleSchema({
     type: String
   },
   publicKeyId: {
-    type: String
-    // TODO: add length max.
+    type: String,
+    min: 40,
+    max: 40
   },
   emailAddress: {
     // We use a string here for convenience. We rely on Mesosphere to
