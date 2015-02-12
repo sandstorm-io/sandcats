@@ -37,6 +37,7 @@ Schemas.UserRegistrations = new SimpleSchema({
 UserRegistrations.attachSchema(Schemas.UserRegistrations);
 
 if (Meteor.isServer) {
+  // Create global constants that come from environment variables.
   BASE_DOMAIN = process.env.BASE_DOMAIN;
   if (! BASE_DOMAIN) {
     throw "Need to provide BASE_DOMAIN as environment variable.";
@@ -255,7 +256,8 @@ if (Meteor.isServer) {
     createUserRegistration(formData.formData);
 
     // in request.body, we will find a Javascript object
-    response.end('<html><body>Your request body was a ' + JSON.stringify(formData.formData) + '</body></html>');
+    response.writeHead(200, {'Content-Type': 'text/json'});
+    response.end(JSON.stringify({'success': true}));
   };
 
   function createDomain(mysqlConnection, domain) {
