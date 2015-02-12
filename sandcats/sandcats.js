@@ -18,31 +18,33 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-    // Create Mesosphere.registerForm validator
-    Mesosphere({
-      name: 'registerForm',
-      fields: {
-        hostname: {
-          required: true,
-          format: "alphanumeric",
-          rules: {
-            maxLength: 20
-          }
-        },
-        ipAddress: {
-          required: true,
-          format: "ipv4"
-        },
-        email: {
-          required: true,
-          format: "email"
-        },
-        pubkey: {
-          required: true
-          // FIXME: Add ursa's validation here?
+  // Create Mesosphere.registerForm validator
+  Mesosphere({
+    name: 'registerForm',
+    fields: {
+      hostname: {
+        required: true,
+        format: /^[0-9a-zA-Z]+$/,
+        transforms: ["clean", "toLowerCase"],
+        rules: {
+          minLength: 1,
+          maxLength: 20
         }
+      },
+      ipAddress: {
+        required: true,
+        format: "ipv4"
+      },
+      email: {
+        required: true,
+        format: "email"
+      },
+      pubkey: {
+        required: true
+        // FIXME: Add ursa's validation here?
       }
-    });
+    }
+  });
 
   createRecord = function(mysqlConnection, domain, host, type, content) {
     mysqlConnection.query(
