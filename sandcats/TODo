@@ -1,0 +1,9 @@
+try out sequelize
+
+add csrf protection for POSTs
+
+sanity-check choice of ursa
+
+add tests
+
+measure test coverage
