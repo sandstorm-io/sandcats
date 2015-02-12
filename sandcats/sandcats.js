@@ -18,7 +18,7 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-  function createRecord(mysqlConnection, domain, host, type, content) {
+  createRecord = function(mysqlConnection, domain, host, type, content) {
     mysqlConnection.query(
       "INSERT INTO records (domain_id, name, type, content) VALUES ((SELECT id FROM domains WHERE domains.name = ?), ?, ?, ?);",
       [domain, host, type, content],
@@ -50,30 +50,25 @@ if (Meteor.isServer) {
         createRecord(mysqlConnection, 'sandcats.io', 'www.sandcats.io', 'A', '127.0.0.1');
         createRecord(mysqlConnection, 'sandcats.io', 'ns1.sandcats.io', 'A', '127.0.0.1');
         createRecord(mysqlConnection, 'sandcats.io', 'sandcats.io', 'SOA', formatSoaRecord(
-          'ns1.sandcats.io',
-          'admin.sandcats.io',
+          'sandcats-ns1.sandstorm.io',
+          'sandcats-admin.sandstorm.io',
           1,
           60,
           60,
           604800,
           60));
-        console.log("Wow! Success.");
+        createRecord(mysqlConnection, 'sandcats.io', 'sandcats.io', 'NS', 'sandcats-ns1.sandstorm.io');
+        createRecord(mysqlConnection, 'sandcats.io', 'sandcats.io', 'NS', 'sandcats-ns2.sandstorm.io');
       });
 
   };
 
-  var pdnsConfig = {
-    adapter: 'mysql',
-    user: process.env.POWERDNS_USER,
-    db: process.env.POWERDNS_DB,
-    password: process.env.POWERDNS_PASSWORD
-  };
-  pdns = Meteor.npmRequire('pdns')(pdnsConfig);
+  connection = null;
 
   Meteor.startup(function () {
 
     // Make sure sandcats.io is in the list of domains.
-    var connection = Mysql.createConnection({
+    connection = Mysql.createConnection({
       host: 'localhost',
       user: process.env.POWERDNS_USER,
       database: process.env.POWERDNS_DB,
