@@ -34,6 +34,24 @@ if (Meteor.isServer) {
     return true;
   });
 
+  Mesosphere.registerRule('ipAddressNotOverused', function (fieldValue, ruleValue) {
+    var MAX_IP_REGISTRATIONS = 20;
+
+    if (! ruleValue) {
+      // if the user includes us but sets the validation to false,
+      // they don't need us to validate.
+      return true;
+    }
+
+    // Mesosphere will make sure this is a valid IP address.
+    //
+    // Therefore, our job is to query the data store to see if this IP
+    // address is registered too many times.
+    //
+    // FIXME: Implement.
+    return true;
+  });
+
   // Create Mesosphere.registerForm validator
   Mesosphere({
     name: 'registerForm',
@@ -49,7 +67,10 @@ if (Meteor.isServer) {
       },
       ipAddress: {
         required: true,
-        format: "ipv4"
+        format: "ipv4",
+        rules: {
+          ipAddressNotOverused: true
+        }
       },
       email: {
         required: true,
