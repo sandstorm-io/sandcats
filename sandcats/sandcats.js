@@ -1,3 +1,35 @@
+UserRegistrations = new Mongo.Collection("userRegistrations");
+UserRegistrations.attachSchema(SimpleSchema({
+  hostname: {
+    type: String,
+    max: 20
+  },
+  ipAddress: {
+    // We use a String here for convenience. We rely on Mesosphere to
+    // validate that this is actually an IP address.
+    //
+    // Note that we currently only support IPv4.
+    type: String,
+    max: 15
+    // FIXME: Somewhere we might want to make sure this is not a
+    // "private IP"? Or not. Maybe we don't care.
+  },
+  fullPublicKeyPem: {
+    // We rely on Mesosphere to validate that this is actually a
+    // public key in PEM format.
+    type: String
+  },
+  publicKeyId: {
+    type: String
+    // TODO: add length max.
+  },
+  emailAddress: {
+    // We use a string here for convenience. We rely on Mesosphere to
+    // validate that this is actually an email address.
+    type: String
+  }
+}));
+
 if (Meteor.isClient) {
   // counter starts at 0
   Session.setDefault('counter', 0);
@@ -118,6 +150,34 @@ if (Meteor.isServer) {
     }
   });
 
+  deleteRecordIfExists = function (mysqlConnection, domain, bareHost) {
+    // Note that this deletes *all* records for this host, of any type
+    // or content.
+    //
+    // It takes care of deleting the wildcard record, too.
+
+    if (bareHost.match(/[.]/)) {
+      throw "bareHost needs to have no dot inside it.";
+    }
+
+    var hosts = [
+      bareHost + '.' + domain,
+      '*.' + bareHost + '.' + domain];
+
+    for (var hostIndex = 0; hostIndex < hosts.length; hostIndex++) {
+      host = hosts[hostIndex];
+
+      mysqlConnection.query(
+        "DELETE from `records` WHERE (domain_id = (SELECT `id` from `domains` WHERE `name` = ?)) AND "
+          + "name = ?",
+        [domain, host],
+        function (err, result) {
+          if (err) throw err;
+          console.log("Successfully deleted record(s) for " + host + "." + "with status " + JSON.stringify(result) + ".");
+        });
+    }
+  };
+
   createRecord = function(mysqlConnection, domain, host, type, content) {
     mysqlConnection.query(
       "INSERT INTO records (domain_id, name, type, content) VALUES ((SELECT id FROM domains WHERE domains.name = ?), ?, ?, ?);",
@@ -137,8 +197,44 @@ if (Meteor.isServer) {
             negativeResultTtl].join(" ");
   };
 
+  function createUserRegistration(formData) {
+    // To create a user registration, we mostly copy data from the form.
+    // We do also need to store a public key "fingerprint", which for
+    // now we calculated as deadbeaf.
+    var publicKeyId = 'deadbeef';
+
+    var userRegistration = UserRegistrations.insert({
+      hostname: formData.rawHostname,
+      ipAddress: formData.ipAddress,
+      fullPublicKeyPem: formData.pubkey,
+      publicKeyId: publicKeyId,
+      emailAddress: formData.email
+    });
+
+    // We also probably want to send a confirmation URL. FIXME.
+    // Arguably we should do this with Meteor accounts. Hmm.
+
+    // Now, publish the UserRegistration to DNS.
+    publishOneUserRegistrationToDns(userRegistration.hostname,
+                                    userRegistration.ipAddress);
+  };
+
+  function publishOneUserRegistrationToDns(hostname, ipAddress) {
+    // Given a hostname, and an IP address, we set up wildcard
+    // records accordingly in the PowerDNS database.
+    //
+    // Note that PowerDNS will cache DNS queries for ~20 seconds
+    // (configurable) before it actually queries the SQL database to
+    // find out what the new value is. This is on top of any TTL in
+    // the DNS record itself, as I understand it.
+    deleteRecordIfExists(mysqlConnection, 'sandcats.io', hostname + '.sandcats.io', 'A');
+    deleteRecordIfExists(mysqlConnection, 'sandcats.io', '*.' + hostname + '.sandcats.io', 'A');
+
+    createRecord(mysqlConnection, 'sandcats.io', hostname + '.sandcats.io', 'A', ipAddress);
+    createRecord(mysqlConnection, 'sandcats.io', '*.' + hostname + '.sandcats.io', 'A', ipAddress);
+  };
+
   function registerPostHandler(clientIp, request, response) {
-    response.writeHead(200, {'Content-Type': 'text/json'});
     // Before validating the form, we add an IP address field to it.
     console.log("woweee, " + clientIp);
     var formData = JSON.parse(JSON.stringify(request.body)); // copy
@@ -146,16 +242,15 @@ if (Meteor.isServer) {
 
     var formData = Mesosphere.registerForm.validate(formData);
     if (formData.errors) {
+      response.writeHead(400, {'Content-Type': 'text/json'});
       response.end(JSON.stringify(formData.errors));
       return;
     }
 
-    // Great! We have a valid registration attempt. Let's store it, so
-    // long as:
-    //
-    // - The IP address isn't registered >= 2 times (FIXME: 2 -> 20)
-    // - The public key has never been used (FIXME: impl)
-    // - The name is not used.
+    // Great! It passed all our validation, including the
+    // Sandcats-specific validation. In that case, let's store an item
+    // in our Mongo collection and also update DNS.
+    createUserRegistration(formData.formData);
 
     // in request.body, we will find a Javascript object
     response.end('<html><body>Your request body was a ' + JSON.stringify(formData.formData) + '</body></html>');
