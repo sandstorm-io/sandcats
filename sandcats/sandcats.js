@@ -18,6 +18,22 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
+  // Provide a "public key must be unique" rule, for validating
+  // the public key.
+  Mesosphere.registerRule('pubkeyValidAndUnique', function (fieldValue, ruleValue) {
+    if (! ruleValue) {
+      // if the user does something like pubkeyUnique:
+      // false, they don't need us to validate.
+      return true;
+    }
+
+    // First, make sure it is a valid pubkey.
+    // Second, make sure it is actually unique.
+
+    // FIXME: Add ursa's validation here?
+    return true;
+  });
+
   // Create Mesosphere.registerForm validator
   Mesosphere({
     name: 'registerForm',
@@ -40,8 +56,10 @@ if (Meteor.isServer) {
         format: "email"
       },
       pubkey: {
-        required: true
-        // FIXME: Add ursa's validation here?
+        required: true,
+        rules: {
+          pubkeyValidAndUnique: true
+        }
       }
     }
   });
