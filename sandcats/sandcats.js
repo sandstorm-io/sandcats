@@ -51,6 +51,26 @@ if (Meteor.isServer) {
     throw "Need to provide fully-qualified hostname for second nameserver as NS2_HOSTNAME environment variable.";
   }
 
+  // PEM file utility functions.
+  forge = Meteor.npmRequire('node-forge');
+  fs = Meteor.npmRequire('fs');
+  pemToPublicKeyFingerprint = function(pemBytes) {
+    return forge.pki.getPublicKeyFingerprint(forge.pki.publicKeyFromPem(pemBytes),
+                                             {encoding: 'hex'});
+  };
+  isValidPublicKey = function(pemBytes) {
+    try {
+      var dummyKeyObject = forge.pki.publicKeyFromPem(pemBytes);
+      if (dummyKeyObject) {
+        return true;
+      }
+    }
+    catch (err) {
+      console.log("While validating PEM public key, triggered error: " + err);
+    }
+    return false;
+  };
+
   // Provide a "public key must be unique" rule, for validating
   // the public key.
   Mesosphere.registerRule('pubkeyValidAndUnique', function (fieldValue, ruleValue) {
@@ -61,9 +81,18 @@ if (Meteor.isServer) {
     }
 
     // First, make sure it is a valid pubkey.
-    // Second, make sure it is actually unique.
+    if (! isValidPublicKey(fieldValue)) {
+      return false;
+    }
 
-    // FIXME: Add ursa's validation here?
+    // Second, make sure it is actually unique.
+    var fingerprint = pemToPublicKeyFingerprint(fieldValue);
+    console.log("HMM FINGEPRINT " + fingerprint);
+    if (UserRegistrations.find({publicKeyId: fingerprint}).count() > 0) {
+      return false;
+    }
+
+    // Everything seems okay!
     return true;
   });
 
@@ -202,7 +231,7 @@ if (Meteor.isServer) {
     // To create a user registration, we mostly copy data from the form.
     // We do also need to store a public key "fingerprint", which for
     // now we calculated as deadbeaf.
-    var publicKeyId = 'deadbeef';
+    var publicKeyId = pemToPublicKeyFingerprint(formData.pubkey);
 
     var userRegistrationId = UserRegistrations.insert({
       hostname: formData.rawHostname,
