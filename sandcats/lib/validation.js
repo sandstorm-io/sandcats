@@ -16,6 +16,20 @@ Mesosphere.registerRule('keyFingerprintUnique', function (fieldValue, ruleValue)
   return true;
 });
 
+Mesosphere.registerAggregate('hostnameAndPubkeyMatch', function(fields, formFieldsObject) {
+  var pubkey = formFieldsObject.pubkey;
+  var hostname = formFieldsObject.rawHostname;
+
+  if (UserRegistrations.findOne({publicKeyId: pubkey,
+                                 hostname: hostname})) {
+    // This means we have a match. Hooray!
+    return true;
+  }
+
+  // By default, do not permit the update.
+  return false;
+});
+
 Mesosphere.registerRule('ipAddressNotOverused', function (fieldValue, ruleValue) {
   var MAX_IP_REGISTRATIONS = 20;
 
@@ -122,11 +136,15 @@ Mesosphere({
         ipAddressNotOverused: true
       }
     },
-    serverChallenge: {
-      required: true
-    },
-    sig: {
-      required: true
+    pubkey: {
+      required: true,
+      rules: {
+        minLength: 40,
+        maxLength: 40,
+      }
     }
+  },
+  aggregates: {
+    updateIsAuthorized: ['hostnameAndPubkeyMatch', ['rawHostname', 'pubkey']]
   }
 });

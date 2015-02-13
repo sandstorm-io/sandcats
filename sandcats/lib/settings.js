@@ -36,6 +36,11 @@ var settingsSchema = new SimpleSchema({
   // Database name for the above.
   POWERDNS_DB: {
     type: String
+  },
+
+  // Port number for UDP-based ping system.
+  UDP_PING_PORT: {
+    type: Number
   }
 });
 

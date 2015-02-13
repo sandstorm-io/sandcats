@@ -47,12 +47,38 @@ def update_asheesh_good():
     # FIXME: This doesn't pass, but for now, I'm not *that* worried.
     return requests.post(
         'http://localhost:3000/update',
-        data={'rawHostname': 'asheesh3',
-         'email': 'asheesh@asheesh.org',
-         'pubkey': open('snakeoil-sample-certs/ssl-cert-snakeoil.pubkey').read()},
+        data={'rawHostname': 'asheesh',
+              'email': 'asheesh@asheesh.org',
+        },
         headers={
             'X-Forwarded-For': '128.151.2.1',
             'X-Sand': 'cats',
-            'X-Client-Cert-Fingerprint': '10:16:48:8E:4C:1F:88:3A:AE:99:38:26:4C:93:E0:3E:9F:B7:74:13',
+            'X-Client-Certificate-Fingerprint': '10:16:48:8E:4C:1F:88:3A:AE:99:38:26:4C:93:E0:3E:9F:B7:74:13',
+        },
+    )
+
+def update_asheesh_caps_basically_good():
+    return requests.post(
+        'http://localhost:3000/update',
+        data={'rawHostname': 'ASHEESH',
+              'email': 'asheesh@asheesh.org',
+        },
+        headers={
+            'X-Forwarded-For': '128.151.2.1',
+            'X-Sand': 'cats',
+            'X-Client-Certificate-Fingerprint': '10:16:48:8E:4C:1F:88:3A:AE:99:38:26:4C:93:E0:3E:9F:B7:74:13',
+        },
+    )
+
+def update_asheesh3_unauthorized():
+    return requests.post(
+        'http://localhost:3000/update',
+        data={'rawHostname': 'asheesh3',
+              'email': 'asheesh@asheesh.org',
+        },
+        headers={
+            'X-Forwarded-For': '128.151.2.1',
+            'X-Sand': 'cats',
+            'X-Client-Certificate-Fingerprint': '10:16:48:8E:4C:1F:88:3A:AE:99:38:26:4C:93:E0:3E:9F:B7:74:13',
         },
     )

@@ -25,5 +25,8 @@ if (Meteor.isServer) {
         }
       });
     });
+
+    // Bind handlers for UDP-based client ping system.
+    startListeningForUdpPings();
   });
 }

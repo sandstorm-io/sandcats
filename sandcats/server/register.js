@@ -85,5 +85,28 @@ doUpdate = function(request, response) {
     return;
   }
 
+  // Before validating the form, we add an IP address field to it.
+  var clientIp = request.connection.remoteAddress;
 
+  // The form data is the request body, plus some extra data that we
+  // add as if the user submitted it, for convenience of our own
+  // processing.
+  var rawFormData = _.clone(request.body);
+  rawFormData.ipAddress = clientIp;
+  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
+
+  // For easy consistency, and to avoid wasting space, turn
+  // e.g. "ab:cd" into "abcd".
+  rawFormData.pubkey = clientCertificateFingerprint.replace(/:/g, "");
+
+  var validatedFormData = Mesosphere.updateForm.validate(rawFormData);
+  if (validatedFormData.errors) {
+    return finishResponse(400, {'error': validatedFormData.errors}, response);
+  }
+
+  if (validatedFormData.formData.updateIsAuthorized) {
+    return finishResponse(200, {'ok': 'lookin good'}, response);
+  } else {
+    return finishResponse(403, {'error': 'not authorized'}, response);
+  }
 };
