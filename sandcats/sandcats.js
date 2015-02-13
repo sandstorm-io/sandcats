@@ -47,7 +47,7 @@ if (Meteor.isServer) {
   if (! NS1_HOSTNAME) {
     throw "Need to provide fully-qualified hostname for first nameserver as NS1_HOSTNAME environment variable.";
   }
-  NS2_HOSTNAME = process.env.NS1_HOSTNAME;
+  NS2_HOSTNAME = process.env.NS2_HOSTNAME;
   if (! NS2_HOSTNAME) {
     throw "Need to provide fully-qualified hostname for second nameserver as NS2_HOSTNAME environment variable.";
   }
@@ -59,7 +59,7 @@ if (Meteor.isServer) {
     return forge.pki.getPublicKeyFingerprint(forge.pki.publicKeyFromPem(pemBytes),
                                              {encoding: 'hex'});
   };
-  isValidPublicKey = function(pemBytes) {
+  pemToPublicKeyOrFalse = function(pemBytes) {
     try {
       var dummyKeyObject = forge.pki.publicKeyFromPem(pemBytes);
       if (dummyKeyObject) {
@@ -88,8 +88,8 @@ if (Meteor.isServer) {
 
     // Second, make sure it is actually unique.
     var fingerprint = pemToPublicKeyFingerprint(fieldValue);
-    console.log("HMM FINGEPRINT " + fingerprint);
-    if (UserRegistrations.find({publicKeyId: fingerprint}).count() > 0) {
+
+    if (UserRegistrations.findOne({publicKeyId: fingerprint})) {
       return false;
     }
 
@@ -146,7 +146,7 @@ if (Meteor.isServer) {
   });
 
   // Create Mesosphere.registerForm validator. The use of custom
-  // validation rules combimes the Sancats-specific logic with the
+  // validation rules combimes the Sandcats-specific logic with the
   // data validation so that we can do it all in one call.
   Mesosphere({
     name: 'registerForm',
@@ -181,7 +181,7 @@ if (Meteor.isServer) {
     }
   });
 
-  deleteRecordIfExists = function (mysqlConnection, domain, bareHost) {
+  deleteRecordIfExists = function (wrappedQuery, domain, bareHost) {
     // Note that this deletes *all* records for this host, of any type
     // or content.
     //
@@ -198,14 +198,13 @@ if (Meteor.isServer) {
     for (var hostIndex = 0; hostIndex < hosts.length; hostIndex++) {
       host = hosts[hostIndex];
 
-      mysqlConnection.query(
+      var wrappedQuery = Meteor.wrapAsync(mysqlConnection.query, mysqlConnection);
+
+      var result = wrappedQuery(
         "DELETE from `records` WHERE (domain_id = (SELECT `id` from `domains` WHERE `name` = ?)) AND "
           + "name = ?",
-        [domain, host],
-        function (err, result) {
-          if (err) throw err;
-          console.log("Successfully deleted record(s) for " + host + "." + "with status " + JSON.stringify(result) + ".");
-        });
+        [domain, host]);
+      console.log("Successfully deleted record(s) for " + host + "." + "with status " + JSON.stringify(result) + ".");
     }
   };
 
@@ -270,7 +269,7 @@ if (Meteor.isServer) {
   function registerPostHandler(clientIp, request, response) {
     // Before validating the form, we add an IP address field to it.
     console.log("woweee, " + clientIp);
-    var formData = JSON.parse(JSON.stringify(request.body)); // copy
+    var formData = _.clone(request.body); // copy
     formData.ipAddress = clientIp;
 
     var formData = Mesosphere.registerForm.validate(formData);
@@ -346,7 +345,7 @@ if (Meteor.isServer) {
       });
 
     Router.map(function() {
-      this.route('placeHolderName', {
+      this.route('register', {
         path: '/register',
         where: 'server',
         action: function() {
