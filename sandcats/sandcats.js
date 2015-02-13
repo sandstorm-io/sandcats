@@ -13,17 +13,7 @@ if (Meteor.isServer) {
         path: '/register',
         where: 'server',
         action: function() {
-          var requestMethod = this.request.method;
-          if (this.request.method == 'POST') {
-            if (this.request.headers['x-sand'] == 'cats') {
-              doRegister(this.request, this.response);
-            } else {
-              // This header is to avoid abuse of a browser as a
-              // cross-site request forgery tool.
-              this.response.writeHead(403, {'Content-Type': 'text/plain'});
-              this.response.end('No header, no response.');
-            }
-          }
+          doRegister(this.request, this.response);
         }
       });
     });

@@ -1,14 +1,30 @@
+function finishResponse(status, text, response) {
+  response.writeHead(status, {'Content-Type': 'text/json'});
+  response.end(JSON.stringify(response));
+}
+
 doRegister = function(request, response) {
+  // Two mini anti-cross-site request forgery checks: POST and a
+  // custom HTTP header.
+  if (request.method != 'POST') {
+    return finishResponse(400, {'error': 'Must POST.'}, response);
+  }
+  if (request.headers['x-sand'] != 'cats') {
+    return finishResponse(403, {'error': 'Must have x-sand: cats header.'}, response);
+  }
+
   // Before validating the form, we add an IP address field to it.
   var clientIp = request.connection.remoteAddress;
-  var rawFormData = _.clone(request.body); // copy
+
+  // The form data is the request body, plus some extra data that we
+  // add as if the user submitted it, for convenience of our own
+  // processing.
+  var rawFormData = _.clone(request.body);
   rawFormData.ipAddress = clientIp;
 
   var validatedFormData = Mesosphere.registerForm.validate(rawFormData);
   if (validatedFormData.errors) {
-    response.writeHead(400, {'Content-Type': 'text/json'});
-    response.end(JSON.stringify(validatedFormData.errors));
-    return;
+    return finishResponse(400, {'error': validatedForm.errors}, response);
   }
 
   // Great! It passed all our validation, including the
@@ -16,9 +32,8 @@ doRegister = function(request, response) {
   // in our Mongo collection and also update DNS.
   createUserRegistration(validatedFormData.formData);
 
-  // in request.body, we will find a Javascript object
-  response.writeHead(200, {'Content-Type': 'text/json'});
-  response.end(JSON.stringify({'success': true}));
+  // Give the user an indication of our success.
+  return finishResponse(200, {'success': true}, response);
 }
 
 function createUserRegistration(formData) {
