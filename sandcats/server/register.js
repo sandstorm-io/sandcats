@@ -1,6 +1,6 @@
-function finishResponse(status, text, response) {
+function finishResponse(status, jsonData, response) {
   response.writeHead(status, {'Content-Type': 'text/json'});
-  response.end(JSON.stringify(response));
+  response.end(JSON.stringify(jsonData));
 }
 
 doRegister = function(request, response) {
@@ -24,7 +24,7 @@ doRegister = function(request, response) {
 
   var validatedFormData = Mesosphere.registerForm.validate(rawFormData);
   if (validatedFormData.errors) {
-    return finishResponse(400, {'error': validatedForm.errors}, response);
+    return finishResponse(400, {'error': validatedFormData.errors}, response);
   }
 
   // Great! It passed all our validation, including the
