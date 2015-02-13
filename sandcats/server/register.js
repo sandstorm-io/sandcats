@@ -3,14 +3,24 @@ function finishResponse(status, jsonData, response) {
   response.end(JSON.stringify(jsonData));
 }
 
-doRegister = function(request, response) {
+function antiCsrf(request, response) {
   // Two mini anti-cross-site request forgery checks: POST and a
   // custom HTTP header.
+  var requestEnded = false;
   if (request.method != 'POST') {
-    return finishResponse(400, {'error': 'Must POST.'}, response);
+    finishResponse(400, {'error': 'Must POST.'}, response);
+    requestEnded = true;
   }
   if (request.headers['x-sand'] != 'cats') {
-    return finishResponse(403, {'error': 'Must have x-sand: cats header.'}, response);
+    finishResponse(403, {'error': 'Must have x-sand: cats header.'}, response);
+    requestEnded = true;
+  }
+}
+
+doRegister = function(request, response) {
+  var requestEnded = antiCsrf(request, response);
+  if (requestEnded) {
+    return;
   }
 
   // Before validating the form, we add an IP address field to it.
@@ -67,3 +77,12 @@ function createUserRegistration(formData) {
     userRegistration.hostname,
     userRegistration.ipAddress);
 }
+
+doUpdate = function(request, response) {
+  var requestEnded = antiCsrf(request, response);
+  if (requestEnded) {
+    return;
+  }
+
+
+};

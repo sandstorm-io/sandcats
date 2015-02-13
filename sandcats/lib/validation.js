@@ -106,3 +106,32 @@ Mesosphere({
     }
   }
 });
+
+// Create validator for an IP address update request.
+Mesosphere({
+  name: 'updateForm',
+  fields: {
+    rawHostname: {
+      required: true,
+      format: /^[0-9a-zA-Z]+$/,
+      transforms: ["clean", "toLowerCase"],
+      rules: {
+        minLength: 1,
+        maxLength: 20
+      }
+    },
+    ipAddress: {
+      required: true,
+      format: "ipv4",
+      rules: {
+        ipAddressNotOverused: true
+      }
+    },
+    serverChallenge: {
+      required: true
+    },
+    sig: {
+      required: true
+    }
+  }
+});
