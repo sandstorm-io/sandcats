@@ -2,6 +2,8 @@
 
 var forge = Meteor.npmRequire('node-forge');
 publicKeyToFingerprint = function(publicKey) {
+  console.log("AIEEEEE");
+  console.log(publicKey);
   return forge.pki.getPublicKeyFingerprint(
     publicKey,
     {encoding: 'hex'});
@@ -9,9 +11,9 @@ publicKeyToFingerprint = function(publicKey) {
 
 pemToPublicKeyOrFalse = function(pemBytes) {
   try {
-    var dummyKeyObject = forge.pki.publicKeyFromPem(pemBytes);
-    if (dummyKeyObject) {
-      return true;
+    var publicKey = forge.pki.publicKeyFromPem(pemBytes);
+    if (publicKey) {
+      return publicKey;
     }
   }
   catch (err) {

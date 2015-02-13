@@ -3,18 +3,26 @@ import requests
 def register_asheesh():
     return requests.post(
         'http://localhost:3000/register',
-        {'rawHostname': 'asheesh',
-         'email': 'asheesh@asheesh.org',
-         'pubkey': open('snakeoil-sample-certs/ssl-cert-snakeoil.pubkey').read()},
-        )
+        data={
+            'rawHostname': 'asheesh',
+            'email': 'asheesh@asheesh.org',
+            'pubkey': open('snakeoil-sample-certs/ssl-cert-snakeoil.pubkey').read(),
+        },
+        headers={
+            'X-Sand': 'cats',
+        },
+    )
 
 def register_asheesh2_bad_key_type():
     return requests.post(
         'http://localhost:3000/register',
-        {'rawHostname': 'asheesh2',
-         'email': 'asheesh@asheesh.org',
-         'pubkey': open('snakeoil-sample-certs/ssl-cert-snakeoil.pem').read()},
-        )
+        data={
+            'rawHostname': 'asheesh2',
+            'email': 'asheesh@asheesh.org',
+            'pubkey': open('snakeoil-sample-certs/ssl-cert-snakeoil.pem').read(),
+        },
+        headers={'X-Sand': 'cats'},
+    )
 
 def register_asheesh3_x_forwarded_for():
     # Provide the HTTP_FORWARDED_COUNT=1 environment variable to
@@ -26,5 +34,8 @@ def register_asheesh3_x_forwarded_for():
         data={'rawHostname': 'asheesh3',
          'email': 'asheesh@asheesh.org',
          'pubkey': open('snakeoil-sample-certs/ssl-cert-snakeoil.pubkey').read()},
-        headers={'X-Forwarded-For': '128.151.2.1'},
-        )
+        headers={
+            'X-Forwarded-For': '128.151.2.1',
+            'X-Sand': 'cats',
+        },
+    )

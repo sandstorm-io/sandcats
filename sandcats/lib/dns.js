@@ -94,3 +94,17 @@ function createDomain(mysqlQuery, domain) {
   createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS1_HOSTNAME);
   createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS2_HOSTNAME);
 }
+
+publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
+  // Given a hostname, and an IP address, we set up wildcard
+  // records accordingly in the PowerDNS database.
+  //
+  // Note that PowerDNS will cache DNS queries for ~20 seconds
+  // (configurable) before it actually queries the SQL database to
+  // find out what the new value is. This is on top of any TTL in
+  // the DNS record itself, as I understand it.
+  deleteRecordIfExists(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname);
+
+  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
+  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, '*.' + hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
+}
