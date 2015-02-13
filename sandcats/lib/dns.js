@@ -51,15 +51,14 @@ deleteRecordIfExists = function (wrappedQuery, domain, bareHost) {
   }
 };
 
-createRecord = function(mysqlConnection, domain, host, type, content) {
-  mysqlConnection.query(
+createRecord = function(mysqlQuery, domain, host, type, content) {
+  // Do the insert, allowing Meteor to turn this into an exception if
+  // it returns an error.
+  mysqlQuery(
     "INSERT INTO records (domain_id, name, type, content) VALUES ((SELECT id FROM domains WHERE domains.name = ?), ?, ?, ?);",
-    [domain, host, type, content],
-    function (err, result) {
-      if (err) throw err;
+    [domain, host, type, content]);
 
-      console.log("Successfully added " + host + " = " + content + " (" + type + ").");
-    });
+  console.log("Successfully added " + host + " = " + content + " (" + type + ").");
 };
 
 createDomainIfNeeded = function(mysqlQuery) {
@@ -83,7 +82,7 @@ function createDomain(mysqlQuery, domain) {
   createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'A', '127.0.0.1');
   createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'SOA', formatSoaRecord(
     // The SOA advertises the first nameserver.
-    NS1_HOSTNAME,
+    Meteor.settings.NS1_HOSTNAME,
     // It advertises hostmaster@Meteor.settings.BASE_DOMAIN as a contact email address.
     'hostmaster.' + Meteor.settings.BASE_DOMAIN,
     // For the rest of these, see formatSoaRecord()'s variable names.
@@ -92,6 +91,6 @@ function createDomain(mysqlQuery, domain) {
     60,
     604800,
     60));
-  createRecord(mysqlConnection, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', NS1_HOSTNAME);
-  createRecord(mysqlConnection, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', NS2_HOSTNAME);
+  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS1_HOSTNAME);
+  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS2_HOSTNAME);
 }
