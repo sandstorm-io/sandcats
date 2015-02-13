@@ -16,11 +16,6 @@ UserRegistrations.attachSchema(new SimpleSchema({
     // FIXME: Somewhere we might want to make sure this is not a
     // "private IP"? Or not. Maybe we don't care.
   },
-  fullPublicKeyPem: {
-    // We rely on Mesosphere to validate that this is actually a
-    // public key in PEM format.
-    type: String
-  },
   publicKeyId: {
     type: String,
     min: 40,

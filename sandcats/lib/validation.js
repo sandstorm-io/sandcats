@@ -1,21 +1,14 @@
 // Provide a "public key must be unique" rule, for validating the
-// public key.
-Mesosphere.registerRule('pubkeyValidAndUnique', function (fieldValue, ruleValue) {
+// public key. Mesosphere handles making sure it is the right length.
+Mesosphere.registerRule('keyFingerprintUnique', function (fieldValue, ruleValue) {
   if (! ruleValue) {
     // if the user does something like pubkeyUnique:
     // false, they don't need us to validate.
     return true;
   }
 
-  // First, make sure it is a valid pubkey.
-  var publicKeyOrFalse = pemToPublicKeyOrFalse(fieldValue);
-  if (! publicKeyOrFalse) {
-    return false;
-  }
-
-  // Second, make sure it is actually unique.
-  var fingerprint = publicKeyToFingerprint(publicKeyOrFalse);
-  if (UserRegistrations.findOne({publicKeyId: fingerprint})) {
+  // Make sure there is no one else registered with this fingerprint.
+  if (UserRegistrations.findOne({publicKeyId: fieldValue})) {
     return false;
   }
 
@@ -101,8 +94,10 @@ Mesosphere({
     pubkey: {
       required: true,
       rules: {
-        pubkeyValidAndUnique: true
-      }
+        minLength: 40,
+        maxLength: 40,
+        keyFingerprintUnique: true
+      },
     }
   }
 });

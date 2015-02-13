@@ -31,6 +31,11 @@ doRegister = function(request, response) {
   // processing.
   var rawFormData = _.clone(request.body);
   rawFormData.ipAddress = clientIp;
+  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
+
+  // For easy consistency, and to avoid wasting space, turn
+  // e.g. "ab:cd" into "abcd".
+  rawFormData.pubkey = clientCertificateFingerprint.replace(/:/g, "");
 
   var validatedFormData = Mesosphere.registerForm.validate(rawFormData);
   if (validatedFormData.errors) {
@@ -53,14 +58,10 @@ function createUserRegistration(formData) {
 
   // FIXME: Attach this to the form data via a validator, as an
   // aggregate, to avoid double-computing it.
-  var publicKeyId = publicKeyToFingerprint(
-    pemToPublicKeyOrFalse(formData.pubkey));
-
   var userRegistrationId = UserRegistrations.insert({
     hostname: formData.rawHostname,
     ipAddress: formData.ipAddress,
-    fullPublicKeyPem: formData.pubkey,
-    publicKeyId: publicKeyId,
+    publicKeyId: formData.pubkey,
     emailAddress: formData.email
   });
 
