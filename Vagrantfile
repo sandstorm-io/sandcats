@@ -13,6 +13,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # machine.
   config.vm.network "forwarded_port", guest: 443, host: 8443
 
+  # Expose port 80 (HTTP) as 8080 (TCP) for the HTTP (non HTTPS)
+  # view of the Meteor site.
+  config.vm.network "forwarded_port", guest: 80, host: 8080,
+                    protocol: 'tcp'
+
   # Expose port 8080 (UDP), for the meta-update protocol.
   config.vm.network "forwarded_port", guest: 8080, host: 8080,
                     protocol: 'udp'
@@ -27,5 +32,5 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Use a shell script that contains steps required to initialize a
   # sandcats server.
-  config.vm.provision "shell", inline: "cd /vagrant && sudo apt-get update && make provision"
+  config.vm.provision "shell", inline: "cd /vagrant && sudo apt-get update && make stage-provision"
 end
