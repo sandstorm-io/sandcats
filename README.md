@@ -99,9 +99,13 @@ To set up a simular environment to production, do the following:
 
 ```
 $ vagrant up
-# This should set up nginx on port 443 within the VM.
+# This should set up nginx on port 80 & 443 within the VM.
 #
-# You can access it as port 8443 on the host.
+# You can access it as port 8080 & 8443 on the host.
+$ vagrant reload
+# Perversely, this is necessary for now, since the base box we
+# are using needs a reboot before it switches into using systemd.
+$
 ```
 
 # Design questions that have not yet been answered
