@@ -105,4 +105,22 @@ unreachable due to problems on the server or perhaps network problems.
 We want to avoid using AXFR on every update because that would mean
 that every update would be an O(N) operation.
 
+One option is to switch to the PowerDNS sqlite backend, and every few
+minutes if there have been changes, copy that from the primary host to
+the secondary host(s). I can't say I love that option. Similarly, we
+could use MySQL replication, which would be more efficient, but harder
+to set up.
+
+Other possibilities:
+
+* Write some scripts that can SSH into a target machine and set up
+  MySQL replication; if the SSH connection goes down, then we could
+  take some drastic action and e.g. destroy the secondary.
+
+* BerkeleyDB's SQLite-API-compatible replication
+  http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html
+
+* Do SQLite inserts over a HTTP API that does replication
+  https://github.com/otoolep/rqlite
+
 If you have ideas, I'd love to hear them.
