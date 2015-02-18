@@ -17,6 +17,22 @@ It uses the following technologies:
 * PowerDNS and MySQL, to update a DNS zone with the new IP address of
   a user.
 
+# Alternatives
+
+If you want a general-purpose dynamic DNS service to use with your own
+non-Sandstorm server, check out the list below.
+
+Similarly, if you want to run a dynamic DNS service for the Internet,
+you might prefer the software in the list below. The Sandcats software
+has very few features.
+
+Other software/services:
+
+* NSUpdate.info: free of cost public service; open source backend.
+
+* duckdns.com: free of cost public service; very responsive
+  maintainers; backend unavailable.
+
 # How to run this
 
 ## Install dependencies
@@ -90,17 +106,3 @@ We want to avoid using AXFR on every update because that would mean
 that every update would be an O(N) operation.
 
 If you have ideas, I'd love to hear them.
-
-# Alternatives
-
-If you want to run your own dynamic DNS server software, or you want
-to use a free of cost public dynamic DNS service, you might prefer to
-use an open source dyndns backend package that is more generic. I
-chose to implement this independent from the below offerings because
-Sandstorm (at the moment) needs a small subset of dynamic DNS
-features.
-
-* Open source backend, free of cost public server: NSUpdate.info.
-
-* Backend not available, free of cost public server, very responsive
-  maintainers: duckdns.com.
