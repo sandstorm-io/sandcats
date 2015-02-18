@@ -12,3 +12,5 @@ Important:
   (email address + user_random_secret )?
 
 * Come up with a way to refresh the MySQL connection if it goes stale.
+
+* Remove unnecessary Meteor packages.
