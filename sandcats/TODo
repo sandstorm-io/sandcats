@@ -14,3 +14,5 @@ Important:
 * Come up with a way to refresh the MySQL connection if it goes stale.
 
 * Remove unnecessary Meteor packages.
+
+* Deal with nginx setup
