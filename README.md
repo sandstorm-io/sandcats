@@ -88,10 +88,21 @@ $ cd sandcats
 $ meteor run --settings dev-settings.json
 ```
 
-## Production use
+# Production use
 
 Production use is presumably very similar to the above. However, I
 haven't really used this in production yet, so who knows.
+
+## Simulating production with Vagrant
+
+To set up a simular environment to production, do the following:
+
+```
+$ vagrant up
+# This should set up nginx on port 443 within the VM.
+#
+# You can access it as port 8443 on the host.
+```
 
 # Design questions that have not yet been answered
 

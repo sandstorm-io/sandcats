@@ -1,0 +1,11 @@
+[Service]
+User=vagrant
+Group=vagrant
+WorkingDirectory=/vagrant/sandcats
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=sandcats-meteor
+ExecStart=/usr/local/bin/meteor run --settings dev-settings.json
+
+[Install]
+WantedBy=multi-user.target

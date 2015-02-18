@@ -1,3 +1,11 @@
+# Ignore backup files.
 *~
+
+# Ignore files that meteor/npm have downloaded.
 sandcats/packages/
-dev-settings.json
+
+# Ignore a settings file that we ask people to create.
+sandcats/dev-settings.json
+
+# Ignore the current working state of Vagrant.
+.vagrant/

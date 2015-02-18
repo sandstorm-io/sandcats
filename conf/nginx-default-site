@@ -1,0 +1,12 @@
+server {
+       root /usr/share/nginx/www;
+       server_name localhost;
+        / {
+                proxy
+
+
+       listen: 80;
+}
+
+server {
+       listen
