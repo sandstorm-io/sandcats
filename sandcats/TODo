@@ -1,28 +1,14 @@
 try out sequelize
 
-add csrf protection for POSTs
-
 add tests
 
-measure test coverage
+measure test coverage <=> move tests to a Javascript-based framework
+
+integrate them into travis-ci
 
 Important:
-
-* Implement UDP protocol.
 
 * Deal with email verification. (HMAC of
   (email address + user_random_secret )?
 
-** Use Meteor auth model
-
-Things to think about:
-
-* For anti-CSRF, see if I can get away with a header.
-
-* Globals - have few things.
-
-* Don't bother with accounts-password.
-
-* Don't bother moving this into separate files yet.
-
-* Use Meteor.settings not ALL_THESE_ENV_VARS
+* Come up with a way to refresh the MySQL connection if it goes stale.
