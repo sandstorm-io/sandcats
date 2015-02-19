@@ -18,6 +18,8 @@ function antiCsrf(request, response) {
 }
 
 doRegister = function(request, response) {
+  console.log("PARTY TIME");
+
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
     return;
@@ -25,6 +27,9 @@ doRegister = function(request, response) {
 
   // Before validating the form, we add an IP address field to it.
   var clientIp = request.connection.remoteAddress;
+
+  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
+
 
   // The form data is the request body, plus some extra data that we
   // add as if the user submitted it, for convenience of our own
@@ -80,6 +85,9 @@ function createUserRegistration(formData) {
 }
 
 doUpdate = function(request, response) {
+  Meteor._debug("ZZZ");
+  console.log("PARTY TIME");
+
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
     return;
@@ -93,7 +101,11 @@ doUpdate = function(request, response) {
   // processing.
   var rawFormData = _.clone(request.body);
   rawFormData.ipAddress = clientIp;
-  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
+  console.log(request.connection.httpHeaders);
+  console.log(request.connection.headers);
+  console.log("PARTY TIME");
+
+  var clientCertificateFingerprint = request.connection.httpHeaders['x-client-certificate-fingerprint'] || "";
 
   // For easy consistency, and to avoid wasting space, turn
   // e.g. "ab:cd" into "abcd".

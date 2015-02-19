@@ -16,3 +16,5 @@ Important:
 * Remove unnecessary Meteor packages.
 
 * Deal with nginx setup
+
+* Remove references to pubkey in tests.
