@@ -9,8 +9,9 @@ function formatSoaRecord(primaryNameServer, adminEmailUsingDots, secondsBeforeRe
 
 // Functions that communicate with the MySQL PowerDNS database.
 createWrappedQuery = function() {
+  var mysql = Meteor.npmRequire('mysql');
   var rawConnection =
-      Mysql.createConnection({
+      mysql.createConnection({
         host: 'localhost',
         user: Meteor.settings.POWERDNS_USER,
         database: Meteor.settings.POWERDNS_DB,

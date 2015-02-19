@@ -5,14 +5,10 @@
 # but you can also edit it by hand.
 
 meteor-platform
-autopublish
-insecure
 meteorhacks:npm
 
 
 npm-container
-patrickocoffeyo:mysql
 iron:router
 copleykj:mesosphere
-gadicohen:headers
 aldeed:collection2
