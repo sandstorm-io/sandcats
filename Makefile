@@ -27,7 +27,9 @@ stage-nginx-setup: stage-nginx-install stage-nginx-configure
 
 stage-nginx-install: /etc/apt/sources.list.d/nginx-development-ppa.list /usr/share/doc/nginx
 
-stage-nginx-configure: /etc/nginx/sites-available/default
+stage-nginx-configure: stage-certificate-configure /etc/nginx/sites-available/default
+
+stage-certificate-configure: /usr/share/doc/ssl-cert
 
 /etc/systemd/multi-user.target.wants.sandcat.service: /usr/share/doc/systemd-sysv /etc/systemd/system/sandcats.service
 	sudo systemctl enable sandcats.service

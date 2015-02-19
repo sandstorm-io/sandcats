@@ -4,10 +4,13 @@ map $http_upgrade $connection_upgrade {
 }
 
 server {
-    # Debian default.
+    # Debian default nginx homepage etc. Note that due to the
+    # proxy_pass stanza, we don't actually serve files from this
+    # directory.
     root /usr/share/nginx/www;
 
-    # Ignored, basically, since we have just the one virtualhost.
+    # Ignored, basically, since we have just the one HTTP virtual host
+    # (and the one HTTPS virtual host).
     server_name localhost;
 
     access_log /var/log/nginx/access.log;
@@ -17,6 +20,11 @@ server {
     #
     # We'll add HTTPS in a later commit.
     listen 80;
+    listen 443 default_server ssl;
+
+    # For now, use the system snakeoil cert.
+    ssl_certificate      /etc/ssl/certs/ssl-cert-snakeoil.pem;
+    ssl_certificate_key  /etc/ssl/private/ssl-cert-snakeoil.key;
 
     location / {
         # Meteor is listening on port 3000.
@@ -27,6 +35,12 @@ server {
 
         # It's a nice thing for us to pass the Host: header along.
         proxy_set_header Host $http_host;
+
+        # Tell Meteor if this came in over HTTP vs. HTTPS.
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # HTTPS client-cert pass-through.
+        proxy_set_header X-Client-Certificate-Fingerprint $ssl_client_fingerprint;
 
         # HTTP/1.1 and WebSocket support.
         proxy_http_version 1.1;
