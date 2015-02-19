@@ -103,8 +103,18 @@ $ vagrant up
 #
 # You can access it as port 8080 & 8443 on the host.
 $ vagrant reload
+$ vagrant ssh
+$ cd /vagrant
+$ make stage-provision
+$ sudo service sandcats restart
+$ sudo service nginx restart
 # Perversely, this is necessary for now, since the base box we
 # are using needs a reboot before it switches into using systemd.
+#
+# Plus you have to wait a minute or two for the sandcats service
+# to finish installing Meteor.
+#
+# You can watch that with: sudo tail -f /var/log/syslog
 $
 ```
 
