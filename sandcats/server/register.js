@@ -26,7 +26,7 @@ doRegister = function(request, response) {
   }
 
   // Before validating the form, we add an IP address field to it.
-  var clientIp = request.connection.remoteAddress;
+  var clientIp = request.headers['x-forwarded-for'] || "";
 
   var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
 
@@ -36,7 +36,6 @@ doRegister = function(request, response) {
   // processing.
   var rawFormData = _.clone(request.body);
   rawFormData.ipAddress = clientIp;
-  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
 
   // For easy consistency, and to avoid wasting space, turn
   // e.g. "ab:cd" into "abcd".
@@ -94,7 +93,7 @@ doUpdate = function(request, response) {
   }
 
   // Before validating the form, we add an IP address field to it.
-  var clientIp = request.connection.remoteAddress;
+  var clientIp = request.headers['x-forwarded-for'];
 
   // The form data is the request body, plus some extra data that we
   // add as if the user submitted it, for convenience of our own
@@ -105,7 +104,7 @@ doUpdate = function(request, response) {
   console.log(request.connection.headers);
   console.log("PARTY TIME");
 
-  var clientCertificateFingerprint = request.connection.httpHeaders['x-client-certificate-fingerprint'] || "";
+  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
 
   // For easy consistency, and to avoid wasting space, turn
   // e.g. "ab:cd" into "abcd".
