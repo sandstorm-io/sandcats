@@ -12,9 +12,21 @@ stage-dev-setup: /usr/local/bin/meteor /usr/share/doc/mysql-server /usr/share/do
 # If used for production, the following customizations will be needed:
 #
 # - Replace its HTTPS keys with non-snakeoil.
-stage-provision: stage-dev-setup /var/tmp/meteor-local stage-mysql-setup stage-install-service stage-nginx-setup
+stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-install-service stage-nginx-setup
 
 stage-install-service: /etc/systemd/multi-user.target.wants.sandcat.service
+
+stage-mongodb-setup: /usr/share/doc/mongodb-server
+	echo 'export MONGO_URL=mongodb://localhost/mongo_sandcats' >> /home/vagrant/.bash_profile
+
+	# Make sure our MongoDB configuration file is the active one.
+	sudo cp conf/mongodb.conf /etc/
+	sudo service mongodb restart
+
+	# Make sure the necessary users are created.
+	printf 'use admin;\n db.addUser({user: "superuser", pwd: "neRQ5iTKpsJp9JTF", roles: ["root"]}); \n' | mongo --port 27017 --authenticationDatabase admin
+
+	# Now ??? enable authorization ???
 
 stage-mysql-setup: /usr/share/doc/mysql-server
 	echo 'create database if not exists sandcats_pdns;' | mysql -uroot
@@ -39,14 +51,6 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	sudo cp $<$(@F) $@
 	sudo chmod 0644 $@
 	sudo service nginx restart
-
-### We use a bind-mounted /vagrant/.meteor/local to avoid issues where
-### MongoDB does not want to start given the NFS mount.
-/var/tmp/meteor-local:
-	sudo mkdir /var/tmp/meteor-local
-	sudo chown vagrant /var/tmp/meteor-local
-	echo '/var/tmp/meteor-local /vagrant/sandcats/.meteor/local none defaults,bind 0 0' | sudo dd of=/etc/fstab conv=notrunc oflag=append
-	sudo mount /vagrant/sandcats/.meteor/local
 
 /etc/systemd/system/sandcats.service: /usr/share/doc/systemd-sysv conf/$(@F)
 	# $(@F) refers to sandcats.service.
