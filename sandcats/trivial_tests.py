@@ -16,10 +16,13 @@ requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.DEBUG)
 requests_log.propagate = True
 
+interface_cache = {}
 
-def make_url(path, external_ip=False, interface_cache={}):
+
+def make_url(path, external_ip=False):
     BASE_URL = ''
 
+    global interface_cache
     if not interface_cache:
         for ifacename in netifaces.interfaces():
             try:
@@ -401,6 +404,26 @@ def test_update():
                                'asheesh2.sandcatz.io',
                                'A',
                                'asheesh2.sandcatz.io. 60 IN A 127.0.0.1')
+
+    # Test that, via the UDP protocol, the server would be surprised
+    # by a UDP packet on 127.0.0.1 for the "asheesh" hostname, since
+    # it has been moved to the other IP address.
+    #
+    # To do that, we create a simple Python UDP client that binds to a
+    # port on 127.0.0.1, sends a message to the sandcats daemon, and
+    # checks that it gets a response within one second.
+    UDP_DEST_IP = '127.0.0.1'
+    UDP_DEST_PORT = 8080
+    MESSAGE = 'asheesh 012356789abcdef'
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        client.sendto(MESSAGE, (UDP_DEST_IP, UDP_DEST_PORT))
+        client.settimeout(1)
+        data, _ = client.recv(1024)
+        assert data == '0123456789abcdef'
+    except socket.timeout:
+        assert False, "Hit timeout without a reply. How sad."
+        client.close()
 
 
 if __name__ == '__main__':
