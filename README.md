@@ -118,6 +118,49 @@ $ sudo service nginx restart
 $
 ```
 
+# Roadmap for sandcats & sandstorm
+
+## Version 1
+
+* The Sandstorm installer should be able to register a domain using
+  against the Sandcats software. The Sandstorm installer needs to be
+  able to generate a client certificate. If the `openssl` command is
+  not installed, and /usr/bin/apt-get exists, ask if the user wants to
+  install it.
+
+* Version 1 stores email addresses, but it does not verify them for now.
+
+* The Sandcats web app has no meaningful web interface.
+
+## Version 2
+
+* The Sandstorm shell will offer a user interface that asks people to
+  confirm their email address so they can recover their domain name if
+  they lose the private key they use to do updates. The shell will
+  have a button that says, "Click here to confirm your Sandcats
+  account," and when they click it, the shell will generate a random
+  number and tell them to wait for a confirmation email that the
+  Sandcats server will send them, and then once they click that
+  confirmation email, the Sandcats server will prompt them to enter
+  the number, and when they do, Sandcats will believe that they
+  confirmed their email address. (Question: How will the Sandstorm
+  shell know that the user actually did the email confirmation?)
+
+* The Sandstorm installer can offer users the ability to use a name
+  they already registered. This will use an email confirmation-based
+  flow to let them recover control of the name.
+
+    * Particularly, if they try to use a name that was already
+      registered, and either the host hasn't checked-in recently or
+      this client has the same IP as the host's last checked-in IP
+      address, then in the installer, print a random number and also
+      secretly sends its registration info to the Sandcats server. It
+      also tells them to wait for an email, into which to type that
+      number. Once they type that number, and this action by itself is
+      what makes the new address record take place. Therefore, the
+      Sandstorm installer just says, "Press enter once you've completed
+      that, or Ctrl-C to interrupt the install."
+
 # Design questions that have not yet been answered
 
 ## High-availability
