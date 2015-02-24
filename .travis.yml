@@ -33,7 +33,7 @@ before_install:
   # Hackishly start the Meteor app. The Travis-CI image has no systemd, so we rely on this
   # for now.
   - sudo cp -a $PWD /vagrant
-  - cd /vagrant/sandcats ; meteor run &
+  - cd /vagrant/sandcats ; meteor run --settings /etc/sandcats-meteor-settings.json &
 install:
   - sudo apt-get install -y python-requests python-dnspython
 script:
