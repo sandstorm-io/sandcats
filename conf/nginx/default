@@ -25,9 +25,10 @@ server {
     # fingerprint in a HTTP header.
     ssl_verify_client optional_no_ca;
 
-    # This config block is about listening in port 80.
+    # We listen on HTTP and HTTPS ports with the same config.
     #
-    # We'll add HTTPS in a later commit.
+    # Note that ssl_* settings seem to be much happier if they appear before
+    # the "listen 443 ..." line!
     listen 80;
     listen 443 default_server ssl;
 
