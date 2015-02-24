@@ -24,7 +24,8 @@ before_install:
   - sudo /usr/sbin/locale-gen
   # Do the Sandcats installing.
   - make stage-provision
+  # Since systemd hasn't taken over the system yet, start our services manually. FIXME.
 install:
-  - "pip install requests"
+  - sudo apt-get install python-requests
 script:
   - cd sandcats ; python trivial_tests.py
