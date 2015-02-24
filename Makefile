@@ -17,7 +17,7 @@ stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-ins
 stage-install-service: /etc/systemd/multi-user.target.wants.sandcat.service
 
 stage-mongodb-setup: /usr/share/doc/mongodb-server
-	echo 'export MONGO_URL=mongodb://localhost/mongo_sandcats' >> /home/vagrant/.bash_profile
+	echo 'export MONGO_URL=mongodb://localhost/mongo_sandcats' >> $$HOME/.bash_profile
 
 	# Make sure our MongoDB configuration file is the active one.
 	sudo cp conf/mongodb.conf /etc/
