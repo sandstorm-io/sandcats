@@ -1,5 +1,8 @@
 import requests
 import os
+import dns.resolver
+import StringIO
+import time
 
 
 import logging
@@ -145,3 +148,49 @@ def update_asheesh3_unauthorized():
     )
     add_key(3, requests_kwargs)
     return requests.post(**requests_kwargs)
+
+def get_resolver():
+    resolver = dns.resolver.Resolver()
+    resolver.reset()
+
+    # Configure our test resolver to resolve against localhost
+    resolver.read_resolv_conf(StringIO.StringIO('nameserver 127.0.0.1'))
+
+    return resolver
+
+def reset_app_state():
+    # To reset the Sandcats app, we must:
+    # - Clear out Mongo, and
+    # - Remove the PowerDNS database, and
+    # - Restart the sandcats service, if it is enabled.
+    os.system('''echo 'drop database if exists sandcats_pdns;' | mysql -uroot''')
+    os.system('''cd .. ; make stage-mysql-setup''')
+    os.system('''printf '\n\nUserRegistrations.remove({}); \n\n .exit \n ' | script  -c 'meteor shell' /dev/stdin''')
+    os.system('sudo service sandcats restart')
+    time.sleep(1)  # Make sure the restart gets a chance to start, to avoid HTTP 502.
+    os.system('sudo service nginx restart')
+    # Attempt to get the homepage, which will mean that Meteor is back, waiting at most 10 seconds.
+    requests.get('http://localhost/', timeout=10)
+
+
+def main():
+    # This main function runs our various manual test helpers, and
+    # checks that their return value is what we were hoping for.
+    #
+    # It assumes that when it started, the system is properly set up but
+    # empty.
+    resolver = get_resolver()
+
+    # Register asheesh dot our domain
+    response = register_asheesh()
+    assert response.status_code == 200, response.content
+    # Make sure MongoDB has stored the registration.
+    # Make sure DNS is updated.
+    dns_response = resolver.query('asheesh.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'asheesh.sandcatz.io. 60 IN A 127.0.0.1'
+
+    dns_response = resolver.query('subdomain-test.asheesh.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'subdomain-test.asheesh.sandcatz.io. 60 IN A 127.0.0.1'
+
+if __name__ == '__main__':
+    main()
