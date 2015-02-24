@@ -201,6 +201,16 @@ def reset_app_state():
     requests.get('http://localhost/', timeout=10)
 
 
+def assert_nxdomain(resolver, domain, rr_type):
+    got_nxdomain = False
+    try:
+        resolver.query(domain, rr_type)
+    except dns.resolver.NXDOMAIN:
+        got_nxdomain = True
+
+    assert got_nxdomain
+
+
 def main():
     # This main function runs our various manual test helpers, and
     # checks that their return value is what we were hoping for.
@@ -229,6 +239,7 @@ def main():
     assert (
         parsed_content['error_text'] ==
         'Your client is misconfigured. You need to provide a client certificate.')
+    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 
     # Attempt to do a GET to /register. Get rejected since /register always
     # wants a POST.
@@ -238,7 +249,7 @@ def main():
     assert (
         parsed_content['error_text'] ==
         'Must POST.')
-
+    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 
     # Attempt to do a POST without the X-Sand: cats header; refuse to
     # process the request.  This is an anti-cross-site-request forgery
@@ -250,6 +261,7 @@ def main():
     assert (
         parsed_content['error_text'] ==
         'Your client is misconfigured. You need X-Sand: cats')
+    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 
     # Attempt to register a domain by providing an X-Forwarded-For
     # header that is set to a forged source address. The registration
