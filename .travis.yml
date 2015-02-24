@@ -9,7 +9,7 @@ before_install:
   - echo 'deb http://http.debian.net/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
   - echo 'deb http://http.debian.net/debian/ wheezy main' | sudo dd of=/etc/apt/sources.list
   - sudo apt-get update
-  - sudo apt-get -y install debian-keyring
+  - sudo apt-get --force-yes -y install debian-keyring
   - sudo apt-get update
   - sudo make
 install:
