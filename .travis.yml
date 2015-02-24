@@ -23,7 +23,7 @@ before_install:
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
   # Remove udev, and let us get the Debian version.
-  - sudo dpkg --purge --force-depends udev
+  - sudo dpkg --purge --force-depends udev initramfs-tools
   - sudo apt-get --fix-broken install
   # Do the Sandcats installing.
   - make stage-provision
