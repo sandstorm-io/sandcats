@@ -9,7 +9,7 @@ before_install:
   - sudo apt-get --force-yes -y install debian-archive-keyring
   - sudo apt-get update
   - sudo rm -f /etc/dpkg/dpkg.cfg.d/multiarch  # Remove historic multi-arch config.
-  - sudo dpkg -r --force-depends locales libc6-dev
+  - sudo dpkg -r --force-depends locales libc6-dev libc-bin
   - sudo apt-get -f install
   - make
 install:
