@@ -35,6 +35,23 @@ function antiCsrf(request, response) {
   return requestEnded;
 }
 
+function getFormDataFromRequest(request) {
+  // The form data is the request body, plus some extra data that we
+  // add as if the user submitted it, for convenience of our own
+  // processing.
+  var rawFormData = _.clone(request.body);
+
+  var clientIp = getClientIpFromRequest(request);
+  rawFormData.ipAddress = clientIp;
+
+  // For easy consistency, and to avoid wasting space, turn
+  // e.g. "ab:cd" into "abcd".
+  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
+  rawFormData.pubkey = clientCertificateFingerprint.replace(/:/g, "");
+
+  return rawFormData;
+}
+
 function getClientIpFromRequest(request) {
   // The X-Real-IP header contains the client's IP address, and since
   // it's a non-standard header, the Meteor built-in proxy does not
@@ -51,20 +68,7 @@ doRegister = function(request, response) {
     return;
   }
 
-  // Before validating the form, we add an IP address field to it.
-  var clientIp = getClientIpFromRequest(request);
-
-  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
-
-  // The form data is the request body, plus some extra data that we
-  // add as if the user submitted it, for convenience of our own
-  // processing.
-  var rawFormData = _.clone(request.body);
-  rawFormData.ipAddress = clientIp;
-
-  // For easy consistency, and to avoid wasting space, turn
-  // e.g. "ab:cd" into "abcd".
-  rawFormData.pubkey = clientCertificateFingerprint.replace(/:/g, "");
+  var rawFormData = getFormDataFromRequest(request);
 
   var validatedFormData = Mesosphere.registerForm.validate(rawFormData);
   if (validatedFormData.errors) {
@@ -110,32 +114,36 @@ function createUserRegistration(formData) {
     userRegistration.ipAddress);
 }
 
-doUpdate = function(request, response) {
-  Meteor._debug("ZZZ");
-  console.log("PARTY TIME");
+function updateUserRegistration(formData) {
+  // To update a user registration, we mostly copy data from the form.
+  //
+  // We use the form's key fingerprint as the primary key to
+  // do the lookup, and then update whatever hostname is
+  // registered to the key fingerprint.
+  //
+  // Finally, we publish this to DNS.
+  UserRegistrations.update({
+    publicKeyId: formData.pubkey
+  }, {$set: {ipAddress: formData.ipAddress}});
 
+  var userRegistration = UserRegistrations.findOne({publicKeyId: formData.pubkey});
+
+  console.log("Update UserRegistration with these details: %s",
+              JSON.stringify(userRegistration));
+
+  publishOneUserRegistrationToDns(
+    mysqlQuery,
+    userRegistration.hostname,
+    userRegistration.ipAddress);
+}
+
+doUpdate = function(request, response) {
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
     return;
   }
 
-  // Before validating the form, we add an IP address field to it.
-  var clientIp = request.headers['x-forwarded-for'];
-
-  // The form data is the request body, plus some extra data that we
-  // add as if the user submitted it, for convenience of our own
-  // processing.
-  var rawFormData = _.clone(request.body);
-  rawFormData.ipAddress = clientIp;
-  console.log(request.connection.httpHeaders);
-  console.log(request.connection.headers);
-  console.log("PARTY TIME");
-
-  var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
-
-  // For easy consistency, and to avoid wasting space, turn
-  // e.g. "ab:cd" into "abcd".
-  rawFormData.pubkey = clientCertificateFingerprint.replace(/:/g, "");
+  var rawFormData = getFormDataFromRequest(request);
 
   var validatedFormData = Mesosphere.updateForm.validate(rawFormData);
   if (validatedFormData.errors) {
@@ -145,6 +153,7 @@ doUpdate = function(request, response) {
   }
 
   if (validatedFormData.formData.updateIsAuthorized) {
+    updateUserRegistration(validatedFormData.formData);
     return finishResponse(200, {'ok': 'lookin good'}, response);
   } else {
     return finishResponse(403, {'error': 'not authorized'}, response);

@@ -1,4 +1,5 @@
 import requests
+import netifaces
 import os
 import dns.resolver
 import StringIO
@@ -16,8 +17,31 @@ requests_log.setLevel(logging.DEBUG)
 requests_log.propagate = True
 
 
-def make_url(path):
-    BASE_URL = os.environ.get('BASE_URL', 'http://localhost:3000/')
+def make_url(path, external_ip=False, interface_cache={}):
+    BASE_URL = ''
+
+    if not interface_cache:
+        for ifacename in netifaces.interfaces():
+            try:
+                address = netifaces.ifaddresses(ifacename)[
+                    netifaces.AF_INET][0]['addr']
+            except:
+                # This interface has no IPv4 address.
+                continue
+            interface_cache[ifacename] = address
+
+    if external_ip:
+        # Find an interface not called lo. If there is no such interface, crash.
+        externals = [x for x in interface_cache.keys() if x != 'lo']
+        assert externals
+        external = externals[0]
+
+        BASE_URL = 'https://' + interface_cache[external] + ':443/'
+    else:
+        # Otherwise, we assume localhost and 127.0.0.1 and lo are all the same.
+        BASE_URL = 'https://127.0.0.1:443/'
+
+    # Make sure it got filled in, and has sane structure.
     assert BASE_URL.endswith('/')
     return BASE_URL + path
 
@@ -145,14 +169,9 @@ def register_asheesh3_x_forwarded_for():
 
 
 def update_asheesh_good():
-    # Provide the HTTP_FORWARDED_COUNT=1 environment variable to
-    # Meteor before running this test.
-    #
-    # FIXME: This doesn't pass, but for now, I'm not *that* worried.
     requests_kwargs = dict(
-        url=make_url('update'),
+        url=make_url('update', external_ip=True),
         data={'rawHostname': 'asheesh',
-              'email': 'asheesh@asheesh.org',
         },
         headers={
             'X-Sand': 'cats',
@@ -218,6 +237,21 @@ def reset_app_state():
     requests.get('http://localhost/', timeout=10)
 
 
+def wait_for_new_resolve_value(resolver, domain, rr_type, old_value):
+    SECONDS_TO_WAIT = 20
+
+    for i in range(SECONDS_TO_WAIT + 1):
+        dns_response = resolver.query(domain, rr_type)
+        # Yay, it didn't crash, so there is a response!
+        if str(dns_response.rrset) == old_value:
+            print '.',
+            time.sleep(1)
+
+    # Do one last query, and verify that it has some different value.
+    dns_response = resolver.query(domain, rr_type)
+    assert str(dns_response.rrset) != old_value, old_value
+
+
 def wait_for_nxdomain_cache_to_clear(resolver, domain, rr_type):
     SECONDS_TO_WAIT = 20
 
@@ -244,13 +278,22 @@ def assert_nxdomain(resolver, domain, rr_type):
     assert got_nxdomain
 
 
-def main():
-    # This main function runs our various manual test helpers, and
-    # checks that their return value is what we were hoping for.
+def test_register():
+    # This function runs our various manual test helpers, and checks
+    # that their return value is what we were hoping for.
     #
     # It assumes that when it started, the system is properly set up but
     # empty.
     resolver = get_resolver()
+
+    # NOTE: test_register() and friends use the default
+    # make_url(external_ip=False) behavior of submitting data over
+    # HTTPS to nginx on 127.0.0.1. Therefore, the resulting data it
+    # finds in DNS will always be 127.0.0.1
+    #
+    # test_update() sometimes uses make_url(external_ip=True), as a
+    # way to have a different IP address show up to nginx, and
+    # therefore for the update event to be meaningful.
 
     # Register asheesh dot our domain
     response = register_asheesh()
@@ -313,6 +356,23 @@ def main():
     dns_response = resolver.query('asheesh2.sandcatz.io', 'A')
     assert str(dns_response.rrset) == 'asheesh2.sandcatz.io. 60 IN A 127.0.0.1'
 
+def test_update():
+    # The update helpers should use make_url(external_ip=True); see
+    # remark in test_register() for more information.
+
+    # Get a resolver that will query 127.0.0.1.
+    resolver = get_resolver()
+
+    # Update the "asheesh" subdomain.
+    response = update_asheesh_good()
+    assert response.status_code == 200, response.content
+    # Make sure DNS is updated.
+    wait_for_new_resolve_value(resolver,
+                               'asheesh.sandcatz.io',
+                               'A',
+                               'asheesh.sandcatz.io. 60 IN A 127.0.0.1')
+
 
 if __name__ == '__main__':
-    main()
+    test_register()
+    test_update()
