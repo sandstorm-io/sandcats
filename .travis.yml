@@ -35,6 +35,6 @@ before_install:
   - sudo cp -a $PWD /vagrant
   - cd /vagrant/sandcats ; meteor run &
 install:
-  - sudo apt-get install python-requests python-dnspython
+  - sudo apt-get install -y python-requests python-dnspython
 script:
   - cd sandcats ; python trivial_tests.py
