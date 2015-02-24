@@ -35,6 +35,14 @@ function antiCsrf(request, response) {
   return requestEnded;
 }
 
+function getClientIpFromRequest(request) {
+  // The X-Real-IP header contains the client's IP address, and since
+  // it's a non-standard header, the Meteor built-in proxy does not
+  // mess with it. We assume nginx is going to give this to us.
+  var clientIp = request.headers['x-real-ip'] || "";
+  return clientIp || "";
+}
+
 doRegister = function(request, response) {
   console.log("PARTY TIME");
 
@@ -44,15 +52,9 @@ doRegister = function(request, response) {
   }
 
   // Before validating the form, we add an IP address field to it.
-  //
-  // The X-Forwarded-For header contains IP addresses in a
-  // comma-separated list, with the final one being the one that was
-  // most recently validated. For our purposes, let's use that.
-  var xffHeaderValues = (request.headers['x-forwarded-for'] || "").split(",");
-  var clientIp = xffHeaderValues[xffHeaderValues.length - 1];
+  var clientIp = getClientIpFromRequest(request);
 
   var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
-
 
   // The form data is the request body, plus some extra data that we
   // add as if the user submitted it, for convenience of our own
