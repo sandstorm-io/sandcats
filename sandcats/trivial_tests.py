@@ -196,8 +196,8 @@ def update_asheesh2_with_asheesh1_key():
 
 def update_asheesh2_caps_basically_good():
     requests_kwargs = dict(
-        url=make_url('update'),
-        data={'rawHostname': 'ASHEESH',
+        url=make_url('update', external_ip=True),
+        data={'rawHostname': 'ASHEESH2',
               'email': 'asheesh@asheesh.org',
         },
         headers={
@@ -206,7 +206,7 @@ def update_asheesh2_caps_basically_good():
             'X-Sand': 'cats',
         },
     )
-    add_key(1, requests_kwargs)
+    add_key(2, requests_kwargs)
     return requests.post(**requests_kwargs)
 
 
@@ -391,6 +391,16 @@ def test_update():
     assert response.status_code == 403, response.content
     # Make sure asheesh2 is still pointing at localhost. I guess we
     # need to wait for 20 seconds, which is pretty sad.
+
+    # Test that we can do an update of asheesh2 even though for some
+    # reason the client is giving us the rawHostname as all caps.
+    response = update_asheesh2_caps_basically_good()
+    assert response.status_code == 200, response.content
+    # Make sure DNS is updated.
+    wait_for_new_resolve_value(resolver,
+                               'asheesh2.sandcatz.io',
+                               'A',
+                               'asheesh2.sandcatz.io. 60 IN A 127.0.0.1')
 
 
 if __name__ == '__main__':
