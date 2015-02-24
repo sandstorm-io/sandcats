@@ -18,7 +18,7 @@ before_install:
   - sudo rm -f /etc/dpkg/dpkg.cfg.d/multiarch  # Remove historic multi-arch config.
   - echo -n | sudo dd of=/var/lib/dpkg/info/libc-bin.list  # Pretend nothing conflicts with this package's files.
   - sudo dpkg -r --force-depends --force-remove-essential locales libc6-dev
-  - sudo apt-get --fix-missing install
+  - sudo apt-get --fix-broken install
   # Make sure locales are in a healthy shape.
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
