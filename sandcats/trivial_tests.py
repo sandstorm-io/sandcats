@@ -389,8 +389,8 @@ def test_update():
     # being unauthorized.
     response = update_asheesh2_with_asheesh1_key()
     assert response.status_code == 403, response.content
-    # Make sure asheesh2 is still pointing at localhost. I guess we
-    # need to wait for 20 seconds, which is pretty sad.
+    # FIXME: Make sure asheesh2 is still pointing at localhost. I
+    # guess we need to wait for 20 seconds, which is pretty sad.
 
     # Test that we can do an update of asheesh2 even though for some
     # reason the client is giving us the rawHostname as all caps.
