@@ -24,7 +24,10 @@ before_install:
   - sudo /usr/sbin/locale-gen
   # Do the Sandcats installing.
   - make stage-provision
-  # Since systemd hasn't taken over the system yet, start our services manually. FIXME.
+  # Now, ask systemd to take over PID 1.
+  - echo | sudo gdb -p 1 --eval-command='call execl(strdup("/lib/systemd/systemd"), strdup("systemd"), 0, 0)'
+  - sleep 10
+  - sudo tail -n 200 /var/log/syslog
 install:
   - sudo apt-get install python-requests
 script:
