@@ -20,7 +20,6 @@ before_install:
   # Make sure locales are in a healthy shape.
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
-  # Create a Vagrant user, to simulate what Vagrant does.
   # Do the Sandcats installing.
   - make stage-provision
 install:
