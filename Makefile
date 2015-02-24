@@ -12,7 +12,7 @@ stage-dev-setup: /usr/local/bin/meteor /usr/share/doc/mysql-server /usr/share/do
 # If used for production, the following customizations will be needed:
 #
 # - Replace its HTTPS keys with non-snakeoil.
-stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-install-service stage-nginx-setup
+stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-pdns-setup stage-install-service stage-nginx-setup
 
 stage-install-service: /etc/systemd/multi-user.target.wants.sandcat.service
 
@@ -29,6 +29,28 @@ stage-mysql-setup: /usr/share/doc/mysql-server
 	# not already been already run.
 	echo 'show tables like "domains"' | mysql -uroot sandcats_pdns | grep -q . || mysql -uroot sandcats_pdns < /usr/share/doc/pdns-backend-mysql/schema.mysql.sql
 	echo "GRANT ALL on sandcats_pdns.* TO 'sandcats_pdns'@'localhost' IDENTIFIED BY '3Rb4k4BQqKr59Ewj';" | mysql -uroot
+
+stage-pdns-setup: /etc/powerdns/pdns.d/pdns.sandcats.conf
+	# Now that we know our conf file has been slotted into place,
+	# we can remove the other conf files we don't need.
+	#
+	# Debian bundles & generates some "local" files; the sandcats
+	# file is all we need, so make sure those are gone.
+	sudo rm -f /etc/powerdns/pdns.d/pdns.local.*
+
+	# We also install our own, simplistic master top-level conf
+	# file.
+	sudo cp conf/pdns.conf /etc/powerdns/pdns.conf
+	sudo chown root.root /etc/powerdns/pdns.conf
+	sudo chmod 0600 /etc/powerdns/pdns.conf
+
+	# Reload PowerDNS configuration to make sure our changes are picked up.
+	sudo service pdns restart
+
+/etc/powerdns/pdns.d/pdns.sandcats.conf:
+	sudo cp conf/pdns.sandcats.conf /etc/powerdns/pdns.d/pdns.sandcats.conf
+	sudo chown root.root /etc/powerdns/pdns.d/pdns.sandcats.conf
+	sudo chmod 0600 /etc/powerdns/pdns.d/pdns.sandcats.conf
 
 stage-nginx-setup: stage-nginx-install stage-nginx-configure
 
