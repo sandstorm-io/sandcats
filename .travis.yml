@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get update
   - sudo dpkg -r --force-depends locales
   - sudo apt-get -y install libc6
-  - sudo make
+  - make
 install:
   - "pip install requests"
 script:
