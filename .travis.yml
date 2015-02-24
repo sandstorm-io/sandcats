@@ -19,12 +19,12 @@ before_install:
   - echo -n | sudo dd of=/var/lib/dpkg/info/libc-bin.list  # Pretend nothing conflicts with this package's files.
   - sudo dpkg -r --force-depends --force-remove-essential locales libc6-dev
   - sudo apt-get --fix-broken install
-  # Remove udev, and let us get the Debian version.
-  - sudo dpkg --purge --force-depends udev
-  - sudo apt-get --fix-broken install
   # Make sure locales are in a healthy shape.
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
+  # Remove udev, and let us get the Debian version.
+  - sudo dpkg --purge --force-depends udev
+  - sudo apt-get --fix-broken install
   # Do the Sandcats installing.
   - make stage-provision
   # Now, ask systemd to take over PID 1.
