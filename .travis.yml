@@ -1,0 +1,18 @@
+language: python
+python:
+  - "2.7"
+# command to install dependencies
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install debian-keyring
+  - sudo rm /etc/apt/sources.list
+  - echo 'deb http://http.debian.net/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
+  - echo 'deb http://http.debian.net/debian/ wheezy main' | sudo dd of=/etc/apt/sources.list
+  - sudo apt-get update
+  - sudo apt-get -y install debian-keyring
+  - sudo apt-get update
+  - sudo make
+install:
+  - "pip install requests"
+script:
+  - cd sandcats ; python trivial_tests.py
