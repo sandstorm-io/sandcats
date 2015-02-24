@@ -37,4 +37,4 @@ before_install:
 install:
   - sudo apt-get install -y python-requests python-dnspython
 script:
-  - python trivial_tests.py
+  - BASE_URL=https://localhost:443/ python trivial_tests.py
