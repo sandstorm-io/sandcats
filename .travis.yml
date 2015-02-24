@@ -29,6 +29,7 @@ before_install:
   - sudo update-rc.d udev-finish disable
   - sudo ln -sf /bin/true /etc/init.d/udev
   - sudo ln -sf /bin/true /etc/init.d/udev-finish
+  - sudo ln -sf /bin/true /var/lib/dpkg/info/udev.postinst
   - sudo dpkg --configure -a
   # Do the Sandcats installing.
   - make stage-provision
