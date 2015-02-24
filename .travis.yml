@@ -30,6 +30,11 @@ before_install:
   - sudo dpkg --configure -a
   # Do the Sandcats installing.
   - make stage-provision
+  # Hackishly start the Meteor app. The Travis-CI image has no systemd, so we rely on this
+  # for now.
+  - sudo cp -a $PWD /vagrant
+  - cd /vagrant
+  - meteor run &
 install:
   - sudo apt-get install python-requests
 script:
