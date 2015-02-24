@@ -25,8 +25,6 @@ before_install:
   # Remove udev, and let us get the Debian version.
   - sudo dpkg --purge --force-depends --force-remove-essential udev initramfs-tools plymouth mountall upstart ureadahead
   - sudo apt-get --fix-broken install || echo "Fixing..."
-  - sudo update-rc.d udev disable
-  - sudo update-rc.d udev-finish disable
   - sudo ln -sf /bin/true /var/lib/dpkg/info/udev.postinst
   - sudo dpkg --configure -a
   # Do the Sandcats installing.
