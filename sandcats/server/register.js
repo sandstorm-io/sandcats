@@ -26,7 +26,12 @@ doRegister = function(request, response) {
   }
 
   // Before validating the form, we add an IP address field to it.
-  var clientIp = request.headers['x-forwarded-for'] || "";
+  //
+  // The X-Forwarded-For header contains IP addresses in a
+  // comma-separated list, with the final one being the one that was
+  // most recently validated. For our purposes, let's use that.
+  var xffHeaderValues = (request.headers['x-forwarded-for'] || "").split(",");
+  var clientIp = xffHeaderValues[xffHeaderValues.length - 1];
 
   var clientCertificateFingerprint = request.headers['x-client-certificate-fingerprint'] || "";
 
