@@ -6,7 +6,7 @@ before_install:
   # Remove some packages that actively depend on locales working properly.
   - sudo apt-get remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4
   # Remove some packages that we get from Debian anyway.
-  - sudo apt-get remove --purge -y mongodb-10gen plymouth
+  - sudo apt-get remove --force-yes --purge -y mongodb-10gen plymouth mountall
   # Tell dpkg it is OK to choose the new config files, without prompting.
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   # Trans-grade to Debian.
