@@ -45,6 +45,7 @@ def add_key(n, requests_kwargs):
     HARDCODED_FINGERPRINTS[3] = '03:16:48:8E:4C:1F:88:3A:AE:99:38:26:4C:93:E0:3E:9F:B7:74:13'
     requests_kwargs['headers']['X-Client-Certificate-Fingerprint'] = HARDCODED_FINGERPRINTS[n]
 
+
 def _add_real_client_cert(n, requests_kwargs):
     '''See add_key() docs.'''
     print 'yay'
@@ -66,6 +67,7 @@ def register_asheesh():
     add_key(1, requests_kwargs)
     return requests.post(**requests_kwargs)
 
+
 def register_asheesh2_missing_fingerprint():
     requests_kwargs = dict(
         url=make_url('register'),
@@ -77,6 +79,7 @@ def register_asheesh2_missing_fingerprint():
     )
     add_key(None, requests_kwargs)
     return requests.post(**requests_kwargs)
+
 
 def register_asheesh3_x_forwarded_for():
     # Provide the HTTP_FORWARDED_COUNT=1 environment variable to
@@ -113,6 +116,7 @@ def update_asheesh_good():
     add_key(1, requests_kwargs)
     return requests.post(**requests_kwargs)
 
+
 def update_asheesh_caps_basically_good():
     requests_kwargs = dict(
         url=make_url('update'),
@@ -126,6 +130,7 @@ def update_asheesh_caps_basically_good():
     )
     add_key(1, requests_kwargs)
     return requests.post(**requests_kwargs)
+
 
 def update_asheesh3_unauthorized():
     requests_kwargs = dict(
