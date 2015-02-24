@@ -181,7 +181,20 @@ def update_asheesh_good():
     return requests.post(**requests_kwargs)
 
 
-def update_asheesh_caps_basically_good():
+def update_asheesh2_with_asheesh1_key():
+    requests_kwargs = dict(
+        url=make_url('update', external_ip=True),
+        data={'rawHostname': 'asheesh2',
+        },
+        headers={
+            'X-Sand': 'cats',
+        },
+    )
+    add_key(1, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
+
+def update_asheesh2_caps_basically_good():
     requests_kwargs = dict(
         url=make_url('update'),
         data={'rawHostname': 'ASHEESH',
@@ -371,6 +384,13 @@ def test_update():
                                'asheesh.sandcatz.io',
                                'A',
                                'asheesh.sandcatz.io. 60 IN A 127.0.0.1')
+
+    # Use key 1 to update "asheesh2", which should be rejected due to
+    # being unauthorized.
+    response = update_asheesh2_with_asheesh1_key()
+    assert response.status_code == 403, response.content
+    # Make sure asheesh2 is still pointing at localhost. I guess we
+    # need to wait for 20 seconds, which is pretty sad.
 
 
 if __name__ == '__main__':
