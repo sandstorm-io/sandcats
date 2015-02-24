@@ -4,7 +4,7 @@ python:
 # command to install dependencies
 before_install:
   # Remove some packages that we get from Debian anyway.
-  - sudo apt-get remove --purge -y mongodb-10gen
+  - sudo apt-get remove --purge -y mongodb-10gen mysql-client-core-5.5
   # Remove some packages that actively depend on locales working properly.
   - sudo apt-get remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4
   # Tell dpkg it is OK to choose the new config files, without prompting.
