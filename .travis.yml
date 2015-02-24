@@ -6,7 +6,7 @@ before_install:
   # Remove some packages that actively depend on locales working properly.
   - sudo apt-get remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4
   # Remove some packages that we get from Debian anyway.
-  - sudo apt-get remove --purge -y mongodb-10gen
+  - sudo apt-get remove --purge -y mongodb-10gen plymouth
   # Tell dpkg it is OK to choose the new config files, without prompting.
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   # Trans-grade to Debian.
@@ -23,7 +23,7 @@ before_install:
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
   # Remove udev, and let us get the Debian version.
-  - sudo dpkg --purge --force-depends udev initramfs-tools plymouth
+  - sudo dpkg --purge --force-depends udev initramfs-tools
   - sudo apt-get --fix-broken install || echo "Fixing..."
   - sudo update-rc.d udev disable
   - sudo update-rc.d udev-finish disable
