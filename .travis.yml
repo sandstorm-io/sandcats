@@ -36,6 +36,6 @@ before_install:
   - cd /vagrant
   - meteor run &
 install:
-  - sudo apt-get install python-requests
+  - sudo apt-get install python-requests python-dnspython
 script:
   - cd sandcats ; python trivial_tests.py
