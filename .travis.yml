@@ -37,4 +37,4 @@ before_install:
 install:
   - sudo apt-get install -y python-requests python-dnspython
 script:
-  - cd sandcats ; python trivial_tests.py
+  - python trivial_tests.py
