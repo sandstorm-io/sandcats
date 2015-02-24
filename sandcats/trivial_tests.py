@@ -137,6 +137,7 @@ def register_asheesh3_x_forwarded_for():
         headers={
             'X-Sand': 'cats',
             'X-Forwarded-For': '128.151.2.1',
+            'X-Real-IP': '128.151.2.1',
         },
     )
     add_key(3, requests_kwargs)
@@ -169,6 +170,7 @@ def update_asheesh_caps_basically_good():
         },
         headers={
             'X-Forwarded-For': '128.151.2.1',
+            'X-Real-IP': '128.151.2.1',
             'X-Sand': 'cats',
         },
     )
@@ -184,6 +186,7 @@ def update_asheesh3_unauthorized():
         },
         headers={
             'X-Forwarded-For': '128.151.2.1',
+            'X-Real-IP': '128.151.2.1',
             'X-Sand': 'cats',
         },
     )
