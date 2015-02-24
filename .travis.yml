@@ -5,7 +5,7 @@ python:
 before_install:
   - sudo rm /etc/apt/sources.list
   - echo 'deb http://http.debian.net/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
-  - echo 'Apt::Get:::AllowUnauthenticated "true";' | sudo dd of=/etc/apt/apt.conf.d/99unauth
+  - echo 'APT::Get:::AllowUnauthenticated "true";' | sudo dd of=/etc/apt/apt.conf.d/99unauth
   - sudo apt-get update
   - sudo make
 install:
