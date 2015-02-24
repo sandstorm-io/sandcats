@@ -5,7 +5,7 @@ WorkingDirectory=/vagrant/sandcats
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=sandcats-meteor
-ExecStart=/usr/local/bin/meteor run --settings dev-settings.json
+ExecStart=/usr/local/bin/meteor run --settings /etc/sandcats-meteor-settings.json
 
 [Install]
 WantedBy=multi-user.target
