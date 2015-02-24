@@ -25,7 +25,7 @@ function antiCsrf(request, response) {
   // custom HTTP header.
   var requestEnded = false;
   if (request.method != 'POST') {
-    finishResponse(400, {'error': 'Must POST.'}, response);
+    finishResponse(403, {'error_text': 'Must POST.'}, response);
     requestEnded = true;
   }
   if (request.headers['x-sand'] != 'cats') {

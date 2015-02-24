@@ -84,6 +84,20 @@ def register_asheesh2_missing_fingerprint():
     add_key(None, requests_kwargs)
     return requests.post(**requests_kwargs)
 
+
+def register_asheesh2_wrong_http_method():
+    requests_kwargs = dict(
+        url=make_url('register'),
+        data={
+            'rawHostname': 'asheesh2',
+            'email': 'asheesh@asheesh.org',
+        },
+        headers={'X-Sand': 'cats'},
+    )
+    add_key(2, requests_kwargs)
+    return requests.get(**requests_kwargs)
+
+
 def register_asheesh2_missing_sand_cats_header():
     requests_kwargs = dict(
         url=make_url('register'),
@@ -216,6 +230,16 @@ def main():
         parsed_content['error_text'] ==
         'Your client is misconfigured. You need to provide a client certificate.')
 
+    # Attempt to do a GET to /register. Get rejected since /register always
+    # wants a POST.
+    response = register_asheesh2_wrong_http_method()
+    assert response.status_code == 403, response.content
+    parsed_content = response.json()
+    assert (
+        parsed_content['error_text'] ==
+        'Must POST.')
+
+
     # Attempt to do a POST without the X-Sand: cats header; refuse to
     # process the request.  This is an anti-cross-site-request forgery
     # tactic, since browsers won't easily be tricked into sending a
@@ -236,8 +260,6 @@ def main():
 
     dns_response = resolver.query('asheesh3.sandcatz.io', 'A')
     assert str(dns_response.rrset) == 'asheesh3.sandcatz.io. 60 IN A 127.0.0.1'
-
-
 
 
 if __name__ == '__main__':
