@@ -49,9 +49,8 @@ def _add_real_client_cert(n, requests_kwargs):
     '''See add_key() docs.'''
     print 'yay'
     requests_kwargs['verify'] = False  # Sad but useful for local testing.
-    requests_kwargs['cert'] = ('test-data/output', 'test-data/output')
-    #client-cert-%d.crt' % (n,),
-    #                           'test-data/client-cert-%d.key' % (n,))
+    requests_kwargs['cert'] = ('test-data/client-cert-%d.crt' % (n,),
+                               'test-data/client-cert-%d.key' % (n,))
 
 def register_asheesh():
     requests_kwargs = dict(
