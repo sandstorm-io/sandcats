@@ -35,6 +35,6 @@ before_install:
   - sudo cp -a $PWD /vagrant
   - cd /vagrant/sandcats ; meteor run --settings /etc/sandcats-meteor-settings.json &
 install:
-  - sudo apt-get install -y python-requests python-dnspython
+  - sudo apt-get install -y python-requests python-dnspython python-netifaces
 script:
   - BASE_URL=https://localhost:443/ python trivial_tests.py
