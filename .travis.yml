@@ -24,7 +24,10 @@ before_install:
   - sudo /usr/sbin/locale-gen
   # Remove udev, and let us get the Debian version.
   - sudo dpkg --purge --force-depends udev initramfs-tools
-  - sudo apt-get --fix-broken install
+  - sudo apt-get --fix-broken install || echo "Fixing..."
+  - sudo update-rc.d udev disable
+  - sudo update-rc.d udev-finish disable
+  - sudo dpkg --configure -a
   # Do the Sandcats installing.
   - make stage-provision
   # Now, ask systemd to take over PID 1.
