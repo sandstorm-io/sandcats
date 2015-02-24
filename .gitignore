@@ -1,6 +1,7 @@
 # Ignore backup files.
 *~
 .#*
+\#*
 
 # Ignore files that meteor/npm have downloaded.
 sandcats/packages/
