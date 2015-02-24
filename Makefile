@@ -16,7 +16,7 @@ stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-ins
 
 stage-install-service: /etc/systemd/multi-user.target.wants.sandcat.service
 
-stage-mongodb-setup: /usr/share/doc/mongodb-server
+stage-mongodb-setup: /usr/share/doc/mongodb-server /etc/sandcats-meteor-settings.json
 	echo 'export MONGO_URL=mongodb://localhost/mongo_sandcats' >> $$HOME/.bash_profile
 
 	# Make sure our MongoDB configuration file is the active one.
@@ -48,7 +48,7 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	sudo service nginx restart
 
 /etc/sandcats-meteor-settings.json: conf/sample-meteor-settings.json
-	sudo cp $<$(@F) $@
+	sudo cp conf/sample-meteor-settings.json /etc/sandcats-meteor-settings.json
 
 /etc/systemd/system/sandcats.service: /usr/share/doc/systemd-sysv conf/$(@F)
 	# $(@F) refers to sandcats.service.
