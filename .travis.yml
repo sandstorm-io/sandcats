@@ -24,8 +24,10 @@ before_install:
   - sudo /usr/sbin/locale-gen
   # Remove udev, and let us get the Debian version.
   - sudo dpkg --purge --force-depends --force-remove-essential udev initramfs-tools plymouth mountall upstart ureadahead
-  - sudo apt-get --fix-broken install || echo "Fixing..."
+  - sudo apt-get --fix-broken install || echo "Working around..."
   - sudo ln -sf /bin/true /var/lib/dpkg/info/udev.postinst
+  - sudo ln -sf /bin/true /var/lib/dpkg/info/initramfs-tools.postinst
+  - sudo ln -sf /bin/true /var/lib/dpkg/info/plymouth.postinst
   - sudo dpkg --configure -a
   # Do the Sandcats installing.
   - make stage-provision
