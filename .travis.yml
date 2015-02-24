@@ -20,7 +20,7 @@ before_install:
   - sudo /usr/sbin/locale-gen
   # Create a Vagrant user, to simulate what Vagrant does.
   # Do the Sandcats installing.
-  - make
+  - make stage-provision
 install:
   - "pip install requests"
 script:
