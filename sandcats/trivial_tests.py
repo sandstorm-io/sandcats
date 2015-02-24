@@ -85,6 +85,19 @@ def register_asheesh2_missing_fingerprint():
     return requests.post(**requests_kwargs)
 
 
+def register_asheesh2_successfully():
+    requests_kwargs = dict(
+        url=make_url('register'),
+        data={
+            'rawHostname': 'asheesh2',
+            'email': 'asheesh@asheesh.org',
+        },
+        headers={'X-Sand': 'cats'},
+    )
+    add_key(2, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
+
 def register_asheesh2_wrong_http_method():
     requests_kwargs = dict(
         url=make_url('register'),
@@ -195,10 +208,27 @@ def reset_app_state():
     os.system('''cd .. ; make stage-mysql-setup''')
     os.system('''printf '\n\nUserRegistrations.remove({}); \n\n .exit \n ' | script  -c 'meteor shell' /dev/stdin''')
     os.system('sudo service sandcats restart')
+    os.system('sudo service pdns restart')
     time.sleep(1)  # Make sure the restart gets a chance to start, to avoid HTTP 502.
     os.system('sudo service nginx restart')
     # Attempt to get the homepage, which will mean that Meteor is back, waiting at most 10 seconds.
     requests.get('http://localhost/', timeout=10)
+
+
+def wait_for_nxdomain_cache_to_clear(resolver, domain, rr_type):
+    SECONDS_TO_WAIT = 20
+
+    for i in range(SECONDS_TO_WAIT + 1):
+        try:
+            resolver.query(domain, rr_type)
+            # If we get this far, hooray, we are done waiting.
+            return
+        except dns.resolver.NXDOMAIN:
+            # Wait a sec, and let's retry.
+            print '.',
+            time.sleep(1)
+
+    raise RuntimeError, "We waited a while but the NXDOMAIN did not go away."
 
 
 def assert_nxdomain(resolver, domain, rr_type):
@@ -272,6 +302,13 @@ def main():
 
     dns_response = resolver.query('asheesh3.sandcatz.io', 'A')
     assert str(dns_response.rrset) == 'asheesh3.sandcatz.io. 60 IN A 127.0.0.1'
+
+    # Finally, register asheesh2 successfully.
+    response = register_asheesh2_successfully()
+    assert response.status_code == 200, response.content
+    wait_for_nxdomain_cache_to_clear(resolver, 'asheesh2.sandcatz.io', 'A')
+    dns_response = resolver.query('asheesh2.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'asheesh2.sandcatz.io. 60 IN A 127.0.0.1'
 
 
 if __name__ == '__main__':

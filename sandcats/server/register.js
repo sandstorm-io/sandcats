@@ -32,6 +32,7 @@ function antiCsrf(request, response) {
     finishResponse(403, {'error_text': 'Your client is misconfigured. You need X-Sand: cats'}, response);
     requestEnded = true;
   }
+  return requestEnded;
 }
 
 doRegister = function(request, response) {
