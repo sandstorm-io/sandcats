@@ -23,11 +23,6 @@ stage-mongodb-setup: /usr/share/doc/mongodb-server
 	sudo cp conf/mongodb.conf /etc/
 	sudo service mongodb restart
 
-	# Make sure the necessary users are created.
-	printf 'use admin;\n db.addUser({user: "superuser", pwd: "neRQ5iTKpsJp9JTF", roles: ["root"]}); \n' | mongo --port 27017 --authenticationDatabase admin
-
-	# Now ??? enable authorization ???
-
 stage-mysql-setup: /usr/share/doc/mysql-server
 	echo 'create database if not exists sandcats_pdns;' | mysql -uroot
 	# The following is a fancy way to only run the SQL queries if they have
@@ -51,6 +46,9 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	sudo cp $<$(@F) $@
 	sudo chmod 0644 $@
 	sudo service nginx restart
+
+/etc/sandcats-meteor-settings.json: conf/sample-meteor-settings.json
+	sudo cp $<$(@F) $@
 
 /etc/systemd/system/sandcats.service: /usr/share/doc/systemd-sysv conf/$(@F)
 	# $(@F) refers to sandcats.service.

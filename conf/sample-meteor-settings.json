@@ -1,0 +1,8 @@
+{"NS1_HOSTNAME": "ns1.sandcatz.io",
+ "NS2_HOSTNAME": "ns2.sandcatz.io",
+ "BASE_DOMAIN": "sandcatz.io",
+ "POWERDNS_USER": "sandcats_pdns",
+ "POWERDNS_DB": "sandcats_pdns",
+ "POWERDNS_PASSWORD": "3Rb4k4BQqKr59Ewj",
+ "UDP_PING_PORT": 8080
+}
