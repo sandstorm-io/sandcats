@@ -3,6 +3,23 @@ function finishResponse(status, jsonData, response) {
   response.end(JSON.stringify(jsonData));
 }
 
+function responseFromFormFailure(validatedFormData) {
+  var response = {error: validatedFormData.errors};
+
+  // This is a convenience for helping me, in the future, display
+  // error messages as I integrate Sandcats support into the Sandstorm
+  // installer.
+  if (validatedFormData.errors &&
+      validatedFormData.errors.pubkey &&
+      validatedFormData.errors.pubkey.required) {
+    response['error_text'] = (
+      'Your client is misconfigured. You need to provide a client certificate.');
+  }
+
+  return response;
+}
+
+
 function antiCsrf(request, response) {
   // Two mini anti-cross-site request forgery checks: POST and a
   // custom HTTP header.
@@ -12,7 +29,7 @@ function antiCsrf(request, response) {
     requestEnded = true;
   }
   if (request.headers['x-sand'] != 'cats') {
-    finishResponse(403, {'error': 'Must have x-sand: cats header.'}, response);
+    finishResponse(403, {'error_text': 'Your client is misconfigured. You need X-Sand: cats'}, response);
     requestEnded = true;
   }
 }
@@ -48,7 +65,9 @@ doRegister = function(request, response) {
 
   var validatedFormData = Mesosphere.registerForm.validate(rawFormData);
   if (validatedFormData.errors) {
-    return finishResponse(400, {'error': validatedFormData.errors}, response);
+    return finishResponse(400,
+                          responseFromFormFailure(validatedFormData),
+                          response);
   }
 
   // Great! It passed all our validation, including the
@@ -117,7 +136,9 @@ doUpdate = function(request, response) {
 
   var validatedFormData = Mesosphere.updateForm.validate(rawFormData);
   if (validatedFormData.errors) {
-    return finishResponse(400, {'error': validatedFormData.errors}, response);
+    return finishResponse(400,
+                          responseFromFormFailure(validatedFormData),
+                          response);
   }
 
   if (validatedFormData.formData.updateIsAuthorized) {
