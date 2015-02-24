@@ -1,6 +1,5 @@
-language: python
-python:
-  - "2.7"
+# Use C as a dummy language.
+language: c
 # command to install dependencies
 before_install:
   # Remove some packages that we get from Debian anyway.
