@@ -27,6 +27,8 @@ before_install:
   - sudo apt-get --fix-broken install || echo "Fixing..."
   - sudo update-rc.d udev disable
   - sudo update-rc.d udev-finish disable
+  - sudo ln -sf /bin/true /etc/init.d/udev
+  - sudo ln -sf /bin/true /etc/init.d/udev-finish
   - sudo dpkg --configure -a
   # Do the Sandcats installing.
   - make stage-provision
