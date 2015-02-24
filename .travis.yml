@@ -8,8 +8,8 @@ before_install:
   - sudo apt-get update
   - sudo apt-get --force-yes -y install debian-archive-keyring
   - sudo apt-get update
-  - sudo dpkg -r --force-depends locales
-  - sudo apt-get -y install libc6
+  - sudo dpkg -r --force-depends locales libc6-dev
+  - sudo apt-get -f install
   - make
 install:
   - "pip install requests"
