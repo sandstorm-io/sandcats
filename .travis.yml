@@ -30,11 +30,6 @@ before_install:
   - sudo dpkg --configure -a
   # Do the Sandcats installing.
   - make stage-provision
-  # Now, ask systemd to take over PID 1.
-  - sudo apt-get install -y gdb
-  - echo | sudo gdb -p 1 --eval-command='call execl(strdup("/lib/systemd/systemd"), strdup("systemd"), 0, 0)'
-  - sleep 10
-  - sudo tail -n 200 /var/log/syslog
 install:
   - sudo apt-get install python-requests
 script:
