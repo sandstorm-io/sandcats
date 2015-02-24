@@ -32,5 +32,5 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Use a shell script that contains steps required to initialize a
   # sandcats server.
-  config.vm.provision "shell", inline: "cd /vagrant && sudo apt-get update && make stage-provision"
+  config.vm.provision "shell", inline: "cd /vagrant && sudo apt-get update && sudo -u vagrant make stage-provision"
 end
