@@ -47,7 +47,7 @@ var settingsSchema = new SimpleSchema({
   // therefore optional here.
   ROOT_URL: {
     type: String,
-    required: false
+    optional: true
   }
 });
 
