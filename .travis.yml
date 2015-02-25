@@ -34,7 +34,5 @@ before_install:
   # for now.
   - sudo cp -a $PWD /vagrant
   - cd /vagrant/sandcats ; meteor run --settings /etc/sandcats-meteor-settings.json &
-install:
-  - sudo apt-get install -y python-requests python-dnspython python-netifaces
 script:
-  - python integration_tests.py
+  - make action-run-tests

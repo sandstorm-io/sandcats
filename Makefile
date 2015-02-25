@@ -14,6 +14,50 @@ stage-dev-setup: /usr/local/bin/meteor /usr/share/doc/mysql-server /usr/share/do
 # - Replace its HTTPS keys with non-snakeoil.
 stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-pdns-setup stage-install-service stage-nginx-setup
 
+# action-deploy-app is an extra phony target -- every time you 'make
+# action-deploy-app', it creates a new build, drops it in
+# /srv/sandcats, twiddles a symlink to point at it, and then reloads
+# the service.
+action-deploy-app: action-update-source
+	sudo systemctl restart sandcats.service
+
+action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces
+	cd sandcats && python integration_tests.py
+
+/srv/sandcats/source: /usr/share/doc/git
+	sudo mkdir -p /srv/sandcats/source
+	sudo chown -R vagrant /srv/sandcats/source
+	sudo -u vagrant git clone https://github.com/sandstorm-io/sandcats.git /srv/sandcats/source
+
+/opt/node-v0.10.33-linux-x64:
+	$(eval TMPDIR := $(shell mktemp -d /tmp/nodejs.XXXXXXX))
+	# Download the tarball, and check it against a SHA that we verified earlier.
+	cd $(TMPDIR) && wget https://nodejs.org/dist/v0.10.33/node-v0.10.33-linux-x64.tar.gz
+	cd $(TMPDIR) && sha256sum node-v0.10.33-linux-x64.tar.gz | grep 159e5485d0fb5c913201baae49f68fd428a7e3b08262e9bf5003c1b399705ca8
+	cd $(TMPDIR) && tar zxvf node-v0.10.33-linux-x64.tar.gz
+	cd $(TMPDIR) && sudo mv node-v0.10.33-linux-x64 /opt
+
+/usr/local/bin/npm: /opt/node-v0.10.33-linux-x64
+	sudo ln -sf /opt/node-v0.10.33-linux-x64/bin/npm /usr/local/bin/npm
+
+/usr/local/bin/node:
+	sudo ln -sf /opt/node-v0.10.33-linux-x64/bin/node /usr/local/bin/node
+
+action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/source
+	# Get latest code.
+	cd /srv/sandcats/source && sudo -u vagrant git pull --rebase
+	# Create a human-friendly timestamp for this build.
+	$(eval BUILDNAME := $(shell date -I).$(shell GIT_DIR=/srv/sandcats/source/.git git rev-parse HEAD).$(shell date +%s))
+	sudo mkdir /srv/sandcats/$(BUILDNAME)  # fail if this already exists
+	sudo mkdir /srv/sandcats/$(BUILDNAME)/build
+	sudo chown vagrant -R /srv/sandcats/$(BUILDNAME)
+	cd /srv/sandcats/source/sandcats && sudo -u vagrant meteor build /srv/sandcats/$(BUILDNAME)/build
+	cd /srv/sandcats/$(BUILDNAME) && sudo -u vagrant tar zxvf build/sandcats.tar.gz
+	cd /srv/sandcats/$(BUILDNAME)/bundle && (cd programs/server && sudo -u vagrant npm install)
+	# Now, declare this is the current build, and restart the service.
+	cd /srv/sandcats && sudo rm -f current && sudo ln -sf $(BUILDNAME) current
+	sudo systemctl restart sandcats.service
+
 stage-install-service: /etc/systemd/multi-user.target.wants.sandcat.service
 
 stage-mongodb-setup: /usr/share/doc/mongodb-server /etc/sandcats-meteor-settings.json
