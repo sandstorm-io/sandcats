@@ -245,7 +245,7 @@ def reset_app_state():
     # - Restart the sandcats service, if it is enabled.
     os.system('''echo 'drop database if exists sandcats_pdns;' | mysql -uroot''')
     os.system('''cd .. ; make stage-mysql-setup''')
-    os.system('''printf '\n\nUserRegistrations.remove({}); \n\n .exit \n ' | script  -c 'meteor shell' /dev/stdin''')
+    os.system('''printf '\n\ndb.userRegistrations.remove({}); \n\nexit \n ' | mongo sandcats_mongo''')
     os.system('sudo service sandcats restart')
     os.system('sudo service pdns restart')
     time.sleep(1)  # Make sure the restart gets a chance to start, to avoid HTTP 502.
