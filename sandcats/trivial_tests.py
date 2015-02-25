@@ -4,6 +4,7 @@ import os
 import dns.resolver
 import StringIO
 import time
+import socket
 
 
 import logging
@@ -409,20 +410,35 @@ def test_update():
     # by a UDP packet on 127.0.0.1 for the "asheesh" hostname, since
     # it has been moved to the other IP address.
     #
-    # To do that, we create a simple Python UDP client that binds to a
-    # port on 127.0.0.1, sends a message to the sandcats daemon, and
+    # To do that, we create a simple Python UDP client that makes a socket
+    # to 127.0.0.1, sends a message to the sandcats daemon, and
     # checks that it gets a response within one second.
     UDP_DEST_IP = '127.0.0.1'
     UDP_DEST_PORT = 8080
-    MESSAGE = 'asheesh 012356789abcdef'
+    message = 'asheesh 0123456789abcdef'
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        client.sendto(MESSAGE, (UDP_DEST_IP, UDP_DEST_PORT))
+        client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
         client.settimeout(1)
-        data, _ = client.recv(1024)
+        data = client.recv(1024)
         assert data == '0123456789abcdef'
     except socket.timeout:
         assert False, "Hit timeout without a reply. How sad."
+        client.close()
+
+    # Now, make sure that asheesh3 would not be surprised by messages
+    # from localhost.
+    message = 'asheesh3 0123456789abcdef'
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
+        client.settimeout(1)
+        client.recv(1024)
+        assert False, "We were hoping for no response."
+    except socket.timeout:
+        # Hooray! No response.
+        print "."
+    finally:
         client.close()
 
 
