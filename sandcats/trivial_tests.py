@@ -4,6 +4,7 @@ import os
 import dns.resolver
 import StringIO
 import time
+import socket
 
 
 import logging
@@ -16,10 +17,13 @@ requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.DEBUG)
 requests_log.propagate = True
 
+interface_cache = {}
 
-def make_url(path, external_ip=False, interface_cache={}):
+
+def make_url(path, external_ip=False):
     BASE_URL = ''
 
+    global interface_cache
     if not interface_cache:
         for ifacename in netifaces.interfaces():
             try:
@@ -181,10 +185,23 @@ def update_asheesh_good():
     return requests.post(**requests_kwargs)
 
 
-def update_asheesh_caps_basically_good():
+def update_asheesh2_with_asheesh1_key():
     requests_kwargs = dict(
-        url=make_url('update'),
-        data={'rawHostname': 'ASHEESH',
+        url=make_url('update', external_ip=True),
+        data={'rawHostname': 'asheesh2',
+        },
+        headers={
+            'X-Sand': 'cats',
+        },
+    )
+    add_key(1, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
+
+def update_asheesh2_caps_basically_good():
+    requests_kwargs = dict(
+        url=make_url('update', external_ip=True),
+        data={'rawHostname': 'ASHEESH2',
               'email': 'asheesh@asheesh.org',
         },
         headers={
@@ -193,7 +210,7 @@ def update_asheesh_caps_basically_good():
             'X-Sand': 'cats',
         },
     )
-    add_key(1, requests_kwargs)
+    add_key(2, requests_kwargs)
     return requests.post(**requests_kwargs)
 
 
@@ -371,6 +388,58 @@ def test_update():
                                'asheesh.sandcatz.io',
                                'A',
                                'asheesh.sandcatz.io. 60 IN A 127.0.0.1')
+
+    # Use key 1 to update "asheesh2", which should be rejected due to
+    # being unauthorized.
+    response = update_asheesh2_with_asheesh1_key()
+    assert response.status_code == 403, response.content
+    # FIXME: Make sure asheesh2 is still pointing at localhost. I
+    # guess we need to wait for 20 seconds, which is pretty sad.
+
+    # Test that we can do an update of asheesh2 even though for some
+    # reason the client is giving us the rawHostname as all caps.
+    response = update_asheesh2_caps_basically_good()
+    assert response.status_code == 200, response.content
+    # Make sure DNS is updated.
+    wait_for_new_resolve_value(resolver,
+                               'asheesh2.sandcatz.io',
+                               'A',
+                               'asheesh2.sandcatz.io. 60 IN A 127.0.0.1')
+
+    # Test that, via the UDP protocol, the server would be surprised
+    # by a UDP packet on 127.0.0.1 for the "asheesh" hostname, since
+    # it has been moved to the other IP address.
+    #
+    # To do that, we create a simple Python UDP client that makes a socket
+    # to 127.0.0.1, sends a message to the sandcats daemon, and
+    # checks that it gets a response within one second.
+    UDP_DEST_IP = '127.0.0.1'
+    UDP_DEST_PORT = 8080
+    message = 'asheesh 0123456789abcdef'
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
+        client.settimeout(1)
+        data = client.recv(1024)
+        assert data == '0123456789abcdef'
+    except socket.timeout:
+        assert False, "Hit timeout without a reply. How sad."
+        client.close()
+
+    # Now, make sure that asheesh3 would not be surprised by messages
+    # from localhost.
+    message = 'asheesh3 0123456789abcdef'
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
+        client.settimeout(1)
+        client.recv(1024)
+        assert False, "We were hoping for no response."
+    except socket.timeout:
+        # Hooray! No response.
+        print "."
+    finally:
+        client.close()
 
 
 if __name__ == '__main__':
