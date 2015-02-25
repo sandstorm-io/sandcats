@@ -48,6 +48,7 @@ var settingsSchema = new SimpleSchema({
   ROOT_URL: {
     type: String,
     required: false
+  }
 });
 
 // A function for the app to call when it starts so that it can
