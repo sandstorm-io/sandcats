@@ -37,4 +37,4 @@ before_install:
 install:
   - sudo apt-get install -y python-requests python-dnspython python-netifaces
 script:
-  - python trivial_tests.py
+  - python integration_tests.py
