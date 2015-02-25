@@ -41,7 +41,13 @@ var settingsSchema = new SimpleSchema({
   // Port number for UDP-based ping system.
   UDP_PING_PORT: {
     type: Number
-  }
+  },
+
+  // In production, the URL of the root. Auto-detected in dev,
+  // therefore optional here.
+  ROOT_URL: {
+    type: String,
+    required: false
 });
 
 // A function for the app to call when it starts so that it can
