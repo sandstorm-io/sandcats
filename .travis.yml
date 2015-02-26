@@ -10,7 +10,7 @@ before_install:
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   # Trans-grade to Debian.
   - sudo rm /etc/apt/sources.list
-  - echo 'deb http://http.debian.net/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
+  - echo 'deb http://mirror.mit.edu/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
   - sudo apt-get update
   - sudo apt-get --force-yes -y install debian-archive-keyring
   - sudo apt-get update
