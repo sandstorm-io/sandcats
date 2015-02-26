@@ -10,7 +10,7 @@ before_install:
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   # Trans-grade to Debian.
   - sudo rm /etc/apt/sources.list
-  - echo 'deb http://http.debian.net/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
+  - echo 'deb http://mirror.mit.edu/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
   - sudo apt-get update
   - sudo apt-get --force-yes -y install debian-archive-keyring
   - sudo apt-get update
@@ -33,8 +33,8 @@ before_install:
   # Hackishly start the Meteor app. The Travis-CI image has no systemd, so we rely on this
   # for now.
   - sudo cp -a $PWD /vagrant
-  - cd /vagrant/sandcats ; meteor run --settings /etc/sandcats-meteor-settings.json &
-install:
-  - sudo apt-get install -y python-requests python-dnspython python-netifaces
+  # We run 'meteor' below first to do the user-specific install process...
+  - meteor --version
+  # ...and now we do the actual meteor run command.
 script:
-  - python integration_tests.py
+  - bash .travis-run-tests.sh

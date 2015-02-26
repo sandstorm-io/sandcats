@@ -1,11 +1,12 @@
 [Service]
 User=vagrant
 Group=vagrant
-WorkingDirectory=/vagrant/sandcats
+WorkingDirectory=/srv/sandcats/current/bundle
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=sandcats-meteor
-ExecStart=/usr/local/bin/meteor run --settings /etc/sandcats-meteor-settings.json
+Environment=PORT=3000 MONGO_URL=mongodb://localhost/sandcats_mongo ROOT_URL=http://localhost/
+ExecStart=/bin/bash -c 'METEOR_SETTINGS="$(cat /etc/sandcats-meteor-settings.json)" /usr/local/bin/node main.js'
 
 [Install]
 WantedBy=multi-user.target
