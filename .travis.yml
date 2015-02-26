@@ -37,8 +37,4 @@ before_install:
   - meteor --version
   # ...and now we do the actual meteor run command.
 script:
-  - pushd /vagrant/sandcats ; MONGO_URL=mongo://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json & popd
-  # Wait for Meteor to come online, up to 60 seconds.
-  - for i in $(seq 60) ; do nc -z localhost 3000  ; retval=$? ; if [[ $retval == "0" ]]  ; then echo -n '+' ; break; else sleep 1; echo -n '.' ; fi ; done ; echo
-  - sudo service nginx restart
-  - make action-run-tests
+  - bash .travis-run-tests.sh
