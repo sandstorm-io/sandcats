@@ -38,7 +38,7 @@ before_install:
   # ...and now we do the actual meteor run command.
 script:
   - pushd /vagrant/sandcats ; MONGO_URL=mongo://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json & popd
-  # Wait for Meteor to come online, up to 5 seconds.
-  - for i in $(seq 5) ; do { nc -z localhost 3000 && meteor_happy=true } || { sleep 1 ; meteor_happy=false } ; done; echo $meteor_happy
+  # Wait for Meteor to come online, up to 60 seconds.
+  - for i in $(seq 60) ; do { nc -z localhost 3000 && meteor_happy=true } || { sleep 1 ; meteor_happy=false } ; done; echo $meteor_happy
   - sudo service nginx restart
   - make action-run-tests
