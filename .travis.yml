@@ -33,6 +33,9 @@ before_install:
   # Hackishly start the Meteor app. The Travis-CI image has no systemd, so we rely on this
   # for now.
   - sudo cp -a $PWD /vagrant
+  # We run 'meteor' below first to do the user-specific install process...
+  - meteor --version
+  # ...and now we do the actual meteor run command.
   - pushd /vagrant/sandcats ; meteor run --settings /etc/sandcats-meteor-settings.json & popd
 script:
   - make action-run-tests
