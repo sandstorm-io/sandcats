@@ -6,8 +6,8 @@ pushd /vagrant/sandcats
 MONGO_URL=mongodb://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json &
 popd
 
-# Wait for Meteor to come online, up to 60 seconds.
-for i in $(seq 60)
+# Wait for Meteor to come online, up to N seconds.
+for i in $(seq 90)
 do
   nc -z localhost 3000
   retval=$?
