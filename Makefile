@@ -61,7 +61,7 @@ action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/sourc
 stage-install-service: /etc/systemd/multi-user.target.wants.sandcat.service
 
 stage-mongodb-setup: /usr/share/doc/mongodb-server /etc/sandcats-meteor-settings.json
-	echo 'export MONGO_URL=mongodb://localhost/mongo_sandcats' >> $$HOME/.bash_profile
+	echo 'export MONGO_URL=mongodb://localhost/sandcats_mongo' >> $$HOME/.bash_profile
 
 	# Make sure our MongoDB configuration file is the active one.
 	sudo cp conf/mongodb.conf /etc/

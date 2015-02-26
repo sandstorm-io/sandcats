@@ -36,6 +36,8 @@ before_install:
   # We run 'meteor' below first to do the user-specific install process...
   - meteor --version
   # ...and now we do the actual meteor run command.
-  - pushd /vagrant/sandcats ; meteor run --settings /etc/sandcats-meteor-settings.json & popd
 script:
+  - pushd /vagrant/sandcats ; MONGO_URL=mongo://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json & popd
+  # Wait for Meteor to come online, up to 5 seconds.
+  - for i in $(seq 5) ; do nc -z localhost 3000 || sleep 1 ; done; echo $?
   - make action-run-tests
