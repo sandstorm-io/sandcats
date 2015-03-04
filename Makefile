@@ -67,12 +67,18 @@ stage-mongodb-setup: /usr/share/doc/mongodb-server /etc/sandcats-meteor-settings
 	sudo cp conf/mongodb.conf /etc/
 	sudo service mongodb restart
 
-stage-mysql-setup: /usr/share/doc/mysql-server
+stage-mysql-setup: /usr/share/doc/mysql-server /etc/mysql/conf.d/sandcats-replication.cnf
 	echo 'create database if not exists sandcats_pdns;' | mysql -uroot
 	# The following is a fancy way to only run the SQL queries if they have
 	# not already been already run.
 	echo 'show tables like "domains"' | mysql -uroot sandcats_pdns | grep -q . || mysql -uroot sandcats_pdns < /usr/share/doc/pdns-backend-mysql/schema.mysql.sql
 	echo "GRANT ALL on sandcats_pdns.* TO 'sandcats_pdns'@'localhost' IDENTIFIED BY '3Rb4k4BQqKr59Ewj';" | mysql -uroot
+
+/etc/mysql/conf.d/sandcats-replication.cnf: conf/sandcats-replication.cnf
+	sudo cp conf/sandcats-replication.cnf /etc/mysql/conf.d/sandcats-replication.cnf
+	sudo service mysql restart
+
+	# Enable binlogging, so that we can have replication.
 
 stage-pdns-setup: /etc/powerdns/pdns.d/pdns.sandcats.conf
 	# Now that we know our conf file has been slotted into place,

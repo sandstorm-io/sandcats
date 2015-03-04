@@ -1,0 +1,11 @@
+[Service]
+User=mysqlbridge
+Group=mysqlbridge
+WorkingDirectory=/home/mysqlbridge
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=autossh-mysql
+ExecStart=/usr/bin/autossh -C mysqlprimary -N -L 6446:localhost:3306
+
+[Install]
+WantedBy=multi-user.target
