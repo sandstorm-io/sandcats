@@ -1,2 +1,2 @@
 [mysqld]
-server-id=FIXME_CURRENT_DATE
+server-id=VAR__CURRENT_DATE

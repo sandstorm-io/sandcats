@@ -29,14 +29,14 @@ stage-setup-mysql: /usr/share/doc/mysql-server /etc/mysql/conf.d/sandcats-replic
 
 /etc/mysql/conf.d/sandcats-replication-secondary.cnf: conf/sandcats-replication-secondary.cnf
 	# We take the config file snippet that we have, but we replace
-	# FIXME_CURRENT_DATE with the current UNIX timestamp. The goal
+	# VAR__CURRENT_DATE with the current UNIX timestamp. The goal
 	# is to get non-overlapping sever IDs for our secondary MySQL
 	# server(s).
 	#
 	# That tip courtesy of Jorden Sissel,
 	# http://www.semicomplete.com/blog/geekery/simple-mysql-slave-id-scaling.html
 	sudo service mysql stop
-	cat conf/sandcats-replication-secondary.cnf | sed 's,FIXME_CURRENT_DATE,'`date +%s`',' | sudo sponge /etc/mysql/conf.d/sandcats-replication-secondary.cnf
+	cat conf/sandcats-replication-secondary.cnf | sed 's,VAR__CURRENT_DATE,'`date +%s`',' | sudo sponge /etc/mysql/conf.d/sandcats-replication-secondary.cnf
 	sudo service mysql start
 
 stage-configure-keypair: /home/mysqlbridge
