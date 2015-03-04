@@ -55,6 +55,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # machine.
     secondary.vm.network :private_network, ip: "169.254.253.3"
 
-    secondary.vm.provision "shell", inline: "cd /vagrant/secondary && sudo apt-get update && sudo -u vagrant MYSQL_PRIMARY_IP_ADDRESS=169.254.253.3 make stage-provision"
+    secondary.vm.provision "shell", inline: "cd /vagrant/secondary && sudo apt-get --quiet=2 update && sudo -u vagrant MYSQL_PRIMARY_IP_ADDRESS=169.254.253.2 make stage-before-authorize"
   end
 end
