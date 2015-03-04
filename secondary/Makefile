@@ -11,7 +11,7 @@
 #
 # * Make sure primary is actually using InnoDB.
 
-stage-before-authorize: stage-configure-hosts stage-setup-mysql /usr/share/doc/systemd-sysv stage-configure-keypair
+stage-before-authorize: stage-configure-hosts stage-setup-mysql stage-setup-powerdns /usr/share/doc/systemd-sysv stage-configure-keypair
 
 stage-configure-hosts: /usr/share/doc/moreutils
 	# Let us configure our own hostname, for sysadmin convenience.
@@ -26,6 +26,28 @@ stage-configure-hosts: /usr/share/doc/moreutils
 	echo $$MYSQL_PRIMARY_IP_ADDRESS mysqlprimary | sudo dd of=/etc/hosts conv=notrunc oflag=append
 
 stage-setup-mysql: /usr/share/doc/mysql-server /etc/mysql/conf.d/sandcats-replication-secondary.cnf
+
+stage-setup-powerdns: /usr/share/doc/pdns-backend-mysql /etc/powerdns/pdns.d/pdns.sandcats.conf
+	# Now that we know our conf file has been slotted into place,
+	# we can remove the other conf files we don't need.
+	#
+	# Debian bundles & generates some "local" files; the sandcats
+	# file is all we need, so make sure those are gone.
+	sudo rm -f /etc/powerdns/pdns.d/pdns.local.*
+
+	# We also install our own, simplistic master top-level conf
+	# file.
+	sudo cp conf/pdns.conf /etc/powerdns/pdns.conf
+	sudo chown root.root /etc/powerdns/pdns.conf
+	sudo chmod 0600 /etc/powerdns/pdns.conf
+
+	# Reload PowerDNS configuration to make sure our changes are picked up.
+	sudo service pdns restart
+
+/etc/powerdns/pdns.d/pdns.sandcats.conf:
+	sudo cp conf/pdns.sandcats.conf /etc/powerdns/pdns.d/pdns.sandcats.conf
+	sudo chown root.root /etc/powerdns/pdns.d/pdns.sandcats.conf
+	sudo chmod 0600 /etc/powerdns/pdns.d/pdns.sandcats.conf
 
 /etc/mysql/conf.d/sandcats-replication-secondary.cnf: conf/sandcats-replication-secondary.cnf
 	# We take the config file snippet that we have, but we replace
@@ -92,6 +114,11 @@ stage-get-mysql-backup: /home/mysqlbridge/mysql-backup.sql
 	mysqldump --host=127.0.0.1 --user=root --port=6446 --skip-lock-tables --single-transaction --flush-logs --hex-blob --master-data=1 -A  | sudo -u mysqlbridge sponge /home/mysqlbridge/mysql-backup.sql
 
 stage-load-mysql-backup: /usr/share/doc/mysql-server /home/mysqlbridge/mysql-backup.sql.loaded
+	# Now that we have some actual zone data, we'll want to
+	# restart pdns. This is essential on initial bringup, since
+	# pdns was configured to point at a database that didn't even
+	# exist when we started pdns initially.
+	sudo service pdns restart
 
 /home/mysqlbridge/mysql-backup.sql.loaded: /home/mysqlbridge/mysql-backup.sql
 	# Have to make sure MySQL is started.

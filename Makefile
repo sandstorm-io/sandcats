@@ -12,7 +12,7 @@ stage-dev-setup: /usr/local/bin/meteor /usr/share/doc/mysql-server /usr/share/do
 # If used for production, the following customizations will be needed:
 #
 # - Replace its HTTPS keys with non-snakeoil.
-stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-pdns-setup stage-install-service stage-nginx-setup
+stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-setup-powerdns action-deploy-app stage-install-service stage-nginx-setup
 
 # action-deploy-app is an extra phony target -- every time you 'make
 # action-deploy-app', it creates a new build, drops it in
@@ -80,7 +80,7 @@ stage-mysql-setup: /usr/share/doc/mysql-server /etc/mysql/conf.d/sandcats-replic
 
 	# Enable binlogging, so that we can have replication.
 
-stage-pdns-setup: /etc/powerdns/pdns.d/pdns.sandcats.conf
+stage-setup-powerdns: /etc/powerdns/pdns.d/pdns.sandcats.conf
 	# Now that we know our conf file has been slotted into place,
 	# we can remove the other conf files we don't need.
 	#
