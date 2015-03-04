@@ -33,12 +33,63 @@ Other software/services:
 * duckdns.com: free of cost public service; very responsive
   maintainers; backend unavailable.
 
-# How to run this
+# How to run this: Three ways
 
-## Install dependencies
+## Way 1: Production-style
 
-Note that we currently assume the software is being run on Debian
-jessie. (Ubuntu will probably work fine.)
+In production, the following are true:
+
+* We download the latest version of Sandcats from git master and
+  use "meteor build" to package that up into a tidy little directory.
+
+* We use a particular version of nodejs that we download from
+  the nice node people.
+
+* When we want to upgrade, we run `make action-deploy-app`, which
+  means you don't get to enjoy the fun of Meteor auto-reload.
+
+You can simulate production-style by using Vagrant and doing the
+following:
+
+```
+$ vagrant up
+# After vagrant up, you should set up nginx on port 80 & 443
+# within the VM.
+#
+# You can access it as port 8080 & 8443 on the host.
+$ vagrant reload
+# Hilariously, the Vagrant basebox we're using doesn't have
+# systemd by default, so we must reboot into systemd.
+$ vagrant ssh
+# Log in, so you can pick up where it left off.
+$ cd /vagrant
+$ make stage-provision
+# Great! Now surf to localhost:8080 and/or https://localhost:8443/.
+```
+
+If you want, you can run some automated tests:
+
+```
+$ vagrant ssh
+$ cd /vagrant
+$ make action-run-tests
+```
+
+## Way 2: Using Vagrant, but with code auto-reload
+
+Do something very like the above, but then:
+
+```
+$ sudo service sandcats stop
+$ cd /vagrant/sandcats
+$ meteor run --settings=dev-settings.json
+```
+
+## Way 3: On your own machine, without Vagrant
+
+This will work, but since there are a lot of dependencies, you'll be mostly on your own. Here's the overview:
+
+### Install dependencies
 
 To run this in development mode, install the dependency packages as
 follows:
@@ -51,9 +102,9 @@ This will use the Makefile at the top level of this repository to make
 sure your system has all the needed dependencies. Read that file if
 you are curious what the package needs.
 
-## Configure database
+### Configure MySQL database
 
-For now, this is a manual process:
+Here's a manual process you can do:
 
 ```
 echo "CREATE DATABASE sandcats_pdns;" | mysql -uroot
@@ -63,7 +114,7 @@ echo "CREATE USER sandcats_pdns IDENTIFIED BY '$(cat $TMPFILE)';" | mysql -uroot
 echo "GRANT ALL on sandcats_pdns.* TO 'sandcats_pdns'@'localhost';" | mysql -uroot
 ```
 
-## Create Meteor configuration file
+### Create Meteor configuration file
 
 The `sandcats/dev-settings.json` file should contain approximately the following:
 
@@ -81,41 +132,11 @@ The `sandcats/dev-settings.json` file should contain approximately the following
 If you chose a different database name or password etc., then by all
 means adjust the configuration accordingly.
 
-## Start the server
+### Start the server
 
 ```
 $ cd sandcats
 $ meteor run --settings dev-settings.json
-```
-
-# Production use
-
-Production use is presumably very similar to the above. However, I
-haven't really used this in production yet, so who knows.
-
-## Simulating production with Vagrant
-
-To set up a simular environment to production, do the following:
-
-```
-$ vagrant up
-# This should set up nginx on port 80 & 443 within the VM.
-#
-# You can access it as port 8080 & 8443 on the host.
-$ vagrant reload
-$ vagrant ssh
-$ cd /vagrant
-$ make stage-provision
-$ sudo service sandcats restart
-$ sudo service nginx restart
-# Perversely, this is necessary for now, since the base box we
-# are using needs a reboot before it switches into using systemd.
-#
-# Plus you have to wait a minute or two for the sandcats service
-# to finish installing Meteor.
-#
-# You can watch that with: sudo tail -f /var/log/syslog
-$
 ```
 
 # Roadmap for sandcats & sandstorm
@@ -160,35 +181,3 @@ $
       what makes the new address record take place. Therefore, the
       Sandstorm installer just says, "Press enter once you've completed
       that, or Ctrl-C to interrupt the install."
-
-# Design questions that have not yet been answered
-
-## High-availability
-
-A typical goal for a DNS service is that there are multiple servers,
-preferably spread around the globe, that respond to DNS queries. This
-permits the DNS zone to operate even if a DNS server becomes
-unreachable due to problems on the server or perhaps network problems.
-
-We want to avoid using AXFR on every update because that would mean
-that every update would be an O(N) operation.
-
-One option is to switch to the PowerDNS sqlite backend, and every few
-minutes if there have been changes, copy that from the primary host to
-the secondary host(s). I can't say I love that option. Similarly, we
-could use MySQL replication, which would be more efficient, but harder
-to set up.
-
-Other possibilities:
-
-* Write some scripts that can SSH into a target machine and set up
-  MySQL replication; if the SSH connection goes down, then we could
-  take some drastic action and e.g. destroy the secondary.
-
-* BerkeleyDB's SQLite-API-compatible replication
-  http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html
-
-* Do SQLite inserts over a HTTP API that does replication
-  https://github.com/otoolep/rqlite
-
-If you have ideas, I'd love to hear them.
