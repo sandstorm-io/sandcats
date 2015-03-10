@@ -12,13 +12,13 @@ stage-dev-setup: /usr/local/bin/meteor /usr/share/doc/mysql-server /usr/share/do
 # If used for production, the following customizations will be needed:
 #
 # - Replace its HTTPS keys with non-snakeoil.
-stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-setup-powerdns action-deploy-app stage-install-service stage-nginx-setup
+stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-setup-powerdns stage-install-service action-deploy-app stage-nginx-setup
 
 # action-deploy-app is an extra phony target -- every time you 'make
 # action-deploy-app', it creates a new build, drops it in
 # /srv/sandcats, twiddles a symlink to point at it, and then reloads
 # the service.
-action-deploy-app: action-update-source
+action-deploy-app: stage-install-service action-update-source
 	sudo systemctl restart sandcats.service
 
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces
