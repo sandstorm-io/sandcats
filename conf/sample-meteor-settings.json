@@ -1,5 +1,6 @@
 {"NS1_HOSTNAME": "ns1.sandcatz.io",
  "NS2_HOSTNAME": "ns2.sandcatz.io",
+ "NS1_IP_ADDRESS": "127.0.0.1",
  "BASE_DOMAIN": "sandcatz.io",
  "POWERDNS_USER": "sandcats_pdns",
  "POWERDNS_DB": "sandcats_pdns",

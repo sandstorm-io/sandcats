@@ -23,6 +23,12 @@ var settingsSchema = new SimpleSchema({
     type: String
   },
 
+  // IP address of first nameserver for the domain, which is also used
+  // as IP address for the apex of the domain.
+  NS1_IP_ADDRESS: {
+    type: String
+  },
+
   // Username for connecting to MySQL for PowerDNS.
   POWERDNS_USER: {
     type: String
