@@ -119,7 +119,21 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	sudo chmod 0644 $@
 	sudo service nginx restart
 
-/etc/sandcats-meteor-settings.json: conf/sample-meteor-settings.json
+/etc/sandcats-meteor-settings.json:
+	# The purpose of this Makefile target is to create a
+	# reasonable sample ettings file, but never modify it.
+	#
+	# This Makefile target carefully does not depend on
+	# conf/sample-meteor-settings.json because otherwise in
+	# production it would end up modifying the live settings file.
+	#
+	# If you actively want to reset the server's settings to default,
+	# you can do: 'make /etc/sandcats-meteor-settings.json'.
+	#
+	# As an extra precaution, when you run this rule, it attempts
+	# to move any existing settings file into /var/backup. We use
+	# --backup=numbered so that we never lose a settings file.
+	if [ -f /etc/sandcats-meteor-settings.json ] ; then sudo mv --backup=numbered /etc/sandcats-meteor-settings.json /var/backups ; fi
 	sudo cp conf/sample-meteor-settings.json /etc/sandcats-meteor-settings.json
 
 /etc/systemd/system/sandcats.service: /usr/share/doc/systemd-sysv conf/$(@F)
