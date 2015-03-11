@@ -80,7 +80,7 @@ function createDomain(mysqlQuery, domain) {
 
   console.log("Created domain; it received ID #" + result.insertId);
   console.log("Creating records for top level...");
-  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'A', '127.0.0.1');
+  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'A', Meteor.settings.NS1_IP_ADDRESS);
   createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'SOA', formatSoaRecord(
     // The SOA advertises the first nameserver.
     Meteor.settings.NS1_HOSTNAME,
