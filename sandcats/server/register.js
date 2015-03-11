@@ -24,6 +24,13 @@ function finishResponse(status, jsonData, response, plainTextOnly) {
 function responseFromFormFailure(validatedFormData) {
   var response = {error: validatedFormData.errors};
 
+  if (validatedFormData.errors &&
+      validatedFormData.errors.rawHostname &&
+      validatedFormData.errors.rawHostname.hostnameUnused) {
+    response['text'] = (
+      'This hostname is already in use. Try a new name.');
+  }
+
   // The response['text'] is information that we show to a person
   // using the Sandstorm installer as their Sandcats client.
   if (validatedFormData.errors &&

@@ -114,6 +114,20 @@ def register_asheesh2_missing_fingerprint():
     return requests.post(**requests_kwargs)
 
 
+def register_asheesh1_with_asheesh2_key():
+    requests_kwargs = dict(
+        url=make_url('register', external_ip=True),
+        data={'rawHostname': 'asheesh',
+              'email': 'asheesh@asheesh.org',
+        },
+        headers={
+            'Accept': 'text/plain',
+            'X-Sand': 'cats',
+        },
+    )
+    add_key(2, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
 def register_asheesh2_successfully_text_plain():
     requests_kwargs = dict(
         url=make_url('register'),
@@ -368,6 +382,11 @@ def test_register():
 
     dns_response = resolver.query('asheesh3.sandcatz.io', 'A')
     assert str(dns_response.rrset) == 'asheesh3.sandcatz.io. 60 IN A 127.0.0.1'
+
+    # Using the asheesh2 key, attempt to steal asheesh's DNS domain.
+    response = register_asheesh1_with_asheesh2_key()
+    assert response.status_code == 400
+    assert response.content == 'This hostname is already in use. Try a new name.'
 
     # Finally, register asheesh2 successfully.
     response = register_asheesh2_successfully_text_plain()
