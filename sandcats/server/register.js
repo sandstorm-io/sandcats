@@ -24,22 +24,29 @@ function finishResponse(status, jsonData, response, plainTextOnly) {
 function responseFromFormFailure(validatedFormData) {
   var response = {error: validatedFormData.errors};
 
-  if (validatedFormData.errors &&
-      validatedFormData.errors.rawHostname &&
-      validatedFormData.errors.rawHostname.hostnameUnused) {
-    response['text'] = (
-      'This hostname is already in use. Try a new name.');
-  }
-
   // The response['text'] is information that we show to a person
   // using the Sandstorm installer as their Sandcats client.
-  if (validatedFormData.errors &&
-      validatedFormData.errors.pubkey &&
-      validatedFormData.errors.pubkey.required) {
-    response['text'] = (
-      'Your client is misconfigured. You need to provide a client certificate.');
-  }
 
+  if (validatedFormData.errors) {
+    if (validatedFormData.errors.rawHostname &&
+        validatedFormData.errors.rawHostname.hostnameUnused) {
+      response['text'] = (
+        'This hostname is already in use. Try a new name.');
+    }
+
+    if (validatedFormData.errors.pubkey) {
+      if (validatedFormData.errors.pubkey.required) {
+        response['text'] = (
+          'Your client is misconfigured. You need to provide a client certificate.');
+      }
+
+      if (validatedFormData.errors.pubkey.keyFingerprintUnique) {
+        response['text'] = (
+          'There is already a domain registered with this sandcats key. If you are re-installing, you can skip the Sandcats configuration process.'
+        );
+      }
+    }
+  }
   return response;
 }
 
