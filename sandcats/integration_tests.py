@@ -157,6 +157,19 @@ def register_asheesh2_reuse_asheesh_key():
     return requests.post(**requests_kwargs)
 
 
+def register_asheesh2_invalid_email():
+    requests_kwargs = dict(
+        url=make_url('register'),
+        data={
+            'rawHostname': 'asheesh2',
+            'email': 'asheesh@asheesh',
+        },
+        headers={'X-Sand': 'cats'},
+    )
+    add_key(2, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
+
 def register_asheesh2_wrong_http_method():
     requests_kwargs = dict(
         url=make_url('register'),
@@ -373,6 +386,16 @@ def test_register():
         parsed_content['text'] ==
         'There is already a domain registered with this sandcats key. If you are re-installing, you can skip the Sandcats configuration process.'
     )
+    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+
+    # Attempt to register asheesh2 with a bad email address.
+    response = register_asheesh2_invalid_email()
+    assert response.status_code == 400, response.content
+    parsed_content = response.json()
+    assert (
+        parsed_content['text'] ==
+        'Please enter a valid email address.'
+    ), parsed_content['text']
     assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 
     # Attempt to do a GET to /register. Get rejected since /register always

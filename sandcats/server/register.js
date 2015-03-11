@@ -28,6 +28,13 @@ function responseFromFormFailure(validatedFormData) {
   // using the Sandstorm installer as their Sandcats client.
 
   if (validatedFormData.errors) {
+    if (validatedFormData.errors.email &&
+        validatedFormData.errors.email['Invalid format']) {
+      response['text'] = (
+        'Please enter a valid email address.'
+      );
+    }
+
     if (validatedFormData.errors.rawHostname &&
         validatedFormData.errors.rawHostname.hostnameUnused) {
       response['text'] = (
