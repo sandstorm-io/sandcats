@@ -19,7 +19,6 @@ function responseFromFormFailure(validatedFormData) {
   return response;
 }
 
-
 function antiCsrf(request, response) {
   // Two mini anti-cross-site request forgery checks: POST and a
   // custom HTTP header.
