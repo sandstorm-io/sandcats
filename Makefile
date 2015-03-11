@@ -161,7 +161,7 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 ###
 ### If we need to install it, then we install it.
 /usr/share/doc/%:
-	sudo DEBIAN_FRONTEND=noninteractive apt-get install -q -y $(@F)
+	sudo DEBIAN_FRONTEND=noninteractive apt-get install --quiet=2 -y $(@F)
 
 ### Rule to install Meteor. Since Meteor installs itself to
 ### /usr/local/bin/meteor when its install completes, this seems
