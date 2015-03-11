@@ -34,7 +34,7 @@ before_install:
   - make stage-provision
   # Hackishly start the Meteor app. The Travis-CI image has no systemd, so we rely on this
   # for now.
-  - sudo rsync -av $PWD/. /vagrant/.
+  - sudo rsync -a $PWD/. /vagrant/.
   # We run 'meteor' below first to do the user-specific install process...
   - meteor --version
   # ...and now we do the actual meteor run command.
