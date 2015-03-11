@@ -153,7 +153,7 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 /etc/apt/sources.list.d/nginx-development-ppa.list:
 	echo "deb http://ppa.launchpad.net/nginx/development/ubuntu trusty main" | sudo dd of=/etc/apt/sources.list.d/nginx-development-ppa.list
 	sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8B3981E7A6852F782CC4951600A6F0A3C300EE8C
-	sudo apt-get --quiet=2 update
+	sudo apt-get --quiet=2 update >/dev/null
 
 ### A tricky apt-get rule. The idea here is that other rules can
 ### depend on a package being installed on the system by depending on
@@ -161,7 +161,7 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 ###
 ### If we need to install it, then we install it.
 /usr/share/doc/%:
-	sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet=2 install -y $(@F)
+	sudo DEBIAN_FRONTEND=noninteractive apt-get --quiet=2 install -y $(@F) >/dev/null
 
 ### Rule to install Meteor. Since Meteor installs itself to
 ### /usr/local/bin/meteor when its install completes, this seems

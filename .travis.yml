@@ -5,21 +5,21 @@ before_install:
   # Create a Vagrant user, to have Travis-CI be similar to the deployment and Vagrant.
   - sudo adduser --disabled-password --home /vagrant --gecos '' vagrant
   # Remove some packages that we get from Debian anyway.
-  - sudo apt-get --quiet=2 remove --purge -y mongodb-10gen mysql-client-core-5.5 man-db
+  - sudo apt-get --quiet=2 remove --purge -y mongodb-10gen mysql-client-core-5.5 man-db >/dev/null
   # Remove some packages that actively depend on locales working properly.
-  - sudo apt-get --quiet=2 remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4
+  - sudo apt-get --quiet=2 remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4 >/dev/null
   # Tell dpkg it is OK to choose the new config files, without prompting.
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   # Trans-grade to Debian.
   - sudo rm /etc/apt/sources.list
   - echo 'deb http://mirror.mit.edu/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
   - sudo apt-get --quiet=2 update
-  - sudo apt-get --quiet=2 --force-yes -y install debian-archive-keyring
+  - sudo apt-get --quiet=2 --force-yes -y install debian-archive-keyring >/dev/null
   - sudo apt-get --quiet=2 update
   - sudo rm -f /etc/dpkg/dpkg.cfg.d/multiarch  # Remove historic multi-arch config.
   - echo -n | sudo dd of=/var/lib/dpkg/info/libc-bin.list  # Pretend nothing conflicts with this package's files.
   - sudo dpkg -r --force-depends --force-remove-essential locales libc6-dev
-  - sudo apt-get --quiet=2 --fix-broken install
+  - sudo apt-get --quiet=2 --fix-broken install >/dev/null
   # Make sure locales are in a healthy shape.
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
