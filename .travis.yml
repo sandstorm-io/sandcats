@@ -2,6 +2,8 @@
 language: c
 # command to install dependencies
 before_install:
+  # Create a Vagrant user, to have Travis-CI be similar to the deployment and Vagrant.
+  - sudo adduser --disabled-password --home /vagrant --gecos '' vagrant
   # Remove some packages that we get from Debian anyway.
   - sudo apt-get remove --purge -y mongodb-10gen mysql-client-core-5.5 man-db
   # Remove some packages that actively depend on locales working properly.

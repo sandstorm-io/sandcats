@@ -27,7 +27,7 @@ action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython
 /srv/sandcats/source: /usr/share/doc/git
 	sudo mkdir -p /srv/sandcats/source
 	sudo chown -R vagrant /srv/sandcats/source
-	sudo -u vagrant git clone https://github.com/sandstorm-io/sandcats.git /srv/sandcats/source
+	sudo -H -u vagrant git clone https://github.com/sandstorm-io/sandcats.git /srv/sandcats/source
 
 /opt/node-v0.10.33-linux-x64:
 	$(eval TMPDIR := $(shell mktemp -d /tmp/nodejs.XXXXXXX))
@@ -45,15 +45,15 @@ action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython
 
 action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/source
 	# Get latest code.
-	cd /srv/sandcats/source && sudo -u vagrant git pull --rebase
+	cd /srv/sandcats/source && sudo -H -u vagrant git pull --rebase
 	# Create a human-friendly timestamp for this build.
 	$(eval BUILDNAME := $(shell date -I).$(shell GIT_DIR=/srv/sandcats/source/.git git rev-parse HEAD).$(shell date +%s))
 	sudo mkdir /srv/sandcats/$(BUILDNAME)  # fail if this already exists
 	sudo mkdir /srv/sandcats/$(BUILDNAME)/build
 	sudo chown vagrant -R /srv/sandcats/$(BUILDNAME)
-	cd /srv/sandcats/source/sandcats && sudo -u vagrant meteor build /srv/sandcats/$(BUILDNAME)/build
-	cd /srv/sandcats/$(BUILDNAME) && sudo -u vagrant tar zxvf build/sandcats.tar.gz
-	cd /srv/sandcats/$(BUILDNAME)/bundle && (cd programs/server && sudo -u vagrant npm install)
+	cd /srv/sandcats/source/sandcats && sudo -H -u vagrant meteor build /srv/sandcats/$(BUILDNAME)/build
+	cd /srv/sandcats/$(BUILDNAME) && sudo -H -u vagrant tar zxvf build/sandcats.tar.gz
+	cd /srv/sandcats/$(BUILDNAME)/bundle && (cd programs/server && sudo -H -u vagrant npm install)
 	# Now, declare this is the current build, and restart the service.
 	cd /srv/sandcats && sudo rm -f current && sudo ln -sf $(BUILDNAME) current
 	sudo systemctl restart sandcats.service
