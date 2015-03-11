@@ -330,7 +330,7 @@ def test_register():
     assert response.status_code == 400, response.content
     parsed_content = response.json()
     assert (
-        parsed_content['error_text'] ==
+        parsed_content['text'] ==
         'Your client is misconfigured. You need to provide a client certificate.')
     assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 
@@ -340,7 +340,7 @@ def test_register():
     assert response.status_code == 403, response.content
     parsed_content = response.json()
     assert (
-        parsed_content['error_text'] ==
+        parsed_content['text'] ==
         'Must POST.')
     assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 
@@ -352,7 +352,7 @@ def test_register():
     assert response.status_code == 403, response.content
     parsed_content = response.json()
     assert (
-        parsed_content['error_text'] ==
+        parsed_content['text'] ==
         'Your client is misconfigured. You need X-Sand: cats')
     assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 

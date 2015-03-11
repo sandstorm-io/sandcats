@@ -1,4 +1,22 @@
-function finishResponse(status, jsonData, response) {
+function finishResponse(status, jsonData, response, plainTextOnly) {
+  if (plainTextOnly) {
+    // If the client really really wants plain text, then we hope that
+    // the jsonData object has a 'text' property.
+    //
+    // If it doesn't, we might as well print the whole JSON blob.
+    //
+    response.writeHead(status, {'Content-Type': 'text/plain'});
+    if ('text' in jsonData) {
+      response.end(jsonData.text);
+      return;
+    } else {
+      // TODO: Log those situations.
+      response.end(JSON.stringify(jsonData));
+      return;
+    }
+  }
+
+  // Otherwise, send full status in JSON.
   response.writeHead(status, {'Content-Type': 'text/json'});
   response.end(JSON.stringify(jsonData));
 }
@@ -6,30 +24,28 @@ function finishResponse(status, jsonData, response) {
 function responseFromFormFailure(validatedFormData) {
   var response = {error: validatedFormData.errors};
 
-  // This is a convenience for helping me, in the future, display
-  // error messages as I integrate Sandcats support into the Sandstorm
-  // installer.
+  // The response['text'] is information that we show to a person
+  // using the Sandstorm installer as their Sandcats client.
   if (validatedFormData.errors &&
       validatedFormData.errors.pubkey &&
       validatedFormData.errors.pubkey.required) {
-    response['error_text'] = (
+    response['text'] = (
       'Your client is misconfigured. You need to provide a client certificate.');
   }
 
   return response;
 }
 
-
 function antiCsrf(request, response) {
   // Two mini anti-cross-site request forgery checks: POST and a
   // custom HTTP header.
   var requestEnded = false;
   if (request.method != 'POST') {
-    finishResponse(403, {'error_text': 'Must POST.'}, response);
+    finishResponse(403, {'text': 'Must POST.'}, response);
     requestEnded = true;
   }
   if (request.headers['x-sand'] != 'cats') {
-    finishResponse(403, {'error_text': 'Your client is misconfigured. You need X-Sand: cats'}, response);
+    finishResponse(403, {'text': 'Your client is misconfigured. You need X-Sand: cats'}, response);
     requestEnded = true;
   }
   return requestEnded;
@@ -60,6 +76,20 @@ function getClientIpFromRequest(request) {
   return clientIp || "";
 }
 
+function wantsPlainText(request) {
+  // If the HTTP client can only handle a text/plain response, the
+  // Sandcats code honors that by throwing away everything but the
+  // 'text' key in the object we were going to respond with.
+  //
+  // The one client that uses this is the Sandstorm installer, which
+  // (powered by curl and bash) serves as a simplistic command line
+  // interface to Sandcats.
+  if (request.headers['accept'] === 'text/plain') {
+    return true;
+  }
+  return false;
+}
+
 doRegister = function(request, response) {
   console.log("PARTY TIME");
 
@@ -69,12 +99,14 @@ doRegister = function(request, response) {
   }
 
   var rawFormData = getFormDataFromRequest(request);
+  var plainTextOnly = wantsPlainText(request);
 
   var validatedFormData = Mesosphere.registerForm.validate(rawFormData);
   if (validatedFormData.errors) {
     return finishResponse(400,
                           responseFromFormFailure(validatedFormData),
-                          response);
+                          response,
+                          plainTextOnly);
   }
 
   // Great! It passed all our validation, including the
@@ -83,7 +115,9 @@ doRegister = function(request, response) {
   createUserRegistration(validatedFormData.formData);
 
   // Give the user an indication of our success.
-  return finishResponse(200, {'success': true}, response);
+  return finishResponse(200, {
+    'success': true, 'text': "Successfully registered!"
+  }, response, plainTextOnly);
 }
 
 function createUserRegistration(formData) {
@@ -143,19 +177,26 @@ doUpdate = function(request, response) {
     return;
   }
 
+  // So far, all consumers of doUpdate know how to understand JSON.
+  //
+  // Therefore, we do not need to support the plain text output format
+  // that doRegister() needs.
+  var plainTextOnly = false;
+
   var rawFormData = getFormDataFromRequest(request);
 
   var validatedFormData = Mesosphere.updateForm.validate(rawFormData);
   if (validatedFormData.errors) {
     return finishResponse(400,
                           responseFromFormFailure(validatedFormData),
-                          response);
+                          response,
+                          plainTextOnly);
   }
 
   if (validatedFormData.formData.updateIsAuthorized) {
     updateUserRegistration(validatedFormData.formData);
-    return finishResponse(200, {'ok': 'lookin good'}, response);
+    return finishResponse(200, {'text': 'Update successful.'}, response, plainTextOnly);
   } else {
-    return finishResponse(403, {'error': 'not authorized'}, response);
+    return finishResponse(403, {'error': 'Not authorized.'}, response, plainTextOnly);
   }
 };
