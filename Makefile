@@ -153,4 +153,7 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 ### /usr/local/bin/meteor when its install completes, this seems
 ### pretty reasonable.
 /usr/local/bin/meteor: /usr/share/doc/curl
-	curl https://install.meteor.com/ | sh
+	# We use a local snapshot of the Meteor installer, which in
+	# effect pins the Meteor version to 1.0.3.2, to avoid version
+	# skew.
+	sh vendor/install-meteor
