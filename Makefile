@@ -19,7 +19,7 @@ stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-set
 # /srv/sandcats, twiddles a symlink to point at it, and then reloads
 # the service.
 action-deploy-app: stage-install-service action-update-source
-	if grep -q systemd /proc/1/exe ; then sudo systemctl restart sandcats.service ; fi
+	if sudo grep -q systemd /proc/1/exe ; then sudo systemctl restart sandcats.service ; fi
 
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces
 	cd sandcats && python integration_tests.py
@@ -56,7 +56,7 @@ action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/sourc
 	cd /srv/sandcats/$(BUILDNAME)/bundle && (cd programs/server && sudo -H -u vagrant npm install)
 	# Now, declare this is the current build, and restart the service.
 	cd /srv/sandcats && sudo rm -f current && sudo ln -sf $(BUILDNAME) current
-	if grep -q systemd /proc/1/exe ; then sudo systemctl restart sandcats.service ; fi
+	if sudo grep -q systemd /proc/1/exe ; then sudo systemctl restart sandcats.service ; fi
 
 stage-install-service: /etc/systemd/multi-user.target.wants.sandcat.service
 
