@@ -7,7 +7,7 @@ MONGO_URL=mongodb://localhost/sandcats_mongo meteor run --settings /etc/sandcats
 popd
 
 # Wait for Meteor to come online, up to N seconds.
-set -x
+set +x
 for i in $(seq 90)
 do
   nc -z localhost 3000
