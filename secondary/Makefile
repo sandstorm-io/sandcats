@@ -63,9 +63,9 @@ stage-setup-powerdns: /usr/share/doc/pdns-backend-mysql /etc/powerdns/pdns.d/pdn
 
 stage-configure-keypair: /home/mysqlbridge
 	# Create SSH keypair, if needed.
-	sudo -u mysqlbridge bash -c '[ -f ~mysqlbridge/.ssh/id_rsa ] || ssh-keygen -t rsa -b 4096 -P "" -f ~mysqlbridge/.ssh/id_rsa'
+	sudo -H -u mysqlbridge bash -c '[ -f ~mysqlbridge/.ssh/id_rsa ] || ssh-keygen -t rsa -b 4096 -P "" -f ~mysqlbridge/.ssh/id_rsa'
 	# Show it.
-	sudo -u mysqlbridge cat ~mysqlbridge/.ssh/id_rsa.pub >&2
+	sudo -H -u mysqlbridge cat ~mysqlbridge/.ssh/id_rsa.pub >&2
 
 /home/mysqlbridge:
 	# Create user.
@@ -83,7 +83,7 @@ stage-verify-ssh:
 	# Verify that SSH access works. This is actually an
 	# interactive process, since the user will have to say yes
 	# that they accept the SSH key.
-	sudo -u mysqlbridge ssh mysqlprimary echo success in logging in
+	sudo -H -u mysqlbridge ssh mysqlprimary echo success in logging in
 
 stage-configure-autossh: /usr/share/doc/autossh /etc/systemd/multi-user.target.wants.autossh.service
 
@@ -111,7 +111,7 @@ stage-get-mysql-backup: /home/mysqlbridge/mysql-backup.sql
 	# the process aborts in the middle for now. (What if it exits
 	# with a non-zero status code? What if the SSH tunnel breaks
 	# in the middle of the MySQL dump?)
-	mysqldump --host=127.0.0.1 --user=root --port=6446 --skip-lock-tables --single-transaction --flush-logs --hex-blob --master-data=1 -A  | sudo -u mysqlbridge sponge /home/mysqlbridge/mysql-backup.sql
+	mysqldump --host=127.0.0.1 --user=root --port=6446 --skip-lock-tables --single-transaction --flush-logs --hex-blob --master-data=1 -A  | sudo -H -u mysqlbridge sponge /home/mysqlbridge/mysql-backup.sql
 
 stage-load-mysql-backup: /usr/share/doc/mysql-server /home/mysqlbridge/mysql-backup.sql.loaded
 	# Now that we have some actual zone data, we'll want to
@@ -137,7 +137,7 @@ stage-load-mysql-backup: /usr/share/doc/mysql-server /home/mysqlbridge/mysql-bac
 	mysql -uroot < /home/mysqlbridge/mysql-backup.sql
 
 	# If that worked OK, let's touch a stamp file.
-	sudo -u mysqlbridge touch /home/mysqlbridge/mysql-backup.sql.loaded
+	sudo -H -u mysqlbridge touch /home/mysqlbridge/mysql-backup.sql.loaded
 
 ### A tricky apt-get rule. The idea here is that other rules can
 ### depend on a package being installed on the system by depending on
