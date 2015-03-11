@@ -34,7 +34,7 @@ action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython
 	# Download the tarball, and check it against a SHA that we verified earlier.
 	cd $(TMPDIR) && wget https://nodejs.org/dist/v0.10.33/node-v0.10.33-linux-x64.tar.gz
 	cd $(TMPDIR) && sha256sum node-v0.10.33-linux-x64.tar.gz | grep 159e5485d0fb5c913201baae49f68fd428a7e3b08262e9bf5003c1b399705ca8
-	cd $(TMPDIR) && tar zxvf node-v0.10.33-linux-x64.tar.gz
+	cd $(TMPDIR) && tar zxf node-v0.10.33-linux-x64.tar.gz
 	cd $(TMPDIR) && sudo mv node-v0.10.33-linux-x64 /opt
 
 /usr/local/bin/npm: /opt/node-v0.10.33-linux-x64
@@ -52,7 +52,7 @@ action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/sourc
 	sudo mkdir /srv/sandcats/$(BUILDNAME)/build
 	sudo chown vagrant -R /srv/sandcats/$(BUILDNAME)
 	cd /srv/sandcats/source/sandcats && sudo -H -u vagrant meteor build /srv/sandcats/$(BUILDNAME)/build
-	cd /srv/sandcats/$(BUILDNAME) && sudo -H -u vagrant tar zxvf build/sandcats.tar.gz
+	cd /srv/sandcats/$(BUILDNAME) && sudo -H -u vagrant tar zxf build/sandcats.tar.gz
 	cd /srv/sandcats/$(BUILDNAME)/bundle && (cd programs/server && sudo -H -u vagrant npm install)
 	# Now, declare this is the current build, and restart the service.
 	cd /srv/sandcats && sudo rm -f current && sudo ln -sf $(BUILDNAME) current
