@@ -12,7 +12,7 @@ function responseFromFormFailure(validatedFormData) {
   if (validatedFormData.errors &&
       validatedFormData.errors.pubkey &&
       validatedFormData.errors.pubkey.required) {
-    response['error_text'] = (
+    response['text'] = (
       'Your client is misconfigured. You need to provide a client certificate.');
   }
 
@@ -25,11 +25,11 @@ function antiCsrf(request, response) {
   // custom HTTP header.
   var requestEnded = false;
   if (request.method != 'POST') {
-    finishResponse(403, {'error_text': 'Must POST.'}, response);
+    finishResponse(403, {'text': 'Must POST.'}, response);
     requestEnded = true;
   }
   if (request.headers['x-sand'] != 'cats') {
-    finishResponse(403, {'error_text': 'Your client is misconfigured. You need X-Sand: cats'}, response);
+    finishResponse(403, {'text': 'Your client is misconfigured. You need X-Sand: cats'}, response);
     requestEnded = true;
   }
   return requestEnded;
