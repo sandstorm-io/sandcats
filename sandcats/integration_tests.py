@@ -113,14 +113,16 @@ def register_asheesh2_missing_fingerprint():
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh2_successfully():
+def register_asheesh2_successfully_text_plain():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
             'rawHostname': 'asheesh2',
             'email': 'asheesh@asheesh.org',
         },
-        headers={'X-Sand': 'cats'},
+        headers={'X-Sand': 'cats',
+                 'Accept': 'text/plain',
+        },
     )
     add_key(2, requests_kwargs)
     return requests.post(**requests_kwargs)
@@ -367,8 +369,10 @@ def test_register():
     assert str(dns_response.rrset) == 'asheesh3.sandcatz.io. 60 IN A 127.0.0.1'
 
     # Finally, register asheesh2 successfully.
-    response = register_asheesh2_successfully()
+    response = register_asheesh2_successfully_text_plain()
     assert response.status_code == 200, response.content
+    assert response.headers['Content-Type'] == 'text/plain'
+    assert response.content == 'Successfully registered!'
     wait_for_nxdomain_cache_to_clear(resolver, 'asheesh2.sandcatz.io', 'A')
     dns_response = resolver.query('asheesh2.sandcatz.io', 'A')
     assert str(dns_response.rrset) == 'asheesh2.sandcatz.io. 60 IN A 127.0.0.1'
