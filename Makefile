@@ -174,3 +174,6 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	# Switch to the 'vagrant' user and run meteor --version, to ensure
 	# it is fully installed.
 	sudo -H -u vagrant meteor --version 2>/dev/null
+	# Run meteor --version as ourselves, whoever we are, just to make
+	# sure that it is fully installed for us, too.
+	meteor --version 2>/dev/null
