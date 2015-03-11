@@ -70,9 +70,11 @@ Mesosphere.registerRule('hostnameUnused', function (fieldValue, ruleValue) {
     return true;
   }
 
-  // FIXME: query Mongo to find out if this hostname is available. If so, then
-  // great! Allow it to be allocated.
-  //
+  // If Mongo says the hostname is used, then block this registration.
+  if (UserRegistrations.findOne({hostname: fieldValue})) {
+    return false;
+  }
+
   // This is in theory race-condition-able. For now I think that's
   // life.
   return true;
