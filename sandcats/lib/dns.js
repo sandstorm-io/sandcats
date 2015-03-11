@@ -10,20 +10,15 @@ function formatSoaRecord(primaryNameServer, adminEmailUsingDots, secondsBeforeRe
 // Functions that communicate with the MySQL PowerDNS database.
 createWrappedQuery = function() {
   var mysql = Meteor.npmRequire('mysql');
-  var rawConnection =
-      mysql.createConnection({
+  var connectionPool =
+      mysql.createPool({
+        connectionLimit: 5,
         host: 'localhost',
         user: Meteor.settings.POWERDNS_USER,
         database: Meteor.settings.POWERDNS_DB,
         password: Meteor.settings.POWERDNS_PASSWORD});
 
-  rawConnection.connect(function(err) {
-    if (err) {
-      throw new Error(err);
-    }
-  });
-
-  wrappedQuery = Meteor.wrapAsync(rawConnection.query, rawConnection);
+  wrappedQuery = Meteor.wrapAsync(connectionPool.query, connectionPool);
   return wrappedQuery;
 };
 
