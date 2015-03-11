@@ -24,7 +24,7 @@ action-deploy-app: stage-install-service action-update-source
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces
 	cd sandcats && python integration_tests.py
 
-/srv/sandcats/source: /usr/share/doc/git
+/srv/sandcats/source/.git: /usr/share/doc/git
 	sudo mkdir -p /srv/sandcats/source
 	sudo chown -R vagrant /srv/sandcats/source
 	sudo -H -u vagrant git clone https://github.com/sandstorm-io/sandcats.git /srv/sandcats/source
@@ -43,7 +43,7 @@ action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython
 /usr/local/bin/node:
 	sudo ln -sf /opt/node-v0.10.33-linux-x64/bin/node /usr/local/bin/node
 
-action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/source
+action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/source/.git
 	# Get latest code.
 	cd /srv/sandcats/source && sudo -H -u vagrant git pull --rebase
 	# Create a human-friendly timestamp for this build.
