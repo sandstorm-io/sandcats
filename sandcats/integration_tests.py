@@ -128,6 +128,7 @@ def register_asheesh1_with_asheesh2_key():
     add_key(2, requests_kwargs)
     return requests.post(**requests_kwargs)
 
+
 def register_asheesh2_successfully_text_plain():
     requests_kwargs = dict(
         url=make_url('register'),
@@ -138,6 +139,32 @@ def register_asheesh2_successfully_text_plain():
         headers={'X-Sand': 'cats',
                  'Accept': 'text/plain',
         },
+    )
+    add_key(2, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
+
+def register_asheesh2_reuse_asheesh_key():
+    requests_kwargs = dict(
+        url=make_url('register'),
+        data={
+            'rawHostname': 'asheesh2',
+            'email': 'asheesh@asheesh.org',
+        },
+        headers={'X-Sand': 'cats'},
+    )
+    add_key(1, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
+
+def register_asheesh2_invalid_email():
+    requests_kwargs = dict(
+        url=make_url('register'),
+        data={
+            'rawHostname': 'asheesh2',
+            'email': 'asheesh@asheesh',
+        },
+        headers={'X-Sand': 'cats'},
     )
     add_key(2, requests_kwargs)
     return requests.post(**requests_kwargs)
@@ -349,6 +376,26 @@ def test_register():
     assert (
         parsed_content['text'] ==
         'Your client is misconfigured. You need to provide a client certificate.')
+    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+
+    # Attempt to register asheesh2 with a key that asheesh used.
+    response = register_asheesh2_reuse_asheesh_key()
+    assert response.status_code == 400, response.content
+    parsed_content = response.json()
+    assert (
+        parsed_content['text'] ==
+        'There is already a domain registered with this sandcats key. If you are re-installing, you can skip the Sandcats configuration process.'
+    )
+    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+
+    # Attempt to register asheesh2 with a bad email address.
+    response = register_asheesh2_invalid_email()
+    assert response.status_code == 400, response.content
+    parsed_content = response.json()
+    assert (
+        parsed_content['text'] ==
+        'Please enter a valid email address.'
+    ), parsed_content['text']
     assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
 
     # Attempt to do a GET to /register. Get rejected since /register always
