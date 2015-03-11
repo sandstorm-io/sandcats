@@ -17,6 +17,8 @@ It uses the following technologies:
 * PowerDNS and MySQL, to update a DNS zone with the new IP address of
   a user.
 
+[![Build Status](https://travis-ci.org/sandstorm-io/sandcats.svg?branch=master)](https://travis-ci.org/sandstorm-io/sandcats)
+
 # Alternatives
 
 If you want a general-purpose dynamic DNS service to use with your own
