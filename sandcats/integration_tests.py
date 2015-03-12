@@ -356,11 +356,24 @@ def test_register():
     # way to have a different IP address show up to nginx, and
     # therefore for the update event to be meaningful.
 
+    # Make sure we have some kind of SOA; store it.
+    dns_response = resolver.query('sandcatz.io', 'SOA')
+    initial_soa = str(dns_response.rrset)
+    assert initial_soa, "Hmm, the server gave us no SOA at all."
+
     # Register asheesh dot our domain
     response = register_asheesh()
     assert response.status_code == 200, response.content
-
     # Assume for now that the Meteor code has updated MongoDB.
+
+    # Make sure the SOA increased.
+    wait_for_new_resolve_value(resolver,
+                               'sandcatz.io',
+                               'SOA',
+                               initial_soa)
+    dns_response = resolver.query('sandcatz.io', 'SOA')
+    next_soa = str(dns_response.rrset)
+    assert next_soa != initial_soa, next_soa
 
     # Make sure DNS is updated.
     dns_response = resolver.query('asheesh.sandcatz.io', 'A')
