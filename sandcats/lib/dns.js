@@ -47,7 +47,7 @@ deleteRecordIfExists = function (wrappedQuery, domain, bareHost) {
   }
 };
 
-createRecord = function(mysqlQuery, domain, host, type, content) {
+var createRecord = function(mysqlQuery, domain, host, type, content) {
   // Do the insert, allowing Meteor to turn this into an exception if
   // it returns an error.
   mysqlQuery(
