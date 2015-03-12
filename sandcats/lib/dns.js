@@ -8,6 +8,8 @@ function formatSoaRecord(primaryNameServer, adminEmailUsingDots, serialNumber,
           negativeResultTtl].join(" ");
 };
 
+// Public functions for use by other JS files.
+
 // Functions that communicate with the MySQL PowerDNS database.
 createWrappedQuery = function() {
   var mysql = Meteor.npmRequire('mysql');
@@ -22,6 +24,17 @@ createWrappedQuery = function() {
   wrappedQuery = Meteor.wrapAsync(connectionPool.query, connectionPool);
   return wrappedQuery;
 };
+
+createDomainIfNeeded = function(mysqlQuery) {
+  var rows = mysqlQuery(
+    "SELECT name FROM `domains` WHERE name = ?",
+    [Meteor.settings.BASE_DOMAIN]);
+
+  if (rows.length === 0) {
+    console.log("Creating " + Meteor.settings.BASE_DOMAIN + "...");
+    createDomain(mysqlQuery, Meteor.settings.BASE_DOMAIN);
+  }
+}
 
 deleteRecordIfExists = function (wrappedQuery, domain, bareHost) {
   // Note that this deletes *all* records for this host, of any type
@@ -48,6 +61,25 @@ deleteRecordIfExists = function (wrappedQuery, domain, bareHost) {
   }
 };
 
+publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
+  // Given a hostname, and an IP address, we set up wildcard
+  // records accordingly in the PowerDNS database.
+  //
+  // Note that PowerDNS will cache DNS queries for ~20 seconds
+  // (configurable) before it actually queries the SQL database to
+  // find out what the new value is. This is on top of any TTL in
+  // the DNS record itself, as I understand it.
+  deleteRecordIfExists(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname);
+
+  // Create the DNS records in the table. We would do well to bump the
+  // SOA, too.
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, '*.' + hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
+  bumpSoaRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN);
+}
+
+// Private functions.
+
 // This function adds a DNS record to PowerDNS's MySQL data store.
 //
 // Note that this thing is pretty naive. If you provide an
@@ -62,17 +94,6 @@ var rawCreateRecord = function(mysqlQuery, domain, host, type, content) {
 
   console.log("Successfully added " + host + " = " + content + " (" + type + ").");
 };
-
-createDomainIfNeeded = function(mysqlQuery) {
-  var rows = mysqlQuery(
-    "SELECT name FROM `domains` WHERE name = ?",
-    [Meteor.settings.BASE_DOMAIN]);
-
-  if (rows.length === 0) {
-    console.log("Creating " + Meteor.settings.BASE_DOMAIN + "...");
-    createDomain(mysqlQuery, Meteor.settings.BASE_DOMAIN);
-  }
-}
 
 function createDomain(mysqlQuery, domain) {
   var result = mysqlQuery(
@@ -98,7 +119,7 @@ function createDomain(mysqlQuery, domain) {
   rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS2_HOSTNAME);
 }
 
-bumpSoaRecord = function(mysqlQuery, domain) {
+function bumpSoaRecord(mysqlQuery, domain) {
   var currentSoaResult = wrappedQuery(
     "SELECT id, content from `records` WHERE " +
       "(domain_id = (SELECT `id` from `domains` WHERE `name` = ?)) AND " +
@@ -140,22 +161,4 @@ bumpSoaRecord = function(mysqlQuery, domain) {
     throw new Error("SOA updating failed, leaving us totally confused.");
   }
   console.log("Updated SOA to " + newSoaData);
-}
-
-
-publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
-  // Given a hostname, and an IP address, we set up wildcard
-  // records accordingly in the PowerDNS database.
-  //
-  // Note that PowerDNS will cache DNS queries for ~20 seconds
-  // (configurable) before it actually queries the SQL database to
-  // find out what the new value is. This is on top of any TTL in
-  // the DNS record itself, as I understand it.
-  deleteRecordIfExists(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname);
-
-  // Create the DNS records in the table. We would do well to bump the
-  // SOA, too.
-  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
-  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, '*.' + hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
-  bumpSoaRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN);
 }
