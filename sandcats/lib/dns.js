@@ -1,8 +1,9 @@
 // Pure-function helpers.
-function formatSoaRecord(primaryNameServer, adminEmailUsingDots, secondsBeforeRefresh,
-                           secondsBeforeRefreshRetry, secondsBeforeDiscardStaleCache,
-                           negativeResultTtl) {
-  return [primaryNameServer, adminEmailUsingDots, secondsBeforeRefresh,
+function formatSoaRecord(primaryNameServer, adminEmailUsingDots, serialNumber,
+                         secondsBeforeRefresh,
+                         secondsBeforeRefreshRetry, secondsBeforeDiscardStaleCache,
+                         negativeResultTtl) {
+  return [primaryNameServer, adminEmailUsingDots, serialNumber, secondsBeforeRefresh,
           secondsBeforeRefreshRetry, secondsBeforeDiscardStaleCache,
           negativeResultTtl].join(" ");
 };
@@ -88,6 +89,7 @@ function createDomain(mysqlQuery, domain) {
     'hostmaster.' + Meteor.settings.BASE_DOMAIN,
     // For the rest of these, see formatSoaRecord()'s variable names.
     1,
+    1,
     60,
     60,
     604800,
@@ -95,6 +97,51 @@ function createDomain(mysqlQuery, domain) {
   rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS1_HOSTNAME);
   rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS2_HOSTNAME);
 }
+
+bumpSoaRecord = function(mysqlQuery, domain) {
+  var currentSoaResult = wrappedQuery(
+    "SELECT id, content from `records` WHERE " +
+      "(domain_id = (SELECT `id` from `domains` WHERE `name` = ?)) AND " +
+      "type='SOA' AND " +
+      "name = ?",
+    [domain, domain]);
+  var currentSoa = currentSoaResult[0];
+
+  // We assume it splits up nicely into the data that
+  // formatSoaRecord() needs.
+  var splitted = currentSoa.content.split(' ');
+  var soaData = {
+    primaryNameServer: splitted[0],
+    adminEmailUsingDots: splitted[1],
+    serialNumber: splitted[2],
+    secondsBeforeRefresh: splitted[3],
+    secondsBeforeRefreshRetry: splitted[4],
+    secondsBeforeDiscardStaleCache: splitted[5],
+    negativeResultTtl: splitted[6]
+  };
+
+  soaData.serialNumber = Number(soaData.serialNumber) + 1;
+  var newSoaData = formatSoaRecord(
+    soaData.primaryNameServer,
+    soaData.adminEmailUsingDots,
+    soaData.serialNumber,
+    soaData.secondsBeforeRefresh,
+    soaData.secondsBeforeRefreshRetry,
+    soaData.secondsBeforeDiscardStaleCache,
+    soaData.negativeResultTtl);
+
+  // Do an UPDATE and make sure it updated 1 row.
+  var queryResult = wrappedQuery(
+    "UPDATE `records` " +
+      "SET content=? WHERE " +
+      "id=? ",
+    [newSoaData, currentSoa.id]);
+  if (queryResult.changedRows != 1) {
+    throw new Error("SOA updating failed, leaving us totally confused.");
+  }
+  console.log("Updated SOA to " + newSoaData);
+}
+
 
 publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
   // Given a hostname, and an IP address, we set up wildcard
@@ -110,4 +157,5 @@ publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
   // SOA, too.
   rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
   rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, '*.' + hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
+  bumpSoaRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN);
 }
