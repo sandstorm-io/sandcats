@@ -15,32 +15,32 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # The idea is to have the Vagrantfile effectively simulate bringing
   # up the production instances, where we need a main worker VM with
   # the web interface and also a secondary DNS server.
-  config.vm.define "main", primary: true do |main|
+  config.vm.define "default", primary: true do |default|
 
     # Accessing "localhost:8443" will access port 443 on the guest
     # machine.
-    main.vm.network "forwarded_port", guest: 443, host: 8443
+    default.vm.network "forwarded_port", guest: 443, host: 8443
 
     # Expose port 80 (HTTP) as 8080 (TCP) for the HTTP (non HTTPS)
     # view of the Meteor site.
-    main.vm.network "forwarded_port", guest: 80, host: 8080,
+    default.vm.network "forwarded_port", guest: 80, host: 8080,
                    protocol: 'tcp'
 
     # Expose port 8080 (UDP), for the meta-update protocol.
-    main.vm.network "forwarded_port", guest: 8080, host: 8080,
+    default.vm.network "forwarded_port", guest: 8080, host: 8080,
                     protocol: 'udp'
 
     # Expose DNS in the guest as 8053 (UDP), for DNS queries.
-    main.vm.network "forwarded_port", guest: 53, host: 8053,
+    default.vm.network "forwarded_port", guest: 53, host: 8053,
                       protocol: 'udp'
 
     # Create a private host<->guest network, mostly for NFS.
-    main.vm.network :private_network, ip: "169.254.253.2"
-    main.vm.synced_folder ".", "/vagrant", type: "nfs"
+    default.vm.network :private_network, ip: "169.254.253.2"
+    default.vm.synced_folder ".", "/vagrant", type: "nfs"
 
     # Use a shell script that contains steps required to initialize a
     # sandcats server.
-    main.vm.provision "shell", inline: "cd /etc/apt && sudo sed -i s,ftp.us.debian.org,http.debian.net,g /etc/apt/sources.list && cd /vagrant && sudo apt-get --quiet=2 update && sudo -u vagrant make stage-provision"
+    default.vm.provision "shell", inline: "cd /etc/apt && sudo sed -i s,ftp.us.debian.org,http.debian.net,g /etc/apt/sources.list && cd /vagrant && sudo apt-get --quiet=2 update && sudo -u vagrant make stage-provision"
   end
 
   # If you're developing on Sandcats itself, you won't need to think
