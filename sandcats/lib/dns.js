@@ -47,7 +47,12 @@ deleteRecordIfExists = function (wrappedQuery, domain, bareHost) {
   }
 };
 
-var createRecord = function(mysqlQuery, domain, host, type, content) {
+// This function adds a DNS record to PowerDNS's MySQL data store.
+//
+// Note that this thing is pretty naive. If you provide an
+// unreasonable text value, it isn't smart enough to tell you to fix
+// it. It won't help you (directly) with the SOA record, either.
+var rawCreateRecord = function(mysqlQuery, domain, host, type, content) {
   // Do the insert, allowing Meteor to turn this into an exception if
   // it returns an error.
   mysqlQuery(
@@ -75,8 +80,8 @@ function createDomain(mysqlQuery, domain) {
 
   console.log("Created domain; it received ID #" + result.insertId);
   console.log("Creating records for top level...");
-  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'A', Meteor.settings.NS1_IP_ADDRESS);
-  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'SOA', formatSoaRecord(
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'A', Meteor.settings.NS1_IP_ADDRESS);
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'SOA', formatSoaRecord(
     // The SOA advertises the first nameserver.
     Meteor.settings.NS1_HOSTNAME,
     // It advertises hostmaster@Meteor.settings.BASE_DOMAIN as a contact email address.
@@ -87,8 +92,8 @@ function createDomain(mysqlQuery, domain) {
     60,
     604800,
     60));
-  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS1_HOSTNAME);
-  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS2_HOSTNAME);
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS1_HOSTNAME);
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, Meteor.settings.BASE_DOMAIN, 'NS', Meteor.settings.NS2_HOSTNAME);
 }
 
 publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
@@ -101,6 +106,8 @@ publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
   // the DNS record itself, as I understand it.
   deleteRecordIfExists(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname);
 
-  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
-  createRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, '*.' + hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
+  // Create the DNS records in the table. We would do well to bump the
+  // SOA, too.
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
+  rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, '*.' + hostname + '.' + Meteor.settings.BASE_DOMAIN, 'A', ipAddress);
 }
