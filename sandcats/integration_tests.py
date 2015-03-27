@@ -86,12 +86,12 @@ def _add_real_client_cert(n, requests_kwargs):
     requests_kwargs['cert'] = ('test-data/client-cert-%d.crt' % (n,),
                                'test-data/client-cert-%d.key' % (n,))
 
-def register_asheesh():
+def register_benb():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh',
-            'email': 'asheesh@asheesh.org',
+            'rawHostname': 'benb',
+            'email': 'benb@benb.org',
         },
         headers={
             'X-Sand': 'cats',
@@ -101,12 +101,12 @@ def register_asheesh():
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh2_missing_fingerprint():
+def register_benb2_missing_fingerprint():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh2',
-            'email': 'asheesh@asheesh.org',
+            'rawHostname': 'benb2',
+            'email': 'benb@benb.org',
         },
         headers={'X-Sand': 'cats'},
     )
@@ -114,11 +114,11 @@ def register_asheesh2_missing_fingerprint():
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh1_with_asheesh2_key():
+def register_benb1_with_benb2_key():
     requests_kwargs = dict(
         url=make_url('register', external_ip=True),
-        data={'rawHostname': 'asheesh',
-              'email': 'asheesh@asheesh.org',
+        data={'rawHostname': 'benb',
+              'email': 'benb@benb.org',
         },
         headers={
             'Accept': 'text/plain',
@@ -129,11 +129,11 @@ def register_asheesh1_with_asheesh2_key():
     return requests.post(**requests_kwargs)
 
 
-def register_ftp_with_asheesh2_key():
+def register_ftp_with_benb2_key():
     requests_kwargs = dict(
         url=make_url('register', external_ip=True),
         data={'rawHostname': 'ftp',
-              'email': 'asheesh@asheesh.org',
+              'email': 'benb@benb.org',
         },
         headers={
             'X-Sand': 'cats',
@@ -143,12 +143,12 @@ def register_ftp_with_asheesh2_key():
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh2_successfully_text_plain():
+def register_benb2_successfully_text_plain():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh2',
-            'email': 'asheesh@asheesh.org',
+            'rawHostname': 'benb2',
+            'email': 'benb@benb.org',
         },
         headers={'X-Sand': 'cats',
                  'Accept': 'text/plain',
@@ -158,12 +158,12 @@ def register_asheesh2_successfully_text_plain():
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh2_reuse_asheesh_key():
+def register_benb2_reuse_benb_key():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh2',
-            'email': 'asheesh@asheesh.org',
+            'rawHostname': 'benb2',
+            'email': 'benb@benb.org',
         },
         headers={'X-Sand': 'cats'},
     )
@@ -171,12 +171,12 @@ def register_asheesh2_reuse_asheesh_key():
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh2_invalid_email():
+def register_benb2_invalid_email():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh2',
-            'email': 'asheesh@asheesh',
+            'rawHostname': 'benb2',
+            'email': 'benb@benb',
         },
         headers={'X-Sand': 'cats'},
     )
@@ -184,12 +184,12 @@ def register_asheesh2_invalid_email():
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh2_wrong_http_method():
+def register_benb2_wrong_http_method():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh2',
-            'email': 'asheesh@asheesh.org',
+            'rawHostname': 'benb2',
+            'email': 'benb@benb.org',
         },
         headers={'X-Sand': 'cats'},
     )
@@ -197,19 +197,19 @@ def register_asheesh2_wrong_http_method():
     return requests.get(**requests_kwargs)
 
 
-def register_asheesh2_missing_sand_cats_header():
+def register_benb2_missing_sand_cats_header():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh2',
-            'email': 'asheesh@asheesh.org',
+            'rawHostname': 'benb2',
+            'email': 'benb@benb.org',
         },
     )
     add_key(2, requests_kwargs)
     return requests.post(**requests_kwargs)
 
 
-def register_asheesh3_x_forwarded_for():
+def register_benb3_x_forwarded_for():
     # Provide the HTTP_FORWARDED_COUNT=1 environment variable to
     # Meteor before running this test.
     #
@@ -217,8 +217,8 @@ def register_asheesh3_x_forwarded_for():
     requests_kwargs = dict(
         url=make_url('register'),
         data={
-            'rawHostname': 'asheesh3',
-            'email': 'asheesh@asheesh.org',
+            'rawHostname': 'benb3',
+            'email': 'benb@benb.org',
         },
         headers={
             'X-Sand': 'cats',
@@ -230,10 +230,10 @@ def register_asheesh3_x_forwarded_for():
     return requests.post(**requests_kwargs)
 
 
-def update_asheesh_good():
+def update_benb_good():
     requests_kwargs = dict(
         url=make_url('update', external_ip=True),
-        data={'rawHostname': 'asheesh',
+        data={'rawHostname': 'benb',
         },
         headers={
             'X-Sand': 'cats',
@@ -243,10 +243,10 @@ def update_asheesh_good():
     return requests.post(**requests_kwargs)
 
 
-def update_asheesh2_with_asheesh1_key():
+def update_benb2_with_benb1_key():
     requests_kwargs = dict(
         url=make_url('update', external_ip=True),
-        data={'rawHostname': 'asheesh2',
+        data={'rawHostname': 'benb2',
         },
         headers={
             'X-Sand': 'cats',
@@ -256,11 +256,11 @@ def update_asheesh2_with_asheesh1_key():
     return requests.post(**requests_kwargs)
 
 
-def update_asheesh2_caps_basically_good():
+def update_benb2_caps_basically_good():
     requests_kwargs = dict(
         url=make_url('update', external_ip=True),
-        data={'rawHostname': 'ASHEESH2',
-              'email': 'asheesh@asheesh.org',
+        data={'rawHostname': 'BENB2',
+              'email': 'benb@benb.org',
         },
         headers={
             'X-Forwarded-For': '128.151.2.1',
@@ -272,11 +272,11 @@ def update_asheesh2_caps_basically_good():
     return requests.post(**requests_kwargs)
 
 
-def update_asheesh3_unauthorized():
+def update_benb3_unauthorized():
     requests_kwargs = dict(
         url=make_url('update'),
-        data={'rawHostname': 'asheesh3',
-              'email': 'asheesh@asheesh.org',
+        data={'rawHostname': 'benb3',
+              'email': 'benb@benb.org',
         },
         headers={
             'X-Forwarded-For': '128.151.2.1',
@@ -375,8 +375,8 @@ def test_register():
     initial_soa = str(dns_response.rrset)
     assert initial_soa, "Hmm, the server gave us no SOA at all."
 
-    # Register asheesh dot our domain
-    response = register_asheesh()
+    # Register benb dot our domain
+    response = register_benb()
     assert response.status_code == 200, response.content
     # Assume for now that the Meteor code has updated MongoDB.
 
@@ -390,25 +390,25 @@ def test_register():
     assert next_soa != initial_soa, next_soa
 
     # Make sure DNS is updated.
-    dns_response = resolver.query('asheesh.sandcatz.io', 'A')
-    assert str(dns_response.rrset) == 'asheesh.sandcatz.io. 60 IN A 127.0.0.1'
+    dns_response = resolver.query('benb.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'benb.sandcatz.io. 60 IN A 127.0.0.1'
 
-    dns_response = resolver.query('subdomain-test.asheesh.sandcatz.io', 'A')
-    assert str(dns_response.rrset) == 'subdomain-test.asheesh.sandcatz.io. 60 IN A 127.0.0.1'
+    dns_response = resolver.query('subdomain-test.benb.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'subdomain-test.benb.sandcatz.io. 60 IN A 127.0.0.1'
 
     # Attempt to register a domain with no client certificate; get rejected.
-    response = register_asheesh2_missing_fingerprint()
+    response = register_benb2_missing_fingerprint()
     assert response.status_code == 400, response.content
     parsed_content = response.json()
     assert (
         parsed_content['text'] ==
         'Your client is misconfigured. You need to provide a client certificate.')
-    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
 
     # Attempt to register ftp as a domain. This should fail, and if it
     # does successfully fail, then we can be reasonably confident that
     # all the various disallowed names also fail.
-    response = register_ftp_with_asheesh2_key()
+    response = register_ftp_with_benb2_key()
     assert response.status_code == 400, response.content
     parsed_content = response.json()
     assert (
@@ -417,71 +417,71 @@ def test_register():
     )
     assert_nxdomain(resolver, 'ftp.sandcatz.io', 'A')
 
-    # Attempt to register asheesh2 with a key that asheesh used.
-    response = register_asheesh2_reuse_asheesh_key()
+    # Attempt to register benb2 with a key that benb used.
+    response = register_benb2_reuse_benb_key()
     assert response.status_code == 400, response.content
     parsed_content = response.json()
     assert (
         parsed_content['text'] ==
         'There is already a domain registered with this sandcats key. If you are re-installing, you can skip the Sandcats configuration process.'
     )
-    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
 
-    # Attempt to register asheesh2 with a bad email address.
-    response = register_asheesh2_invalid_email()
+    # Attempt to register benb2 with a bad email address.
+    response = register_benb2_invalid_email()
     assert response.status_code == 400, response.content
     parsed_content = response.json()
     assert (
         parsed_content['text'] ==
         'Please enter a valid email address.'
     ), parsed_content['text']
-    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
 
     # Attempt to do a GET to /register. Get rejected since /register always
     # wants a POST.
-    response = register_asheesh2_wrong_http_method()
+    response = register_benb2_wrong_http_method()
     assert response.status_code == 403, response.content
     parsed_content = response.json()
     assert (
         parsed_content['text'] ==
         'Must POST.')
-    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
 
     # Attempt to do a POST without the X-Sand: cats header; refuse to
     # process the request.  This is an anti-cross-site-request forgery
     # tactic, since browsers won't easily be tricked into sending a
     # request with this header.
-    response = register_asheesh2_missing_sand_cats_header()
+    response = register_benb2_missing_sand_cats_header()
     assert response.status_code == 403, response.content
     parsed_content = response.json()
     assert (
         parsed_content['text'] ==
         'Your client is misconfigured. You need X-Sand: cats')
-    assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
 
     # Attempt to register a domain by providing an X-Forwarded-For
     # header that is set to a forged source address. The registration
     # will succeed; make sure it is for 127.0.0.1, not for
     # 128.151.2.1.
-    response = register_asheesh3_x_forwarded_for()
+    response = register_benb3_x_forwarded_for()
     assert response.status_code == 200, response.content
 
-    dns_response = resolver.query('asheesh3.sandcatz.io', 'A')
-    assert str(dns_response.rrset) == 'asheesh3.sandcatz.io. 60 IN A 127.0.0.1'
+    dns_response = resolver.query('benb3.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'benb3.sandcatz.io. 60 IN A 127.0.0.1'
 
-    # Using the asheesh2 key, attempt to steal asheesh's DNS domain.
-    response = register_asheesh1_with_asheesh2_key()
+    # Using the benb2 key, attempt to steal benb's DNS domain.
+    response = register_benb1_with_benb2_key()
     assert response.status_code == 400
     assert response.content == 'This hostname is already in use. Try a new name.'
 
-    # Finally, register asheesh2 successfully.
-    response = register_asheesh2_successfully_text_plain()
+    # Finally, register benb2 successfully.
+    response = register_benb2_successfully_text_plain()
     assert response.status_code == 200, response.content
     assert response.headers['Content-Type'] == 'text/plain'
     assert response.content == 'Successfully registered!'
-    wait_for_nxdomain_cache_to_clear(resolver, 'asheesh2.sandcatz.io', 'A')
-    dns_response = resolver.query('asheesh2.sandcatz.io', 'A')
-    assert str(dns_response.rrset) == 'asheesh2.sandcatz.io. 60 IN A 127.0.0.1'
+    wait_for_nxdomain_cache_to_clear(resolver, 'benb2.sandcatz.io', 'A')
+    dns_response = resolver.query('benb2.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'benb2.sandcatz.io. 60 IN A 127.0.0.1'
 
 def test_update():
     # The update helpers should use make_url(external_ip=True); see
@@ -490,34 +490,34 @@ def test_update():
     # Get a resolver that will query 127.0.0.1.
     resolver = get_resolver()
 
-    # Update the "asheesh" subdomain.
-    response = update_asheesh_good()
+    # Update the "benb" subdomain.
+    response = update_benb_good()
     assert response.status_code == 200, response.content
     # Make sure DNS is updated.
     wait_for_new_resolve_value(resolver,
-                               'asheesh.sandcatz.io',
+                               'benb.sandcatz.io',
                                'A',
-                               'asheesh.sandcatz.io. 60 IN A 127.0.0.1')
+                               'benb.sandcatz.io. 60 IN A 127.0.0.1')
 
-    # Use key 1 to update "asheesh2", which should be rejected due to
+    # Use key 1 to update "benb2", which should be rejected due to
     # being unauthorized.
-    response = update_asheesh2_with_asheesh1_key()
+    response = update_benb2_with_benb1_key()
     assert response.status_code == 403, response.content
-    # FIXME: Make sure asheesh2 is still pointing at localhost. I
+    # FIXME: Make sure benb2 is still pointing at localhost. I
     # guess we need to wait for 20 seconds, which is pretty sad.
 
-    # Test that we can do an update of asheesh2 even though for some
+    # Test that we can do an update of benb2 even though for some
     # reason the client is giving us the rawHostname as all caps.
-    response = update_asheesh2_caps_basically_good()
+    response = update_benb2_caps_basically_good()
     assert response.status_code == 200, response.content
     # Make sure DNS is updated.
     wait_for_new_resolve_value(resolver,
-                               'asheesh2.sandcatz.io',
+                               'benb2.sandcatz.io',
                                'A',
-                               'asheesh2.sandcatz.io. 60 IN A 127.0.0.1')
+                               'benb2.sandcatz.io. 60 IN A 127.0.0.1')
 
     # Test that, via the UDP protocol, the server would be surprised
-    # by a UDP packet on 127.0.0.1 for the "asheesh" hostname, since
+    # by a UDP packet on 127.0.0.1 for the "benb" hostname, since
     # it has been moved to the other IP address.
     #
     # To do that, we create a simple Python UDP client that makes a socket
@@ -525,7 +525,7 @@ def test_update():
     # checks that it gets a response within one second.
     UDP_DEST_IP = '127.0.0.1'
     UDP_DEST_PORT = 8080
-    message = 'asheesh 0123456789abcdef'
+    message = 'benb 0123456789abcdef'
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
@@ -536,9 +536,9 @@ def test_update():
         assert False, "Hit timeout without a reply. How sad."
         client.close()
 
-    # Now, make sure that asheesh3 would not be surprised by messages
+    # Now, make sure that benb3 would not be surprised by messages
     # from localhost.
-    message = 'asheesh3 0123456789abcdef'
+    message = 'benb3 0123456789abcdef'
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
