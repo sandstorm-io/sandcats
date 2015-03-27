@@ -75,6 +75,30 @@ Mesosphere.registerRule('hostnameUnused', function (fieldValue, ruleValue) {
     return false;
   }
 
+  // Here we block some well-known hostnames; see full discussion in
+  // issue #43.
+  var wellKnownHostnames = /^(www|mail|email|smtp|mx|ns[0-9]|ftp)$/;
+  var adminEsqueUsernames = /^(root|admin|administrator|owner|sys|system|domainadmin|domainadministrator)$/;
+  var rfc2142EmailAddresses = /^(hostmaster|postmaster|usenet|news|webmaster|www|uucp|ftp|abuse|noc|security|info|marketing|sales|support)$/;
+  var caOwnershipEmails = /^(ssladmin|ssladministrator|sslwebmaster|sysadmin|is|it|mis)$/;
+  var otherCommonEmails = /^(noreply|no-reply|community|mailerdaemon|mailer-daemon|nobody)$/;
+  var sandstormSpecific = /^(sandcat|sandcats|sandstorm|blackrock|capnproto|capnp|garply|asheesh|paulproteus|jade|qiqing|kenton|kentonv|jason|jparyani|david|dwrensha)$/;
+  var powerfulHostnames = /^(wpad|isatap)$/;
+  var emailAutoconfigHostnames = /^(autoconfig|imap|pop|pop3)$/;
+  var localhostAndFriends = /^(localhost|localdomain|broadcasthost|_tcp|_udp)$/;
+  if (wellKnownHostnames.test(fieldValue) ||
+      adminEsqueUsernames.test(fieldValue) ||
+      rfc2142EmailAddresses.test(fieldValue) ||
+      caOwnershipEmails.test(fieldValue) ||
+      otherCommonEmails.test(fieldValue) ||
+      sandstormSpecific.test(fieldValue) ||
+      powerfulHostnames.test(fieldValue) ||
+      emailAutoconfigHostnames.test(fieldValue) ||
+      localhostAndFriends.test(fieldValue)) {
+    console.log("Blocked the use of hostname " + fieldValue);
+    return false;
+  }
+
   // This is in theory race-condition-able. For now I think that's
   // life.
   return true;
