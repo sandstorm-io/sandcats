@@ -129,6 +129,21 @@ def register_asheesh1_with_asheesh2_key():
     return requests.post(**requests_kwargs)
 
 
+def register_ftp_with_asheesh2_key():
+    requests_kwargs = dict(
+        url=make_url('register', external_ip=True),
+        data={'rawHostname': 'ftp',
+              'email': 'asheesh@asheesh.org',
+        },
+        headers={
+            'Accept': 'text/plain',
+            'X-Sand': 'cats',
+        },
+    )
+    add_key(2, requests_kwargs)
+    return requests.post(**requests_kwargs)
+
+
 def register_asheesh2_successfully_text_plain():
     requests_kwargs = dict(
         url=make_url('register'),
@@ -390,6 +405,18 @@ def test_register():
         parsed_content['text'] ==
         'Your client is misconfigured. You need to provide a client certificate.')
     assert_nxdomain(resolver, 'asheesh2.sandcatz.io', 'A')
+
+    # Attempt to register ftp as a domain. This should fail, and if it
+    # does successfully fail, then we can be reasonably confident that
+    # all the various disallowed names also fail.
+    response = register_ftp_with_asheesh2_key()
+    assert response.status_code == 400, response.content
+    parsed_content = response.json()
+    assert (
+        parsed_content['text'] ==
+        'This hostname is already in use. Try a new name.'
+    )
+    assert_nxdomain(resolver, 'ftp.sandcatz.io', 'A')
 
     # Attempt to register asheesh2 with a key that asheesh used.
     response = register_asheesh2_reuse_asheesh_key()
