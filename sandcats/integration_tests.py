@@ -136,7 +136,6 @@ def register_ftp_with_asheesh2_key():
               'email': 'asheesh@asheesh.org',
         },
         headers={
-            'Accept': 'text/plain',
             'X-Sand': 'cats',
         },
     )
