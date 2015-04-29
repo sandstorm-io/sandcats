@@ -133,7 +133,7 @@ def register_benb():
 
 def register_benb2_missing_fingerprint():
     return _make_api_call(
-        rawHostname='benb2',
+        rawHostname='ben-b2',
         key_number=None)
 
 
@@ -152,36 +152,54 @@ def register_ftp_with_benb2_key():
         key_number=2)
 
 
+def register_hyphen_start_with_benb2_key():
+    return _make_api_call(
+        rawHostname='-shouldfail',
+        key_number=2)
+
+
+def register_hyphen_end_with_benb2_key():
+    return _make_api_call(
+        rawHostname='shouldfail-',
+        key_number=2)
+
+
+def register_two_hyphens_with_benb2_key():
+    return _make_api_call(
+        rawHostname='should--fail',
+        key_number=2)
+
+
 def register_benb2_successfully_text_plain():
     return _make_api_call(
-        rawHostname='benb2',
+        rawHostname='ben-b2',
         accept_mime_type='text/plain',
         key_number=2)
 
 
 def register_benb2_reuse_benb_key():
     return _make_api_call(
-        rawHostname='benb2',
+        rawHostname='ben-b2',
         key_number=1)
 
 
 def register_benb2_invalid_email():
     return _make_api_call(
-        rawHostname='benb2',
+        rawHostname='ben-b2',
         email='benb@benb',
         key_number=2)
 
 
 def register_benb2_wrong_http_method():
     return _make_api_call(
-        rawHostname='benb2',
+        rawHostname='ben-b2',
         http_method='get',
         key_number=2)
 
 
 def register_benb2_missing_sand_cats_header():
     return _make_api_call(
-        rawHostname='benb2',
+        rawHostname='ben-b2',
         key_number=2,
         provide_x_sandcats=False)
 
@@ -209,7 +227,7 @@ def update_benb2_with_benb1_key():
     return _make_api_call(
         path='update',
         external_ip=True,
-        rawHostname='benb2',
+        rawHostname='ben-b2',
         key_number=1)
 
 
@@ -217,7 +235,7 @@ def update_benb2_caps_basically_good():
     return _make_api_call(
         path='update',
         external_ip=True,
-        rawHostname='BENB2',
+        rawHostname='BEN-B2',
         x_forwarded_for='128.151.2.1',
         key_number=2)
 
@@ -338,7 +356,7 @@ def test_register():
     assert (
         parsed_content['text'] ==
         'Your client is misconfigured. You need to provide a client certificate.')
-    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'ben-b2.sandcatz.io', 'A')
 
     # Attempt to register ftp as a domain. This should fail, and if it
     # does successfully fail, then we can be reasonably confident that
@@ -360,7 +378,7 @@ def test_register():
         parsed_content['text'] ==
         'There is already a domain registered with this sandcats key. If you are re-installing, you can skip the Sandcats configuration process.'
     )
-    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'ben-b2.sandcatz.io', 'A')
 
     # Attempt to register benb2 with a bad email address.
     response = register_benb2_invalid_email()
@@ -370,7 +388,7 @@ def test_register():
         parsed_content['text'] ==
         'Please enter a valid email address.'
     ), parsed_content['text']
-    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'ben-b2.sandcatz.io', 'A')
 
     # Attempt to do a GET to /register. Get rejected since /register always
     # wants a POST.
@@ -380,7 +398,7 @@ def test_register():
     assert (
         parsed_content['text'] ==
         'Must POST.')
-    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'ben-b2.sandcatz.io', 'A')
 
     # Attempt to do a POST without the X-Sand: cats header; refuse to
     # process the request.  This is an anti-cross-site-request forgery
@@ -392,7 +410,7 @@ def test_register():
     assert (
         parsed_content['text'] ==
         'Your client is misconfigured. You need X-Sand: cats')
-    assert_nxdomain(resolver, 'benb2.sandcatz.io', 'A')
+    assert_nxdomain(resolver, 'ben-b2.sandcatz.io', 'A')
 
     # Attempt to register a domain by providing an X-Forwarded-For
     # header that is set to a forged source address. The registration
@@ -414,9 +432,9 @@ def test_register():
     assert response.status_code == 200, response.content
     assert response.headers['Content-Type'] == 'text/plain'
     assert response.content == 'Successfully registered!'
-    wait_for_nxdomain_cache_to_clear(resolver, 'benb2.sandcatz.io', 'A')
-    dns_response = resolver.query('benb2.sandcatz.io', 'A')
-    assert str(dns_response.rrset) == 'benb2.sandcatz.io. 60 IN A 127.0.0.1'
+    wait_for_nxdomain_cache_to_clear(resolver, 'ben-b2.sandcatz.io', 'A')
+    dns_response = resolver.query('ben-b2.sandcatz.io', 'A')
+    assert str(dns_response.rrset) == 'ben-b2.sandcatz.io. 60 IN A 127.0.0.1'
 
 def test_update():
     # The update helpers should use make_url(external_ip=True); see
@@ -447,9 +465,9 @@ def test_update():
     assert response.status_code == 200, response.content
     # Make sure DNS is updated.
     wait_for_new_resolve_value(resolver,
-                               'benb2.sandcatz.io',
+                               'ben-b2.sandcatz.io',
                                'A',
-                               'benb2.sandcatz.io. 60 IN A 127.0.0.1')
+                               'ben-b2.sandcatz.io. 60 IN A 127.0.0.1')
 
     # Test that, via the UDP protocol, the server would be surprised
     # by a UDP packet on 127.0.0.1 for the "benb" hostname, since
