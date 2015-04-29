@@ -86,127 +86,106 @@ def _add_real_client_cert(n, requests_kwargs):
     requests_kwargs['cert'] = ('test-data/client-cert-%d.crt' % (n,),
                                'test-data/client-cert-%d.key' % (n,))
 
-def register_benb():
+def _make_api_call(rawHostname, key_number, path='register',
+                   provide_x_sandcats=True, external_ip=False,
+                   http_method='post', accept_mime_type=None,
+                   email='benb@benb.org',
+                   x_forwarded_for=None):
+    '''This internal helper function allows code-reuse within the tests.'''
+    submitted_form_data = {}
+    if rawHostname is not None:
+        submitted_form_data['rawHostname'] = rawHostname
+
+    if email is not None:
+        submitted_form_data['email'] = email
+
+    url = make_url(path, external_ip=external_ip)
+
+    headers = {}
+    if provide_x_sandcats:
+        headers['X-Sand'] = 'cats'
+
+    if accept_mime_type:
+        headers['Accept'] = accept_mime_type
+
+    if x_forwarded_for:
+        headers['X-Forwarded-For'] = x_forwarded_for
+        headers['X-Real-IP'] = x_forwarded_for
+
     requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb',
-            'email': 'benb@benb.org',
-        },
-        headers={
-            'X-Sand': 'cats',
-        },
+        url=url,
+        data=submitted_form_data,
+        headers=headers,
     )
-    add_key(1, requests_kwargs)
-    return requests.post(**requests_kwargs)
+
+    add_key(key_number, requests_kwargs)
+
+    if http_method in ('get', 'post'):
+        action = getattr(requests, http_method)
+
+    return action(**requests_kwargs)
+
+def register_benb():
+    return _make_api_call(
+        rawHostname='benb',
+        provide_x_sandcats=True,
+        key_number=1)
 
 
 def register_benb2_missing_fingerprint():
-    requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb2',
-            'email': 'benb@benb.org',
-        },
-        headers={'X-Sand': 'cats'},
-    )
-    add_key(None, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        rawHostname='benb2',
+        provide_x_sandcats=True,
+        key_number=None)
 
 
 def register_benb1_with_benb2_key():
-    requests_kwargs = dict(
-        url=make_url('register', external_ip=True),
-        data={'rawHostname': 'benb',
-              'email': 'benb@benb.org',
-        },
-        headers={
-            'Accept': 'text/plain',
-            'X-Sand': 'cats',
-        },
-    )
-    add_key(2, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        external_ip=True,
+        rawHostname='benb',
+        accept_mime_type='text/plain',
+        key_number=2)
 
 
 def register_ftp_with_benb2_key():
-    requests_kwargs = dict(
-        url=make_url('register', external_ip=True),
-        data={'rawHostname': 'ftp',
-              'email': 'benb@benb.org',
-        },
-        headers={
-            'X-Sand': 'cats',
-        },
-    )
-    add_key(2, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        external_ip=True,
+        rawHostname='ftp',
+        key_number=2)
 
 
 def register_benb2_successfully_text_plain():
-    requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb2',
-            'email': 'benb@benb.org',
-        },
-        headers={'X-Sand': 'cats',
-                 'Accept': 'text/plain',
-        },
-    )
-    add_key(2, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        rawHostname='benb2',
+        accept_mime_type='text/plain',
+        key_number=2)
 
 
 def register_benb2_reuse_benb_key():
-    requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb2',
-            'email': 'benb@benb.org',
-        },
-        headers={'X-Sand': 'cats'},
-    )
-    add_key(1, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        rawHostname='benb2',
+        key_number=1)
 
 
 def register_benb2_invalid_email():
-    requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb2',
-            'email': 'benb@benb',
-        },
-        headers={'X-Sand': 'cats'},
-    )
-    add_key(2, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        rawHostname='benb2',
+        email='benb@benb',
+        key_number=2)
 
 
 def register_benb2_wrong_http_method():
-    requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb2',
-            'email': 'benb@benb.org',
-        },
-        headers={'X-Sand': 'cats'},
-    )
-    add_key(2, requests_kwargs)
-    return requests.get(**requests_kwargs)
+    return _make_api_call(
+        rawHostname='benb2',
+        http_method='get',
+        key_number=2)
 
 
 def register_benb2_missing_sand_cats_header():
-    requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb2',
-            'email': 'benb@benb.org',
-        },
-    )
-    add_key(2, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        rawHostname='benb2',
+        key_number=2,
+        provide_x_sandcats=False)
 
 
 def register_benb3_x_forwarded_for():
@@ -214,78 +193,36 @@ def register_benb3_x_forwarded_for():
     # Meteor before running this test.
     #
     # FIXME: This doesn't pass, but for now, I'm not *that* worried.
-    requests_kwargs = dict(
-        url=make_url('register'),
-        data={
-            'rawHostname': 'benb3',
-            'email': 'benb@benb.org',
-        },
-        headers={
-            'X-Sand': 'cats',
-            'X-Forwarded-For': '128.151.2.1',
-            'X-Real-IP': '128.151.2.1',
-        },
-    )
-    add_key(3, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        rawHostname='benb3',
+        key_number=3,
+        x_forwarded_for='128.151.2.1')
 
 
 def update_benb_good():
-    requests_kwargs = dict(
-        url=make_url('update', external_ip=True),
-        data={'rawHostname': 'benb',
-        },
-        headers={
-            'X-Sand': 'cats',
-        },
-    )
-    add_key(1, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        path='update',
+        external_ip=True,
+        rawHostname='benb',
+        key_number=1)
 
 
 def update_benb2_with_benb1_key():
-    requests_kwargs = dict(
-        url=make_url('update', external_ip=True),
-        data={'rawHostname': 'benb2',
-        },
-        headers={
-            'X-Sand': 'cats',
-        },
-    )
-    add_key(1, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        path='update',
+        external_ip=True,
+        rawHostname='benb2',
+        key_number=1)
 
 
 def update_benb2_caps_basically_good():
-    requests_kwargs = dict(
-        url=make_url('update', external_ip=True),
-        data={'rawHostname': 'BENB2',
-              'email': 'benb@benb.org',
-        },
-        headers={
-            'X-Forwarded-For': '128.151.2.1',
-            'X-Real-IP': '128.151.2.1',
-            'X-Sand': 'cats',
-        },
-    )
-    add_key(2, requests_kwargs)
-    return requests.post(**requests_kwargs)
+    return _make_api_call(
+        path='update',
+        external_ip=True,
+        rawHostname='BENB2',
+        x_forwarded_for='128.151.2.1',
+        key_number=2)
 
-
-def update_benb3_unauthorized():
-    requests_kwargs = dict(
-        url=make_url('update'),
-        data={'rawHostname': 'benb3',
-              'email': 'benb@benb.org',
-        },
-        headers={
-            'X-Forwarded-For': '128.151.2.1',
-            'X-Real-IP': '128.151.2.1',
-            'X-Sand': 'cats',
-        },
-    )
-    add_key(3, requests_kwargs)
-    return requests.post(**requests_kwargs)
 
 def get_resolver():
     resolver = dns.resolver.Resolver()
