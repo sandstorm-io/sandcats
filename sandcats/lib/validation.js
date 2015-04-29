@@ -16,6 +16,34 @@ Mesosphere.registerRule('keyFingerprintUnique', function (fieldValue, ruleValue)
   return true;
 });
 
+// Add extra constraints about hyphen use: can't start with a hyphen; can't end with
+// a hyphen; can't have two hyphens next to each other.
+Mesosphere.registerRule('extraHyphenRegexes', function (fieldValue, ruleValue) {
+  if (! ruleValue) {
+    // if the user does something like extraHyphenRegexes: false, they
+    // don't need us to validate.
+    return true;
+  }
+
+  // Reject start with hyphen;
+  if (fieldValue.match(/^-/)) {
+    return false;
+  }
+
+  // Reject end with a hyphen.
+  if (fieldValue.match(/-$/)) {
+    return false;
+  }
+
+  // Reject two hyphens next to each other.
+  if (fieldValue.match(/--/)) {
+    return false;
+  }
+
+  // Seems OK!
+  return true;
+});
+
 Mesosphere.registerAggregate('hostnameAndPubkeyMatch', function(fields, formFieldsObject) {
   var pubkey = formFieldsObject.pubkey;
   var hostname = formFieldsObject.rawHostname;
@@ -112,12 +140,13 @@ Mesosphere({
   fields: {
     rawHostname: {
       required: true,
-      format: /^[0-9a-zA-Z]+$/,
+      format: /^[0-9a-zA-Z-]+$/,
       transforms: ["clean", "toLowerCase"],
       rules: {
         minLength: 1,
         maxLength: 20,
-        hostnameUnused: true
+        hostnameUnused: true,
+        extraHyphenRegexes: true,
       }
     },
     ipAddress: {
@@ -148,7 +177,7 @@ Mesosphere({
   fields: {
     rawHostname: {
       required: true,
-      format: /^[0-9a-zA-Z]+$/,
+      format: /^[0-9a-zA-Z-]+$/,
       transforms: ["clean", "toLowerCase"],
       rules: {
         minLength: 1,
