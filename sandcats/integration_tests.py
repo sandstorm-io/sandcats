@@ -128,14 +128,12 @@ def _make_api_call(rawHostname, key_number, path='register',
 def register_benb():
     return _make_api_call(
         rawHostname='benb',
-        provide_x_sandcats=True,
         key_number=1)
 
 
 def register_benb2_missing_fingerprint():
     return _make_api_call(
         rawHostname='benb2',
-        provide_x_sandcats=True,
         key_number=None)
 
 
