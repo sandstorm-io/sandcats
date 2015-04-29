@@ -1,16 +1,12 @@
-# Copyright (c) Twisted Matrix Laboratories.
-# See LICENSE for details.
+# based heavily on
+# https://twistedmatrix.com/documents/current/_downloads/emailserver.tac
+# , which is MIT-licensed.
 
-# You can run this module directly with:
-#    twistd -ny emailserver.tac
-
-"""
-A toy email server.
-"""
+import sys
 
 from zope.interface import implements
 
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from twisted.mail import smtp
 from twisted.mail.imap4 import LOGINCredentials, PLAINCredentials
 
@@ -19,48 +15,46 @@ from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 
 
-
 class ConsoleMessageDelivery:
     implements(smtp.IMessageDelivery)
-    
+
+    # receivedHeader is required; it adds a header
     def receivedHeader(self, helo, origin, recipients):
         return "Received: ConsoleMessageDelivery"
 
-    
+    # validateFrom is required.
     def validateFrom(self, helo, origin):
         # All addresses are accepted
         return origin
 
-    
     def validateTo(self, user):
         # Only messages directed to the "console" user are accepted.
-        if user.dest.local == "console":
+        if (user.dest.local == "benb" and
+            user.dest.domain == 'benb.org'):
             return lambda: ConsoleMessage()
         raise smtp.SMTPBadRcpt(user)
 
 
-
 class ConsoleMessage:
     implements(smtp.IMessage)
-    
+
     def __init__(self):
-        self.lines = []
+        self.found_token = None
 
-    
+
     def lineReceived(self, line):
-        self.lines.append(line)
+        if 'X-Sandcats-recoveryToken' in line:
+            self.found_token = line.split(':')[1].strip()
 
-    
+
     def eomReceived(self):
-        print "New message received:"
-        print "\n".join(self.lines)
-        self.lines = None
+        print "Found recoveryToken: %s" % (self.found_token,)
+        reactor.callLater(0, reactor.stop)
         return defer.succeed(None)
 
-    
+
     def connectionLost(self):
-        # There was an error, throw away the stored lines
-        self.lines = None
+        pass
 
 
 
@@ -70,7 +64,7 @@ class ConsoleSMTPFactory(smtp.SMTPFactory):
     def __init__(self, *a, **kw):
         smtp.SMTPFactory.__init__(self, *a, **kw)
         self.delivery = ConsoleMessageDelivery()
-    
+
 
     def buildProtocol(self, addr):
         p = smtp.SMTPFactory.buildProtocol(self, addr)
@@ -92,16 +86,21 @@ class SimpleRealm:
 
 def main():
     from twisted.application import internet
-    from twisted.application import service    
-    
+    from twisted.application import service
+
     portal = Portal(SimpleRealm())
     checker = InMemoryUsernamePasswordDatabaseDontUse()
     checker.addUser("guest", "password")
     portal.registerChecker(checker)
-    
+
     a = service.Application("Console SMTP Server")
     internet.TCPServer(2500, ConsoleSMTPFactory(portal)).setServiceParent(a)
-    
+
+    # Tell the reactor to just totally stop in a few seconds.
+    WAIT_TIME=10
+    reactor.callLater(WAIT_TIME, reactor.stop)
+
+    # OK, configure is complete.
     return a
 
 application = main()
