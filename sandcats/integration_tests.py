@@ -5,7 +5,7 @@ import dns.resolver
 import StringIO
 import time
 import socket
-
+import subprocess
 
 import logging
 import httplib
@@ -89,7 +89,7 @@ def _add_real_client_cert(n, requests_kwargs):
 def _make_api_call(rawHostname, key_number, path='register',
                    provide_x_sandcats=True, external_ip=False,
                    http_method='post', accept_mime_type=None,
-                   email='benb@benb.org',
+                   email='benb@benb.org', recoveryToken=None,
                    x_forwarded_for=None):
     '''This internal helper function allows code-reuse within the tests.'''
     submitted_form_data = {}
@@ -98,6 +98,9 @@ def _make_api_call(rawHostname, key_number, path='register',
 
     if email is not None:
         submitted_form_data['email'] = email
+
+    if recoveryToken is not None:
+        submitted_form_data['recoveryToken'] = recoveryToken
 
     url = make_url(path, external_ip=external_ip)
 
@@ -239,6 +242,97 @@ def update_benb2_caps_basically_good():
         x_forwarded_for='128.151.2.1',
         key_number=2)
 
+def send_recovery_token_to_benb3():
+    # This causes an email to get sent to the email address
+    # on file for the benb3 account.
+    #
+    # That email contains a domain recovery token that benb3 can
+    # provide to the "/recover" method.
+    #
+    # This function returns the recovery token so that later tests can
+    # use the token. To achieve that, we play fun games involving
+    # listening on port 1025 to intercept the email.
+
+    # Create an SMTPd that listens on port 2500. This uses Python's
+    # multiprocessing library to shell out to Twisted+tac, and then
+    # parse its output, but it was the greatest combination of
+    # "quickest" and "most reasonable" thing I could do, given the
+    # rest of this code, so there you go.
+
+    # Start the process.
+    p = subprocess.Popen(
+        ['twistd', '-ny' 'testing_smtpd.py'],
+        stdout=subprocess.PIPE)
+
+    # Add a busy-loop waiting at most 5 seconds for port 2500 to be
+    # available.
+    RESOLUTION=0.01
+    port_2500_was_opened = False
+    for i in range(int(5 * (1/RESOLUTION))):
+        try:
+            sock = socket.socket()
+            sock.connect(('127.0.0.1', 2500))
+            port_2500_was_opened = True
+            sock.close()
+        except socket.error:
+            time.sleep(RESOLUTION)
+
+    assert port_2500_was_opened
+
+    # Now, tell JS to send the mail.
+    sandcats_response = _make_api_call(
+        path='sendrecoverytoken',
+        rawHostname='benb3',
+        key_number=None
+    )
+
+    # Now give the JS backend about 10 seconds to send the mail. Snag
+    # its output.
+    def get_recoveryToken_from_subprocess(p=p):
+        stdout, _ = p.communicate()
+
+        # Make sure it didn't blow up.
+        assert p.returncode == 0
+
+        for line in stdout.split('\n'):
+            if 'recoveryToken' in line:
+                recoveryToken = line.split('recoveryToken: ')[1].strip()
+                return recoveryToken
+
+    return get_recoveryToken_from_subprocess()
+
+
+def recover_benb3_with_fake_recovery_token_and_fresh_cert():
+    return _make_api_call(
+        path='recover',
+        # the following fake recoveryToken is 40 chars long, which
+        # passes the input validation, but is not a working recovery
+        # token.
+        recoveryToken='abcdefghijabcdefghijabcdefghijabcdefghij',
+        rawHostname='benb3',
+        external_ip=True,
+        key_number=4,
+        accept_mime_type='text/plain')
+
+
+def recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken):
+    return _make_api_call(
+        path='recover',
+        recoveryToken=recoveryToken,
+        rawHostname='benb3',
+        external_ip=True,
+        key_number=4,
+        accept_mime_type='text/plain')
+
+
+def recover_benb3_with_fresh_cert_with_no_recovery_token():
+    return _make_api_call(
+        path='recover',
+        rawHostname='benb3',
+        external_ip=True,
+        key_number=4,
+        accept_mime_type='text/plain')
+
 
 def get_resolver():
     resolver = dns.resolver.Resolver()
@@ -248,6 +342,7 @@ def get_resolver():
     resolver.read_resolv_conf(StringIO.StringIO('nameserver 127.0.0.1'))
 
     return resolver
+
 
 def reset_app_state():
     # To reset the Sandcats app, we must:
@@ -436,6 +531,47 @@ def test_register():
     dns_response = resolver.query('ben-b2.sandcatz.io', 'A')
     assert str(dns_response.rrset) == 'ben-b2.sandcatz.io. 60 IN A 127.0.0.1'
 
+
+def test_recovery():
+    # Per sandcats issue #49, we support the ability for users to
+    # request an email to be sent to them that grants them
+    # authorization to re-register a domain.
+
+    # First, let's try to steal benb3's domain by providing a
+    # recoveryToken that is invalid. We're hopeful for a 400.
+    response = recover_benb3_with_fake_recovery_token_and_fresh_cert()
+    assert response.status_code == 400, response.content
+
+    # Now, let's send a recoveryToken to benb3. This function returns
+    # the actual token, which is good, because we need it later.
+    #
+    # (It mocks out email sending, too, which is nice because it means
+    # we don't end up sending lots of emails to ben@benb3.org.)
+    recoveryToken = send_recovery_token_to_benb3()
+    assert recoveryToken, "Sad, we needed a recoveryToken but we got %s instead" % (recoveryToken,)
+
+    # Now, let's attempt again to use the invalid recovery token, just
+    # in case we caused some horrifying state change that makes
+    # benb3's account pwnable.
+    response = recover_benb3_with_fake_recovery_token_and_fresh_cert()
+    assert response.status_code == 400, response.content
+
+    # And let's attempt to re-register benb3's domain with a fresh
+    # cert and no recovery token, and hope that doesn't work either.
+    response = recover_benb3_with_fresh_cert_with_no_recovery_token()
+    assert response.status_code == 400, response.content
+
+    # OK! So finally let's re-register benb3's domain, with a fresh
+    # cert and the right recovery token.
+    response = recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken)
+    assert response.content == 'OK! You have recovered your domain.', response.content
+    assert response.status_code == 200
+
+    # Try to do it a second time; discover that the token only works once.
+    response = recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken)
+    assert response.content == 'Bad recovery token.', response.content
+    assert response.status_code == 400
+
 def test_update():
     # The update helpers should use make_url(external_ip=True); see
     # remark in test_register() for more information.
@@ -469,6 +605,8 @@ def test_update():
                                'A',
                                'ben-b2.sandcatz.io. 60 IN A 127.0.0.1')
 
+
+def test_udp_protocol():
     # Test that, via the UDP protocol, the server would be surprised
     # by a UDP packet on 127.0.0.1 for the "benb" hostname, since
     # it has been moved to the other IP address.
@@ -507,4 +645,6 @@ def test_update():
 
 if __name__ == '__main__':
     test_register()
+    test_recovery()
     test_update()
+    test_udp_protocol()

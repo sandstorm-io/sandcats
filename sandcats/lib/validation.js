@@ -44,6 +44,40 @@ Mesosphere.registerRule('extraHyphenRegexes', function (fieldValue, ruleValue) {
   return true;
 });
 
+Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFieldsObject) {
+  // Recovery is authorized under the following circumstances.
+  //
+  // - The domain in question has an entry in UserRegistrations.
+  //
+  // - The UserRegistrations has a recoveryData attribute
+  //
+  // - The recoveryData's timestamp is less than
+  //   RECOVERY_TIME_PERIOD_IN_SECONDS old.
+  //
+  // - The recoveryToken we are given is the same as the one in the
+  //   recoveryData.
+  var userRegistration = UserRegistrations.findOne({'hostname': formFieldsObject.rawHostname});
+  if (! userRegistration) {
+    return false;
+  }
+
+  var recoveryData = userRegistration.recoveryData;
+  if (! recoveryData) {
+    return false;
+  }
+
+  var staleness = Date.now() - recoveryData.timestamp.getTime();
+  if (staleness > RECOVERY_TIME_PERIOD_IN_SECONDS) {
+    return false;
+  }
+
+  if (formFieldsObject.recoveryToken == recoveryData.recoveryToken) {
+    return true;  // hooray!
+  }
+
+  return false;
+});
+
 Mesosphere.registerAggregate('hostnameAndPubkeyMatch', function(fields, formFieldsObject) {
   var pubkey = formFieldsObject.pubkey;
   var hostname = formFieldsObject.rawHostname;
@@ -57,6 +91,74 @@ Mesosphere.registerAggregate('hostnameAndPubkeyMatch', function(fields, formFiel
   // By default, do not permit the update.
   return false;
 });
+
+var RECOVERY_TIME_PERIOD_IN_SECONDS = 15 * 60;
+function makeOkToSendRecoveryToken() {
+  // The purpose of this function is to ensure that we don't send
+  // recovery tokens to users too frequently.
+  //
+  // To achieve that, we make a closure that contains information
+  // about recent times we sent recovery tokens. If the server stops
+  // and starts, yeah, we'll lose this info, but the
+  // RECOVERY_TIME_PERIOD_IN_MINUTES is a pretty short window, and we restart
+  // the server pretty infrequently, so I'm not super worried about
+  // that.
+  var recoveryTokenSendTimesByHostname = {};
+
+  var MAX_SENDS_PER_TIME_PERIOD = 2;
+
+  // TODO: Make this use a heap. We could then have a garbage
+  // collection strategy involving a heap (sorted by date of
+  // insertion) and keeping a linear list of the hosts where password
+  // resets were sent.
+  //
+  // For now, let's just do no garbage collection on this at all, and
+  // assume that server restarts will save us.
+
+  return function(fields, formFieldsObject) {
+    var hostname = formFieldsObject.rawHostname;
+
+    // We need the current time (in UNIX epoch seconds) in a few
+    // places.
+    var now = Math.floor(new Date().getTime() / 1000);
+
+    // If no one has requested a reset on this ever, then let's add a
+    // note indicating when the reset was done, and say it's OK.
+    if (! recoveryTokenSendTimesByHostname[hostname]) {
+      recoveryTokenSendTimesByHostname[hostname] = [now];
+      return true;
+    }
+
+    // If someone has ever requested this domain, loop through the
+    // list of requests and count the number that occurred in the past
+    // RECOVERY_TIME_PERIOD_IN_SECONDS. If it's greater than that,
+    // refuse to send.
+    var relevantTimes = recoveryTokenSendTimesByHostname[hostname];
+
+    var numberOfRecentRecoveryTokenRequests = 1;  // starts at 1
+                                                  // because there's
+                                                  // this one right
+                                                  // now to consider.
+
+    for (var i = 0 ; i < relevantTimes.length; i++) {
+      var difference = now - relevantTimes[i];
+      if (difference <= RECOVERY_TIME_PERIOD_IN_SECONDS) {
+        numberOfRecentRecoveryTokenRequests += 1;
+      }
+    }
+
+    // If numberOfRecentRecoveryTokenRequests is greater than
+    // MAX_SENDS_PER_TIME_PERIOD, then scrupulously refuse to send.
+    if (numberOfRecentRecoveryTokenRequests > MAX_SENDS_PER_TIME_PERIOD) {
+      return false;
+    }
+
+    // Well, things seem OK then.
+    return true;
+  }
+};
+
+Mesosphere.registerAggregate('okToSendRecoveryToken', makeOkToSendRecoveryToken());
 
 Mesosphere.registerRule('ipAddressNotOverused', function (fieldValue, ruleValue) {
   var MAX_IP_REGISTRATIONS = 20;
@@ -201,5 +303,60 @@ Mesosphere({
   },
   aggregates: {
     updateIsAuthorized: ['hostnameAndPubkeyMatch', ['rawHostname', 'pubkey']]
+  }
+});
+
+// Create validator for recovery token sending request.
+Mesosphere({
+  name: 'recoverDomainForm',
+  fields: {
+    recoveryToken: {
+      required: true,
+      format: /^[0-9a-zA-Z-]+$/,
+      rules: {
+        minLength: 40,
+        maxLength: 40
+      },
+    },
+    rawHostname: {
+      required: true,
+      format: /^[0-9a-zA-Z-]+$/,
+      transforms: ["clean", "toLowerCase"],
+      rules: {
+        minLength: 1,
+        maxLength: 20
+      }
+    },
+    pubkey: {
+      required: true,
+      rules: {
+        minLength: 40,
+        maxLength: 40,
+        keyFingerprintUnique: true
+      },
+    }
+  },
+  aggregates: {
+    recoveryIsAuthorized: ['recoveryIsAuthorized', ['rawHostname', 'recoveryToken']]
+  }
+});
+
+// Create validator for recovery token sending request.
+Mesosphere({
+  name: 'recoverytokenForm',
+  fields: {
+    rawHostname: {
+      required: true,
+      format: /^[0-9a-zA-Z-]+$/,
+      transforms: ["clean", "toLowerCase"],
+      rules: {
+        minLength: 1,
+        maxLength: 20
+      }
+    },
+
+  },
+  aggregates: {
+    okToSendRecoveryToken: ['okToSendRecoveryToken', ['rawHostname']]
   }
 });

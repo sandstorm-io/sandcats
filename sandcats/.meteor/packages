@@ -12,3 +12,6 @@ npm-container
 iron:router
 copleykj:mesosphere
 aldeed:collection2
+email
+random
+meteorhacks:ssr

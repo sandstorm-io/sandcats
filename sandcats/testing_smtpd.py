@@ -43,11 +43,12 @@ class ConsoleMessage:
 
 
     def lineReceived(self, line):
-        if 'X-Sandcats-recoveryToken' in line:
+        if 'X-Sandcats-recoveryToken'.lower() in line.lower():
             self.found_token = line.split(':')[1].strip()
 
 
     def eomReceived(self):
+        assert self.found_token
         print "Found recoveryToken: %s" % (self.found_token,)
         reactor.callLater(0, reactor.stop)
         return defer.succeed(None)
