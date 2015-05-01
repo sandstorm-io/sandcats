@@ -13,6 +13,9 @@ This is a token that you can copy-paste into the install script. It allows
 you to register a new computer at the same sandcats.io subdomain that you
 were using before.
 
+Once you successfully recover the domain, I will send you a fresh email
+to say that you did so.
+
 If you have further questions, hit "reply" or send an email to
 support@sandstorm.io.
 

@@ -66,7 +66,8 @@ Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFields
     return false;
   }
 
-  var staleness = Date.now() - recoveryData.timestamp.getTime();
+  var staleness_ms = Date.now() - recoveryData.timestamp.getTime();
+  var staleness = Math.floor(staleness_ms / 1000);
   if (staleness > RECOVERY_TIME_PERIOD_IN_SECONDS) {
     return false;
   }
