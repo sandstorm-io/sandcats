@@ -170,7 +170,7 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	# We use a local snapshot of the Meteor installer, which in
 	# effect pins the Meteor version to 1.0.3.2, to avoid version
 	# skew.
-	sh vendor/install-meteor
+	sh vendor/install-meteor 2>/dev/null >/dev/null
 	# Switch to the 'vagrant' user and run meteor --version, to ensure
 	# it is fully installed.
 	sudo -H -u vagrant meteor --version 2>/dev/null
