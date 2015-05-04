@@ -308,6 +308,18 @@ def send_recovery_token_to_benb3():
         return get_recoveryToken_from_subprocess(p)
 
 
+def send_recovery_token_to_benb():
+    # This exists to support testing how many recoveryTokens can be
+    # sent to one person in a short period of time.
+    with testing_smtpd() as p:
+        sandcats_response = _make_api_call(
+            path='sendrecoverytoken',
+            rawHostname='benb',
+            key_number=None
+        )
+        return get_recoveryToken_from_subprocess(p)
+
+
 def recover_benb3_with_fake_recovery_token_and_fresh_cert():
     return _make_api_call(
         path='recover',
@@ -590,6 +602,20 @@ def test_recovery():
     response = recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken)
     assert response.content == 'Bad recovery token.', response.content
     assert response.status_code == 400
+
+    # Try to get three recovery tokens right after each other.
+    #
+    # The first two should succeed; the latter two should fail.
+    #
+    # We request for benb, not benb3, so that we test a fresh account.
+    for i in range(3):
+        recoveryToken = send_recovery_token_to_benb()
+        if i in [0, 1]:
+            assert recoveryToken, "The first two attempts should work but we got %s instead." % (
+                recoveryToken,)
+        if i == 2:
+            assert not recoveryToken, "We expect to be denied but we got %s instead." % (
+                recoveryToken,)
 
 def test_update():
     # The update helpers should use make_url(external_ip=True); see

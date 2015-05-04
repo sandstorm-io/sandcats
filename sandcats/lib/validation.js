@@ -128,6 +128,8 @@ function makeOkToSendRecoveryToken() {
     if (! recoveryTokenSendTimesByHostname[hostname]) {
       recoveryTokenSendTimesByHostname[hostname] = [now];
       return true;
+    } else {
+      recoveryTokenSendTimesByHostname[hostname].push(now);
     }
 
     // If someone has ever requested this domain, loop through the
@@ -136,10 +138,10 @@ function makeOkToSendRecoveryToken() {
     // refuse to send.
     var relevantTimes = recoveryTokenSendTimesByHostname[hostname];
 
-    var numberOfRecentRecoveryTokenRequests = 1;  // starts at 1
-                                                  // because there's
-                                                  // this one right
-                                                  // now to consider.
+    var numberOfRecentRecoveryTokenRequests = 0;  // starts at 0
+                                                  // because we can
+                                                  // find this request
+                                                  // in the array.
 
     for (var i = 0 ; i < relevantTimes.length; i++) {
       var difference = now - relevantTimes[i];
