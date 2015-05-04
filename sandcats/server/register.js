@@ -260,6 +260,34 @@ doRecover = function(request, response) {
       // Throw away the recovery data, so it can't be used twice.
       recoveryData: null
     }});
+
+    var userRegistration = UserRegistrations.findOne({
+      hostname: validatedFormData.formData.rawHostname
+    });
+
+    SSR.compileTemplate('recoverySuccessfulEmail', Assets.getText('recoverySuccessfulEmail.txt'));
+
+    var emailBody = SSR.render("recoverySuccessfulEmail", {
+      hostname: userRegistration.hostname
+    });
+
+    // Send the user an email saying that their domain was recovered.
+    Email.send({
+      from: Meteor.settings.EMAIL_FROM_ADDRESS,
+      to: userRegistration.emailAddress,
+      subject: "You successfully recovered your domain name",
+      text: emailBody,
+      headers: {
+        // We set these headers to avoid email auto-replies from
+        // people who are on vacation, etc.
+        //
+        // See e.g.,
+        // http://blogs.technet.com/b/exchange/archive/2006/10/06/3395024.aspx
+        // https://tools.ietf.org/rfc/rfc3834.txt
+        'Precedence': 'bulk',
+        'Auto-Submitted': 'auto-generated',
+        'Auto-Response-Suppress': 'OOF'}
+    });
     return finishResponse(200, {'text': 'OK! You have recovered your domain.'}, response, plainTextOnly);
   } else {
     console.log("Recovery not authorized for " + validatedFormData.formData.rawHostname);

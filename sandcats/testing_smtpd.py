@@ -40,23 +40,29 @@ class ConsoleMessage:
 
     def __init__(self):
         self.found_token = None
+        self.found_recovery_success_subject = False
 
 
     def lineReceived(self, line):
+        if 'Subject:'.lower() in line.lower():
+            subject = line.split(':')[1].strip()
+            if subject == "You successfully recovered your domain name":
+                self.found_recovery_success_subject = True
+
         if 'X-Sandcats-recoveryToken'.lower() in line.lower():
             self.found_token = line.split(':')[1].strip()
 
-
     def eomReceived(self):
-        assert self.found_token
-        print "Found recoveryToken: %s" % (self.found_token,)
+        seems_ok = (self.found_recovery_success_subject or self.found_token)
+        assert seems_ok
+
+        if self.found_token:
+            print "Found recoveryToken: %s" % (self.found_token,)
         reactor.callLater(0, reactor.stop)
         return defer.succeed(None)
 
-
     def connectionLost(self):
         pass
-
 
 
 class ConsoleSMTPFactory(smtp.SMTPFactory):

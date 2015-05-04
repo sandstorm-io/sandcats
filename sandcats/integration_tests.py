@@ -1,3 +1,4 @@
+import contextlib
 import requests
 import netifaces
 import os
@@ -20,6 +21,52 @@ if 'DEBUG' in os.environ:
 
 interface_cache = {}
 
+
+# Now give the JS backend about 10 seconds to send the mail. Snag
+# its output.
+def get_recoveryToken_from_subprocess(p):
+    stdout, _ = p.communicate()
+
+    # Make sure it didn't blow up.
+    assert p.returncode == 0
+
+    for line in stdout.split('\n'):
+        if 'recoveryToken' in line:
+            recoveryToken = line.split('recoveryToken: ')[1].strip()
+            return recoveryToken
+
+
+@contextlib.contextmanager
+def testing_smtpd():
+    # Create an SMTPd that listens on port 2500. This uses Python's
+    # multiprocessing library to shell out to Twisted+tac, and then
+    # parse its output, but it was the greatest combination of
+    # "quickest" and "most reasonable" thing I could do, given the
+    # rest of this code, so there you go.
+
+    # Start the process.
+    p = subprocess.Popen(
+        ['twistd', '-ny' 'testing_smtpd.py'],
+        stdout=subprocess.PIPE)
+
+    # Add a busy-loop waiting at most 5 seconds for port 2500 to be
+    # available.
+    RESOLUTION=0.01
+    port_2500_was_opened = False
+    for i in range(int(5 * (1/RESOLUTION))):
+        try:
+            sock = socket.socket()
+            sock.connect(('127.0.0.1', 2500))
+            port_2500_was_opened = True
+            sock.close()
+        except socket.error:
+            time.sleep(RESOLUTION)
+
+    assert port_2500_was_opened
+
+    # Run whatever code we are context-managing, allowing that code to
+    # control the 'p'rocess.
+    yield p
 
 def make_url(path, external_ip=False):
     BASE_URL = ''
@@ -250,56 +297,15 @@ def send_recovery_token_to_benb3():
     # provide to the "/recover" method.
     #
     # This function returns the recovery token so that later tests can
-    # use the token. To achieve that, we play fun games involving
-    # listening on port 1025 to intercept the email.
-
-    # Create an SMTPd that listens on port 2500. This uses Python's
-    # multiprocessing library to shell out to Twisted+tac, and then
-    # parse its output, but it was the greatest combination of
-    # "quickest" and "most reasonable" thing I could do, given the
-    # rest of this code, so there you go.
-
-    # Start the process.
-    p = subprocess.Popen(
-        ['twistd', '-ny' 'testing_smtpd.py'],
-        stdout=subprocess.PIPE)
-
-    # Add a busy-loop waiting at most 5 seconds for port 2500 to be
-    # available.
-    RESOLUTION=0.01
-    port_2500_was_opened = False
-    for i in range(int(5 * (1/RESOLUTION))):
-        try:
-            sock = socket.socket()
-            sock.connect(('127.0.0.1', 2500))
-            port_2500_was_opened = True
-            sock.close()
-        except socket.error:
-            time.sleep(RESOLUTION)
-
-    assert port_2500_was_opened
-
-    # Now, tell JS to send the mail.
-    sandcats_response = _make_api_call(
-        path='sendrecoverytoken',
-        rawHostname='benb3',
-        key_number=None
-    )
-
-    # Now give the JS backend about 10 seconds to send the mail. Snag
-    # its output.
-    def get_recoveryToken_from_subprocess(p=p):
-        stdout, _ = p.communicate()
-
-        # Make sure it didn't blow up.
-        assert p.returncode == 0
-
-        for line in stdout.split('\n'):
-            if 'recoveryToken' in line:
-                recoveryToken = line.split('recoveryToken: ')[1].strip()
-                return recoveryToken
-
-    return get_recoveryToken_from_subprocess()
+    # use the token. To achieve that, we get the help of testing_smtpd()
+    # to listen on port 2500 and intercept the mail.
+    with testing_smtpd() as p:
+        sandcats_response = _make_api_call(
+            path='sendrecoverytoken',
+            rawHostname='benb3',
+            key_number=None
+        )
+        return get_recoveryToken_from_subprocess(p)
 
 
 def recover_benb3_with_fake_recovery_token_and_fresh_cert():
@@ -316,13 +322,22 @@ def recover_benb3_with_fake_recovery_token_and_fresh_cert():
 
 
 def recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken):
-    return _make_api_call(
-        path='recover',
-        recoveryToken=recoveryToken,
-        rawHostname='benb3',
-        external_ip=True,
-        key_number=4,
-        accept_mime_type='text/plain')
+    with testing_smtpd() as p:
+        sandcats_response = _make_api_call(
+            path='recover',
+            recoveryToken=recoveryToken,
+            rawHostname='benb3',
+            external_ip=True,
+            key_number=4,
+            accept_mime_type='text/plain')
+
+        stdout, _ = p.communicate()
+
+        # Make sure the testing SMTPd didn't get upset.
+        assert p.returncode == 0
+
+        # In that case, provide the HTTP response.
+        return sandcats_response
 
 
 def recover_benb3_with_fresh_cert_with_no_recovery_token():

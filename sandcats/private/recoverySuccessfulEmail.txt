@@ -1,0 +1,14 @@
+Hi there,
+
+I'm a robot running on sandcats.io, helping out with people's domain names.
+
+Someone, hopefully you, just configured a new computer (or at least, a new
+key) to be used with your domain, namely:
+
+{{ hostname }}.sandcats.io.
+
+
+If you have further questions, hit "reply" or send an email to
+support@sandstorm.io.
+
+Thanks!
