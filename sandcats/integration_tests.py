@@ -369,6 +369,10 @@ def wait_for_new_resolve_value(resolver, domain, rr_type, old_value):
         if str(dns_response.rrset) == old_value:
             print '.',
             time.sleep(1)
+        else:
+            # If the values are different, we can stop
+            # looping/sleeping.
+            break
 
     # Do one last query, and verify that it has some different value.
     dns_response = resolver.query(domain, rr_type)
