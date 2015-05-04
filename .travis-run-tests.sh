@@ -25,6 +25,12 @@ echo
 
 set -e  # Failure is no longer OK!
 
+# Adjust pdns configuration so the cache TTL is shorter. This way, the
+# tests run faster.
+
+printf '### testing optimizations\ncache-ttl=1\nnegquery-cache-ttl=1\nquery-cache-ttl=1\n### end testing optimizations' | sudo dd of=/etc/powerdns/pdns.conf conv=notrunc oflag=append
+sudo service pdns restart
+
 # Restart nginx, in case it is wants to be all 502-y
 sudo service nginx restart
 
