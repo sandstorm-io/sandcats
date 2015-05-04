@@ -3,7 +3,7 @@ set +e  # failure OK for now...
 set -x
 
 pushd /vagrant/sandcats
-MONGO_URL=mongodb://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json &
+MAIL_URL=smtp://localhost:2500/ MONGO_URL=mongodb://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json &
 popd
 
 # Wait for Meteor to come online, up to N seconds.

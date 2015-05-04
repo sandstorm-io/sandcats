@@ -6,5 +6,6 @@
  "POWERDNS_DB": "sandcats_pdns",
  "POWERDNS_PASSWORD": "3Rb4k4BQqKr59Ewj",
  "UDP_PING_PORT": 8080,
- "ROOT_URL": "https://sandcats.io/"
+ "ROOT_URL": "https://sandcats.io/",
+ "EMAIL_FROM_ADDRESS": "noreply-sandcats-example@example.com"
 }

@@ -112,7 +112,7 @@ function wantsPlainText(request) {
 }
 
 doRegister = function(request, response) {
-  console.log("PARTY TIME");
+  console.log("Beginning registration.");
 
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
@@ -141,6 +141,132 @@ doRegister = function(request, response) {
   }, response, plainTextOnly);
 }
 
+doSendRecoveryToken = function(request, response) {
+  // Somewhat strangely, the way this function is written, anyone
+  // can request a recoveryToken sent to the email address on file
+  // for any domain.
+  //
+  // That could lead to a bit of abuse, where someone causes lots
+  // of emails to get sent.
+  //
+  // To guard individual users from a lot of abuse on this front, we
+  // establish a best-effort in-memory log of the two most recent
+  // times that a password reset token was emailed to a user. Read
+  // more about that in okToSendRecoveryToken() in validation.js.
+  var i = 0;
+
+  console.log("Received request for recovery token");
+
+  var requestEnded = antiCsrf(request, response);
+
+  if (requestEnded) {
+    return;
+  }
+
+  var rawFormData = getFormDataFromRequest(request);
+  var plainTextOnly = wantsPlainText(request);
+
+  var validatedFormData = Mesosphere.recoverytokenForm.validate(rawFormData);
+  if (validatedFormData.errors) {
+    return finishResponse(400,
+                          responseFromFormFailure(validatedFormData),
+                          response,
+                          plainTextOnly);
+  }
+
+  if (validatedFormData.formData.okToSendRecoveryToken) {
+    // Get the corresponding UserRegistration object, and then
+    // give it a fresh recoveryData attribute.
+    var recoveryToken = addRecoveryData(validatedFormData.formData);
+
+    var userRegistration = UserRegistrations.findOne({
+      hostname: validatedFormData.formData.rawHostname});
+
+    SSR.compileTemplate('recoveryTokenEmail', Assets.getText('recoveryTokenEmail.txt'));
+
+    var emailBody = SSR.render("recoveryTokenEmail", {
+      recoveryToken: recoveryToken,
+      hostname: userRegistration.hostname
+    });
+
+    // Send the user an email with this token.
+    Email.send({
+      from: Meteor.settings.EMAIL_FROM_ADDRESS,
+      to: userRegistration.emailAddress,
+      subject: "Recovering your domain name",
+      text: emailBody,
+      headers: {
+        // This header is used by the automated test suite, to avoid
+        // having to parse the body of the email.
+        'X-Sandcats-recoveryToken': recoveryToken,
+        // We set these headers to avoid email auto-replies from people
+        // who are on vacation, etc.
+        //
+        // See e.g.,
+        // http://blogs.technet.com/b/exchange/archive/2006/10/06/3395024.aspx
+        // https://tools.ietf.org/rfc/rfc3834.txt
+        'Precedence': 'bulk',
+        'Auto-Submitted': 'auto-generated',
+        'Auto-Response-Suppress': 'OOF'}
+    });
+
+    console.log("Sent recovery token email for " + validatedFormData.formData.rawHostname);
+    return finishResponse(200, {'text': 'OK! Sent a recovery token to your email.'}, response, plainTextOnly);
+  } else {
+    console.log("Recovery not OK!");
+    return finishResponse(200, {'text': 'Too many attempts recently. Wait 15 minutes.'}, response, plainTextOnly);
+  }
+}
+
+doRecover = function(request, response) {
+  // If you call this with a request that contains:
+  //
+  // - A valid recoveryToken for a domain, and
+  // - With a valid client cert,
+  //
+  // then this updates the domain to have the IP address that is
+  // making the request.
+  //
+  // This is separate from doUpdate() and doRegister() to avoid
+  // complicated if-else logic that could lead to careless bugs that
+  // could lead to security issues.
+  console.log("Received request to recover domain");
+
+  var requestEnded = antiCsrf(request, response);
+  if (requestEnded) {
+    return;
+  }
+
+  var rawFormData = getFormDataFromRequest(request);
+  var plainTextOnly = wantsPlainText(request);
+
+  var validatedFormData = Mesosphere.recoverDomainForm.validate(rawFormData);
+  if (validatedFormData.errors) {
+    return finishResponse(400,
+                          responseFromFormFailure(validatedFormData),
+                          response,
+                          plainTextOnly);
+  }
+
+  if (validatedFormData.formData.recoveryIsAuthorized) {
+    // OK. Let's update the domain to have this new key.
+    console.log("Recovery authorized. Updating " + validatedFormData.formData.rawHostname);
+
+    UserRegistrations.update({
+      hostname: validatedFormData.formData.rawHostname
+    }, {$set: {
+      // Actually update the domain to use the new key.
+      pubkey: validatedFormData.formData.pubkey,
+      // Throw away the recovery data, so it can't be used twice.
+      recoveryData: null
+    }});
+    return finishResponse(200, {'text': 'OK! You have recovered your domain.'}, response, plainTextOnly);
+  } else {
+    console.log("Recovery not authorized for " + validatedFormData.formData.rawHostname);
+    return finishResponse(400, {'text': 'Bad recovery token.'}, response, plainTextOnly);
+  }
+}
+
 function createUserRegistration(formData) {
   // To create a user registration, we mostly copy data from the form.
   // We do also need to store a public key "fingerprint", which for
@@ -167,6 +293,30 @@ function createUserRegistration(formData) {
     mysqlQuery,
     userRegistration.hostname,
     userRegistration.ipAddress);
+}
+
+function addRecoveryData(formData) {
+  // The recoveryData attribute of UserRegistration stores information
+  // that can be used to call the "recover" method on a domain that is
+  // already registered. The purpose is to let people use this to get
+  // access to a domain they registered, but lost the key for, so long
+  // as we can send them a token by email.
+
+  // Generate some recovery data.
+  var recoveryData = {}
+  recoveryData.recoveryToken = Random.id(40);
+  recoveryData.timestamp = new Date();
+
+  // Always just toss it onto the corresponding UserRegistration
+  // record. (We will only send the recoveryToken to email address
+  // on file.)
+  UserRegistrations.update({
+    hostname: formData.rawHostname
+  }, {$set: {recoveryData: recoveryData}});
+
+  // Return the recoveryToken so that the caller can place it in email
+  // headers, etc.
+  return recoveryData.recoveryToken;
 }
 
 function updateUserRegistration(formData) {

@@ -21,7 +21,7 @@ stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-set
 action-deploy-app: stage-install-service action-update-source
 	if sudo grep -q systemd /proc/1/exe ; then sudo systemctl restart sandcats.service ; fi
 
-action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces
+action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
 	cd sandcats && python integration_tests.py
 
 /srv/sandcats/source/.git: /usr/share/doc/git
@@ -170,7 +170,7 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	# We use a local snapshot of the Meteor installer, which in
 	# effect pins the Meteor version to 1.0.3.2, to avoid version
 	# skew.
-	sh vendor/install-meteor
+	sh vendor/install-meteor 2>/dev/null >/dev/null
 	# Switch to the 'vagrant' user and run meteor --version, to ensure
 	# it is fully installed.
 	sudo -H -u vagrant meteor --version 2>/dev/null

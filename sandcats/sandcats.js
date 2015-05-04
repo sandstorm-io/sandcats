@@ -29,6 +29,22 @@ Router.map(function() {
     }
   });
 
+  this.route('sendrecoverytoken', {
+    path: '/sendrecoverytoken',
+    where: 'server',
+    action: function() {
+      doSendRecoveryToken(this.request, this.response);
+    }
+  });
+
+  this.route('recover', {
+    path: '/recover',
+    where: 'server',
+    action: function() {
+      doRecover(this.request, this.response);
+    }
+  });
+
   this.route('update', {
     path: '/update',
     where: 'server',

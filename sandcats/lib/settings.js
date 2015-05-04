@@ -54,6 +54,12 @@ var settingsSchema = new SimpleSchema({
   ROOT_URL: {
     type: String,
     optional: true
+  },
+
+  // When we send emails out for account recovery, we need to use some
+  // kind of "From:" address. Here is where we store that.
+  EMAIL_FROM_ADDRESS: {
+    type: String,
   }
 });
 

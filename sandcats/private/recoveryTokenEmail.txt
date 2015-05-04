@@ -1,0 +1,19 @@
+Hi there,
+
+I'm a robot running on sandcats.io, helping out with people's domain names.
+
+Someone told me that you need to recover your domain name, namely
+{{ hostname }}.sandcats.io.
+
+You will need the following string:
+
+  {{ recoveryToken }}
+
+This is a token that you can copy-paste into the install script. It allows
+you to register a new computer at the same sandcats.io subdomain that you
+were using before.
+
+If you have further questions, hit "reply" or send an email to
+support@sandstorm.io.
+
+Thanks!
