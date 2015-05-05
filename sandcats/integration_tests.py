@@ -289,6 +289,7 @@ def update_benb2_caps_basically_good():
         x_forwarded_for='128.151.2.1',
         key_number=2)
 
+
 def send_recovery_token_to_benb3():
     # This causes an email to get sent to the email address
     # on file for the benb3 account.
@@ -333,14 +334,14 @@ def recover_benb3_with_fake_recovery_token_and_fresh_cert():
         accept_mime_type='text/plain')
 
 
-def recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken):
+def recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken, key_number=4):
     with testing_smtpd() as p:
         sandcats_response = _make_api_call(
             path='recover',
             recoveryToken=recoveryToken,
             rawHostname='benb3',
             external_ip=True,
-            key_number=4,
+            key_number=key_number,
             accept_mime_type='text/plain')
 
         stdout, _ = p.communicate()
@@ -371,6 +372,15 @@ def recover_benb3_via_recovery_token_and_stale_cert(recoveryToken):
         accept_mime_type='text/plain')
 
 
+def update_benb3_after_recovery(external_ip=True):
+    return _make_api_call(
+        path='update',
+        external_ip=external_ip,
+        rawHostname='benb3',
+        key_number=4,
+        accept_mime_type='text/plain')
+
+
 def get_resolver():
     resolver = dns.resolver.Resolver()
     resolver.reset()
@@ -390,6 +400,10 @@ def reset_app_state():
     os.system('''cd .. ; make stage-mysql-setup''')
     os.system('''printf '\n\ndb.userRegistrations.remove({}); \n\nexit \n ' | mongo sandcats_mongo''')
     os.system('sudo service sandcats restart')
+
+    # We require a restart of the app, if it's in development mode.
+    os.system('killall -INT node')
+
     os.system('sudo service pdns restart')
     time.sleep(1)  # Make sure the restart gets a chance to start, to avoid HTTP 502.
     os.system('sudo service nginx restart')
@@ -614,7 +628,7 @@ def test_recovery():
     assert response.status_code == 200
 
     # Try to do it a second time; discover that the token only works once.
-    response = recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken)
+    response = recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken, key_number=5)
     assert response.content == 'Bad recovery token.', response.content
     assert response.status_code == 400
 
@@ -631,6 +645,26 @@ def test_recovery():
         if i == 2:
             assert not recoveryToken, "We expect to be denied but we got %s instead." % (
                 recoveryToken,)
+
+    # Now test a real update. The install script will use the /update
+    # if it is taking over an existing domain, since that method
+    # requires only a hostname and pubkey.
+    response = update_benb3_after_recovery()
+    try:
+        assert response.status_code == 200, response.content
+    except:
+        import pdb; pdb.set_trace()
+    # Make sure DNS is updated.
+    resolver = get_resolver()
+    wait_for_new_resolve_value(resolver,
+                               'benb3.sandcatz.io',
+                               'A',
+                               'benb3.sandcatz.io. 60 IN A 127.0.0.1')
+    # Now, let's set benb3 back to 127.0.0.1, so the rest of the test
+    # suite doesn't get surprised.
+    response = update_benb3_after_recovery(external_ip=False)
+    assert response.status_code == 200
+
 
 def test_update():
     # The update helpers should use make_url(external_ip=True); see

@@ -256,7 +256,7 @@ doRecover = function(request, response) {
       hostname: validatedFormData.formData.rawHostname
     }, {$set: {
       // Actually update the domain to use the new key.
-      pubkey: validatedFormData.formData.pubkey,
+      publicKeyId: validatedFormData.formData.pubkey,
       // Throw away the recovery data, so it can't be used twice.
       recoveryData: null
     }});
@@ -371,6 +371,7 @@ function updateUserRegistration(formData) {
 }
 
 doUpdate = function(request, response) {
+  console.log('hi 1');
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
     return;
