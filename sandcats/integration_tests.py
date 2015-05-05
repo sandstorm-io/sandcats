@@ -361,6 +361,16 @@ def recover_benb3_with_fresh_cert_with_no_recovery_token():
         accept_mime_type='text/plain')
 
 
+def recover_benb3_via_recovery_token_and_stale_cert(recoveryToken):
+    return _make_api_call(
+        path='recover',
+        rawHostname='benb3',
+        external_ip=True,
+        key_number=1,
+        recoveryToken=recoveryToken,
+        accept_mime_type='text/plain')
+
+
 def get_resolver():
     resolver = dns.resolver.Resolver()
     resolver.reset()
@@ -590,6 +600,11 @@ def test_recovery():
     # And let's attempt to re-register benb3's domain with a fresh
     # cert and no recovery token, and hope that doesn't work either.
     response = recover_benb3_with_fresh_cert_with_no_recovery_token()
+    assert response.status_code == 400, response.content
+
+    # Attempt to re-register benb3's domain with a re-used key, but
+    # the right recovery token, and hope that doesn't work either.
+    response = recover_benb3_via_recovery_token_and_stale_cert(recoveryToken)
     assert response.status_code == 400, response.content
 
     # OK! So finally let's re-register benb3's domain, with a fresh
