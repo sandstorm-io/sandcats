@@ -309,6 +309,19 @@ def send_recovery_token_to_benb3():
         return get_recoveryToken_from_subprocess(p)
 
 
+def send_recovery_token_to_nonexistent():
+    # This requests recovery of a nonexistent domain. We should see an
+    # easy to understand error message saying this domain isn't
+    # registered.
+    sandcats_response = _make_api_call(
+        path='sendrecoverytoken',
+        rawHostname='nonexistent',
+        accept_mime_type='text/plain',
+        key_number=None
+    )
+    return sandcats_response
+
+
 def send_recovery_token_to_benb():
     # This exists to support testing how many recoveryTokens can be
     # sent to one person in a short period of time.
@@ -596,6 +609,12 @@ def test_recovery():
     # recoveryToken that is invalid. We're hopeful for a 400.
     response = recover_benb3_with_fake_recovery_token_and_fresh_cert()
     assert response.status_code == 400, response.content
+
+    # Let's try to recover a nonexistent domain, just to make sure the
+    # backend isn't too shocked by this.
+    response = send_recovery_token_to_nonexistent()
+    assert response.status_code == 400, response.content
+    assert response.content == 'There is no such domain. You can register it!', response.content
 
     # Now, let's send a recoveryToken to benb3. This function returns
     # the actual token, which is good, because we need it later.

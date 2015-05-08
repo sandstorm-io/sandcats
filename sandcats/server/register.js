@@ -174,6 +174,15 @@ doSendRecoveryToken = function(request, response) {
                           plainTextOnly);
   }
 
+  // If the form data refers to a domain name that does not exist,
+  // then bail out now.
+  if (! validatedFormData.formData.domainExistsSoCanBeRecovered) {
+    return finishResponse(400,
+                          {'text': 'There is no such domain. You can register it!'},
+                          response,
+                          plainTextOnly);
+  }
+
   if (validatedFormData.formData.okToSendRecoveryToken) {
     // Get the corresponding UserRegistration object, and then
     // give it a fresh recoveryData attribute.

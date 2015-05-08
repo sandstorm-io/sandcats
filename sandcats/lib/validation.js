@@ -44,6 +44,15 @@ Mesosphere.registerRule('extraHyphenRegexes', function (fieldValue, ruleValue) {
   return true;
 });
 
+Mesosphere.registerAggregate('domainExistsSoCanBeRecovered', function(fields, formFieldsObject) {
+  // Sending a recovery token only makes sense if the hostname
+  // actually exists.
+  var userRegistration = UserRegistrations.findOne({'hostname': formFieldsObject.rawHostname});
+
+  // Take that userRegistration and "cast it to a boolean", Javascript style.
+  return !! userRegistration;
+});
+
 Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFieldsObject) {
   // Recovery is authorized under the following circumstances.
   //
@@ -360,6 +369,7 @@ Mesosphere({
 
   },
   aggregates: {
-    okToSendRecoveryToken: ['okToSendRecoveryToken', ['rawHostname']]
+    okToSendRecoveryToken: ['okToSendRecoveryToken', ['rawHostname']],
+    domainExistsSoCanBeRecovered: ['domainExistsSoCanBeRecovered', ['rawHostname']]
   }
 });
