@@ -643,7 +643,7 @@ def test_recovery():
     # OK! So finally let's re-register benb3's domain, with a fresh
     # cert and the right recovery token.
     response = recover_benb3_via_recovery_token_and_fresh_cert(recoveryToken)
-    assert response.content == 'OK! You have recovered your domain.', response.content
+    assert response.content == 'OK! You have recovered your domain. Next we will update your IP address.', response.content
     assert response.status_code == 200
 
     # Try to do it a second time; discover that the token only works once.
