@@ -529,7 +529,7 @@ def test_register():
     parsed_content = response.json()
     assert (
         parsed_content['text'] ==
-        'This hostname is already in use. Try a new name.'
+        'This hostname is already in use. Type help if you need to recover access, or pick a new one.'
     )
     assert_nxdomain(resolver, 'ftp.sandcatz.io', 'A')
 
@@ -588,7 +588,7 @@ def test_register():
     # Using the benb2 key, attempt to steal benb's DNS domain.
     response = register_benb1_with_benb2_key()
     assert response.status_code == 400
-    assert response.content == 'This hostname is already in use. Try a new name.'
+    assert response.content == 'This hostname is already in use. Type help if you need to recover access, or pick a new one.'
 
     # Finally, register benb2 successfully.
     response = register_benb2_successfully_text_plain()

@@ -38,7 +38,7 @@ function responseFromFormFailure(validatedFormData) {
     if (validatedFormData.errors.rawHostname &&
         validatedFormData.errors.rawHostname.hostnameUnused) {
       response['text'] = (
-        'This hostname is already in use. Try a new name.');
+        'This hostname is already in use. Type help if you need to recover access, or pick a new one.');
     }
 
     if (validatedFormData.errors.pubkey) {
