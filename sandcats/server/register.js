@@ -386,11 +386,10 @@ doUpdate = function(request, response) {
     return;
   }
 
-  // So far, all consumers of doUpdate know how to understand JSON.
-  //
-  // Therefore, we do not need to support the plain text output format
-  // that doRegister() needs.
-  var plainTextOnly = false;
+  // doUpdate is used both by the Sandstorm (C++/JS) code as well as
+  // the install script (as part of the domain recovery flow), so we
+  // do the same thing as usual to support plain text output.
+  var plainTextOnly = wantsPlainText(request);
 
   var rawFormData = getFormDataFromRequest(request);
 
