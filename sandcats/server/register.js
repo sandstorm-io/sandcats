@@ -380,7 +380,6 @@ function updateUserRegistration(formData) {
 }
 
 doUpdate = function(request, response) {
-  console.log('hi 1');
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
     return;
