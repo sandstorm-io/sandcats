@@ -16,9 +16,16 @@ if (Meteor.isServer) {
 // HTTP API-type URL handling.
 
 Router.map(function() {
-  // Provide a trivial front page, to avoid the Iron Router default.
+  // Redirect the front page to the Sandstorm wiki.
   this.route('root', {
-    path: '/'
+    path: '/',
+    where: 'server',
+    action: function() {
+      this.response.writeHead(302, {
+        'Location': 'https://github.com/sandstorm-io/sandstorm/wiki/Sandcats-dynamic-DNS'
+      });
+      this.response.end();
+    }
   });
 
   this.route('register', {
