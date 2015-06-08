@@ -202,6 +202,13 @@ def register_ftp_with_benb2_key():
         key_number=2)
 
 
+def register_capitalized_ftp_with_benb2_key():
+    return _make_api_call(
+        external_ip=True,
+        rawHostname='ftp',
+        key_number=2)
+
+
 def register_hyphen_start_with_benb2_key():
     return _make_api_call(
         rawHostname='-shouldfail',
@@ -523,8 +530,19 @@ def test_register():
 
     # Attempt to register ftp as a domain. This should fail, and if it
     # does successfully fail, then we can be reasonably confident that
-    # all the various disallowed names also fail.
+    # all the various blocked/disallowed names also fail.
     response = register_ftp_with_benb2_key()
+    assert response.status_code == 400, response.content
+    parsed_content = response.json()
+    assert (
+        parsed_content['text'] ==
+        'This hostname is already in use. Type help if you need to recover access, or pick a new one.'
+    )
+    assert_nxdomain(resolver, 'ftp.sandcatz.io', 'A')
+
+    # Attempt to register FTP (uppercase). Same as previous test; this
+    # verifies domain blocking is case-sensitive.
+    response = register_capitalized_ftp_with_benb2_key()
     assert response.status_code == 400, response.content
     parsed_content = response.json()
     assert (
