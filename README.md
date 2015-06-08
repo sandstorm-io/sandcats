@@ -32,7 +32,7 @@ Other software/services:
 
 * NSUpdate.info: free of cost public service; open source backend.
 
-* duckdns.com: free of cost public service; very responsive
+* duckdns.org: free of cost public service; very responsive
   maintainers; backend unavailable.
 
 # How to run this: Three ways
