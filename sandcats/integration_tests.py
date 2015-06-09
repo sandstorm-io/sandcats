@@ -205,7 +205,7 @@ def register_ftp_with_benb2_key():
 def register_capitalized_ftp_with_benb2_key():
     return _make_api_call(
         external_ip=True,
-        rawHostname='ftp',
+        rawHostname='FTP',
         key_number=2)
 
 
