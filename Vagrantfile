@@ -7,7 +7,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Base ourselves on a reasonable-seeming Debian base box. Jessie so
   # we can have systemd.
-  config.vm.box = "thoughtbot/debian-jessie-64"
+  config.vm.box = "debian/jessie64"
 
   # This Vagrantfile creates two machines: the main machine, and a
   # secondary.
@@ -40,7 +40,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     # Use a shell script that contains steps required to initialize a
     # sandcats server.
-    default.vm.provision "shell", inline: "cd /etc/apt && sudo sed -i s,ftp.us.debian.org,http.debian.net,g /etc/apt/sources.list && cd /vagrant && sudo apt-get --quiet=2 update && sudo -u vagrant make stage-provision"
+    default.vm.provision "shell", inline: "cd /vagrant && sudo apt-get --quiet=2 update && sudo -u vagrant make stage-provision"
   end
 
   # If you're developing on Sandcats itself, you won't need to think
@@ -55,6 +55,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # machine.
     secondary.vm.network :private_network, ip: "169.254.253.3"
 
-    secondary.vm.provision "shell", inline: "cd /etc/apt && sudo sed -i s,ftp.us.debian.org,http.debian.net,g /etc/apt/sources.list && cd /vagrant/secondary && sudo apt-get --quiet=2 update && sudo -u vagrant MYSQL_PRIMARY_IP_ADDRESS=169.254.253.2 make stage-before-authorize"
+    secondary.vm.provision "shell", inline: "cd /vagrant/secondary && sudo apt-get --quiet=2 update && sudo -u vagrant MYSQL_PRIMARY_IP_ADDRESS=169.254.253.2 make stage-before-authorize"
   end
 end
