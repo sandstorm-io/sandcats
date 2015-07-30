@@ -60,4 +60,38 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     secondary.vm.provision "shell", inline: "cd /vagrant/secondary && sudo apt-get --quiet=2 update && sudo -u vagrant MYSQL_PRIMARY_IP_ADDRESS=169.254.253.2 make stage-before-authorize"
   end
+
+  ### Copied from sandstorm/Vagrantfile:
+  #
+  # Use the same number of CPUs within Vagrant as the system, with 1
+  # as a default.
+  #
+  # Use at least 512MB of RAM, and if the system has more than 2GB of
+  # RAM, use 1/4 of the system RAM. This seems a reasonable compromise
+  # between having the Vagrant guest operating system not run out of
+  # RAM entirely (which it basically would if we went much lower than
+  # 512MB) and also allowing it to use up a healthily large amount of
+  # RAM so it can run faster on systems that can afford it.
+  assign_cpus = nil
+  assign_ram_mb = nil
+  if cpus.nil?
+    assign_cpus = 1
+  else
+    assign_cpus = cpus
+  end
+  if total_kB_ram.nil? or total_kB_ram < 2048000
+    assign_ram_mb = 512
+  else
+    assign_ram_mb = (total_kB_ram / 1024 / 4)
+  end
+
+  # Actually provide the computed CPUs/memory to the backing provider.
+  config.vm.provider :virtualbox do |vb|
+    vb.cpus = assign_cpus
+    vb.memory = assign_ram_mb
+  end
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.cpus = assign_cpus
+    libvirt.memory = assign_ram_mb
+  end
 end
