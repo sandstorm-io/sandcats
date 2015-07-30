@@ -9,6 +9,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # we can have systemd.
   config.vm.box = "debian/jessie64"
 
+  # Avoid 'stdin is not a tty' pseudo-error.
+  config.ssh.pty = true
+
   # This Vagrantfile creates two machines: the main machine, and a
   # secondary.
   #
