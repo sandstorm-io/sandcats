@@ -16,6 +16,8 @@ Mesosphere.registerRule('keyFingerprintUnique', function (fieldValue, ruleValue)
   return true;
 });
 
+// Provide a "public key must be unique" rule, for validating the
+// public key. Mesosphere handles making sure it is the right length.
 // Add extra constraints about hyphen use: can't start with a hyphen; can't end with
 // a hyphen; can't have two hyphens next to each other.
 Mesosphere.registerRule('extraHyphenRegexes', function (fieldValue, ruleValue) {
@@ -51,6 +53,45 @@ Mesosphere.registerAggregate('domainExistsSoCanBeRecovered', function(fields, fo
 
   // Take that userRegistration and "cast it to a boolean", Javascript style.
   return !! userRegistration;
+});
+
+var pem = Meteor.npmRequire('pem');
+var readCertificateInfo = Meteor.wrapAsync(pem.readCertificateInfo);
+
+getCommonNameFromCsr = function(csrData) {
+  try {
+    return readCertificateInfo(csrData).commonName || "";
+  } catch (error) {
+    console.error(error);
+    return "";
+  }
+};
+
+Mesosphere.registerAggregate('certificateMatchesHostname', function(fields, formFieldsObject) {
+  var csr = formFieldsObject.certificateSigningRequest;
+  if (!csr) {
+    return false;
+  }
+
+  var commonNameFromCsr = getCommonNameFromCsr(csr);
+
+  var baseDomainWithDot = "." + Meteor.settings.BASE_DOMAIN;
+
+  // Verify that the hostname ends in our BASE_DOMAIN
+  if (! commonNameFromCsr.endsWith(baseDomainWithDot)) {
+    return false;
+  }
+
+  // Remove exactly one reference of that from the end.
+  var hostnameFromCsr = commonNameFromCsr.slice(
+    0, commonNameFromCsr.lastIndexOf(baseDomainWithDot));
+
+  // FIXME: Verify for case-insensitivity.
+  if (formFieldsObject.rawHostname === hostnameFromCsr) {
+    return true;
+  }
+
+  return false;
 });
 
 Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFieldsObject) {
@@ -263,6 +304,9 @@ Mesosphere({
         extraHyphenRegexes: true,
       }
     },
+    certificateSigningRequest: {
+      required: false
+    },
     ipAddress: {
       required: true,
       format: "ipv4",
@@ -282,6 +326,9 @@ Mesosphere({
         keyFingerprintUnique: true
       },
     }
+  },
+  aggregates: {
+    certificateIsUsable: ['certificateMatchesHostname', ['rawHostname', 'certificateSigningRequest']]
   }
 });
 
