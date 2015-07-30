@@ -62,7 +62,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   ### Copied from sandstorm/Vagrantfile:
-  #
+  # Calculate the number of CPUs and the amount of RAM the system has,
+  # in a platform-dependent way; further logic below.
+  cpus = nil
+  total_kB_ram = nil
+
+  host = RbConfig::CONFIG['host_os']
+  if host =~ /darwin/
+    cpus = `sysctl -n hw.ncpu`.to_i
+    total_kB_ram =  `sysctl -n hw.memsize`.to_i / 1024
+  elsif host =~ /linux/
+    cpus = `nproc`.to_i
+    total_kB_ram = `grep MemTotal /proc/meminfo | awk '{print $2}'`.to_i
+  end
+
   # Use the same number of CPUs within Vagrant as the system, with 1
   # as a default.
   #
