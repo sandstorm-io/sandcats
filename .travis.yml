@@ -23,6 +23,9 @@ before_install:
   # Make sure locales are in a healthy shape.
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
+  # On Travis-CI, remove insserv, since the Travis-CI version breaks w/ nginx.
+  - sudo dpkg -r --force-depends insserv
+  - sudo apt-get --quiet=2 --fix-broken install >/dev/null
   # Remove udev, and let us get the Debian version.
   - sudo dpkg --purge --force-depends --force-remove-essential udev initramfs-tools plymouth mountall upstart ureadahead
   - sudo apt-get --quiet=2 --fix-broken install || echo "Working around..."
