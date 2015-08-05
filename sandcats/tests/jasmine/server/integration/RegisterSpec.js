@@ -91,6 +91,10 @@ Jasmine.onTest(function () {
 
       it('should return a signed certificate for the domain', function() {
       });
+
+      it('time to exit', function() {
+        // See input-filter.py for the need for this. Sad but OK.
+      });
     });
   });
 });
