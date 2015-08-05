@@ -21,6 +21,9 @@ stage-provision: stage-dev-setup stage-mongodb-setup stage-mysql-setup stage-set
 action-deploy-app: stage-install-service action-update-source
 	if sudo grep -q systemd /proc/1/exe ; then sudo systemctl restart sandcats.service ; fi
 
+action-run-dev:
+	(cd sandcats ; MAIL_URL=smtp://localhost:2500 meteor run --settings=dev-settings.json )
+
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
 	cd sandcats && python integration_tests.py
 
