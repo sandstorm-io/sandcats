@@ -40,6 +40,8 @@ before_install:
   - sudo rsync -a $PWD/. /vagrant/.
   # We run 'meteor' below first to do the user-specific install process...
   - meteor --version
+  # We need Twisted for the silly Python script.
+  - sudo apt-get --quiet=2 -y install python-twisted
   # ...and now we do the actual meteor run command.
 script:
   - bash .travis-run-tests.sh

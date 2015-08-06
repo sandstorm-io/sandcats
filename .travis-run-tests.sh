@@ -2,6 +2,14 @@
 set +e  # failure OK for now...
 set -x
 
+# Run the unit tests, which run via Jasmine+Velocity.
+ln -s /etc/sandcats-meteor-settings.json sandcats/dev-settings.json
+make action-run-unit-tests
+
+# Now run the full-on integration tests, which do DNS queries and do
+# real timeouts so run somewhat slowly at the moment, requiring a
+# working nginx setup etc.
+
 pushd /vagrant/sandcats
 MAIL_URL=smtp://localhost:2500/ MONGO_URL=mongodb://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json &
 popd
@@ -34,5 +42,4 @@ sudo service pdns restart
 # Restart nginx, in case it is wants to be all 502-y
 sudo service nginx restart
 
-# Now, actually run the tests
 make action-run-tests

@@ -3,6 +3,12 @@ if (Meteor.isServer) {
     // Validate that the config file contains the data we need.
     validateSettings();
 
+    /* In the mirror process for running automated tests, do not do
+     * PowerDNS setup nor UDP pings setup. */
+    if (process.env.IS_MIRROR) {
+      return;
+    }
+
     // Create our DNS zone for PowerDNS, if necessary.
     mysqlQuery = createWrappedQuery();
     createDomainIfNeeded(mysqlQuery);

@@ -16,6 +16,8 @@ Mesosphere.registerRule('keyFingerprintUnique', function (fieldValue, ruleValue)
   return true;
 });
 
+// Provide a "public key must be unique" rule, for validating the
+// public key. Mesosphere handles making sure it is the right length.
 // Add extra constraints about hyphen use: can't start with a hyphen; can't end with
 // a hyphen; can't have two hyphens next to each other.
 Mesosphere.registerRule('extraHyphenRegexes', function (fieldValue, ruleValue) {
@@ -53,6 +55,45 @@ Mesosphere.registerAggregate('domainExistsSoCanBeRecovered', function(fields, fo
   return !! userRegistration;
 });
 
+function commonNameMatchesHostname(csr, rawHostname) {
+  var commonNameFromCsr = getCommonNameFromCsr(csr);
+
+  var baseDomainWithDot = "." + Meteor.settings.BASE_DOMAIN;
+
+  // Verify that the hostname ends in our BASE_DOMAIN
+  if (! commonNameFromCsr.endsWith(baseDomainWithDot)) {
+    return false;
+  }
+
+  // Remove exactly one reference of that from the end.
+  var hostnameFromCsr = commonNameFromCsr.slice(
+    0, commonNameFromCsr.lastIndexOf(baseDomainWithDot));
+
+  // This converts the hostname on both sides to lowercase, doing
+  // a case-insensitive comparison.
+  if (rawHostname.toLowerCase() === hostnameFromCsr.toLowerCase()) {
+    return true;
+  }
+
+  return false;
+}
+
+Mesosphere.registerAggregate('getCertificateIsAuthorized', function(fields, formFieldsObject) {
+  var csr = formFieldsObject.certificateSigningRequest;
+  if (!csr) {
+    return false;
+  }
+
+  var pubkey = formFieldsObject.pubkey;
+  var hostname = formFieldsObject.rawHostname;
+
+  if (! _hostnameAndPubkeyMatch(pubkey, hostname)) {
+    return false;
+  }
+
+  return commonNameMatchesHostname(csr, hostname);
+});
+
 Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFieldsObject) {
   // Recovery is authorized under the following circumstances.
   //
@@ -88,10 +129,7 @@ Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFields
   return false;
 });
 
-Mesosphere.registerAggregate('hostnameAndPubkeyMatch', function(fields, formFieldsObject) {
-  var pubkey = formFieldsObject.pubkey;
-  var hostname = formFieldsObject.rawHostname;
-
+function _hostnameAndPubkeyMatch(pubkey, hostname) {
   if (UserRegistrations.findOne({publicKeyId: pubkey,
                                  hostname: hostname})) {
     // This means we have a match. Hooray!
@@ -100,6 +138,13 @@ Mesosphere.registerAggregate('hostnameAndPubkeyMatch', function(fields, formFiel
 
   // By default, do not permit the update.
   return false;
+}
+
+Mesosphere.registerAggregate('hostnameAndPubkeyMatch', function(fields, formFieldsObject) {
+  var pubkey = formFieldsObject.pubkey;
+  var hostname = formFieldsObject.rawHostname;
+
+  return _hostnameAndPubkeyMatch(pubkey, hostname);
 });
 
 var RECOVERY_TIME_PERIOD_IN_SECONDS = 15 * 60;
@@ -263,6 +308,9 @@ Mesosphere({
         extraHyphenRegexes: true,
       }
     },
+    certificateSigningRequest: {
+      required: false
+    },
     ipAddress: {
       required: true,
       format: "ipv4",
@@ -315,6 +363,35 @@ Mesosphere({
   },
   aggregates: {
     updateIsAuthorized: ['hostnameAndPubkeyMatch', ['rawHostname', 'pubkey']]
+  }
+});
+
+// Create validator for a request that we sign a CSR.
+Mesosphere({
+  name: 'getCertificate',
+  fields: {
+    rawHostname: {
+      required: true,
+      format: /^[0-9a-zA-Z-]+$/,
+      transforms: ["clean", "toLowerCase"],
+      rules: {
+        minLength: 1,
+        maxLength: 20
+      }
+    },
+    certificateSigningRequest: {
+      required: true
+    },
+    pubkey: {
+      required: true,
+      rules: {
+        minLength: 40,
+        maxLength: 40
+      },
+    }
+  },
+  aggregates: {
+    isAuthorized: ['getCertificateIsAuthorized', ['pubkey', 'rawHostname', 'certificateSigningRequest']]
   }
 });
 

@@ -424,9 +424,9 @@ def reset_app_state():
     # We require a restart of the app, if it's in development mode.
     os.system('killall -INT node')
 
-    os.system('sudo service pdns restart')
     time.sleep(1)  # Make sure the restart gets a chance to start, to avoid HTTP 502.
     os.system('sudo service nginx restart')
+    os.system('sudo service pdns restart')
     # Attempt to get the homepage, which will mean that Meteor is back, waiting at most 10 seconds.
     requests.get('http://localhost/', timeout=10)
 
@@ -759,14 +759,15 @@ def test_udp_protocol():
         client.close()
 
     # Now, make sure that benb3 would not be surprised by messages
-    # from localhost.
-    message = 'benb3 0123456789abcdef'
+    # from localhost. Use a slightly different constant so we know
+    # we're not being somehow fooled by duplicate messages.
+    message = 'benb3 abcdef0123456789'
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
         client.settimeout(1)
-        client.recv(1024)
-        assert False, "We were hoping for no response."
+        data = client.recv(1024)
+        assert False, "We were hoping for no response, but got " + repr(data)
     except socket.timeout:
         # Hooray! No response.
         print "."

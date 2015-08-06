@@ -27,6 +27,12 @@ action-run-dev:
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
 	cd sandcats && python integration_tests.py
 
+action-run-unit-tests:
+	(cd sandcats ; tail --retry -f ./.meteor/local/log/jasmine-server-integration.log & (meteor --test --settings=dev-settings.json 2>&1 || true) | python ../meteor-testing-nonsense/input-filter.py )
+
+action-run-unit-tests-continuously:
+	(cd sandcats ; tail --retry -f ./.meteor/local/log/jasmine-server-integration.log & meteor --test --settings=dev-settings.json )
+
 /srv/sandcats/source/.git: /usr/share/doc/git
 	sudo mkdir -p /srv/sandcats/source
 	sudo chown -R vagrant /srv/sandcats/source

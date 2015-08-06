@@ -60,6 +60,15 @@ var settingsSchema = new SimpleSchema({
   // kind of "From:" address. Here is where we store that.
   EMAIL_FROM_ADDRESS: {
     type: String,
+  },
+
+  // When we make API calls to GlobalSign, we need to use a username
+  // and password. The username is not a secret; the password is. It
+  // is permissible to run this code without the GlobalSign username
+  // configured.
+  GLOBALSIGN_USERNAME: {
+    type: String,
+    optional: true
   }
 });
 
