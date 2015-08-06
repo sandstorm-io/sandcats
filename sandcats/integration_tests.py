@@ -424,9 +424,9 @@ def reset_app_state():
     # We require a restart of the app, if it's in development mode.
     os.system('killall -INT node')
 
-    os.system('sudo service pdns restart')
     time.sleep(1)  # Make sure the restart gets a chance to start, to avoid HTTP 502.
     os.system('sudo service nginx restart')
+    os.system('sudo service pdns restart')
     # Attempt to get the homepage, which will mean that Meteor is back, waiting at most 10 seconds.
     requests.get('http://localhost/', timeout=10)
 
