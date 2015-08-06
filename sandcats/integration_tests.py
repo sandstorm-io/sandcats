@@ -759,14 +759,15 @@ def test_udp_protocol():
         client.close()
 
     # Now, make sure that benb3 would not be surprised by messages
-    # from localhost.
-    message = 'benb3 0123456789abcdef'
+    # from localhost. Use a slightly different constant so we know
+    # we're not being somehow fooled by duplicate messages.
+    message = 'benb3 abcdef0123456789'
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         client.sendto(message, (UDP_DEST_IP, UDP_DEST_PORT))
         client.settimeout(1)
-        client.recv(1024)
-        assert False, "We were hoping for no response."
+        data = client.recv(1024)
+        assert False, "We were hoping for no response, but got " + repr(data)
     except socket.timeout:
         # Hooray! No response.
         print "."
