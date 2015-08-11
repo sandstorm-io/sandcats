@@ -69,6 +69,22 @@ var settingsSchema = new SimpleSchema({
   GLOBALSIGN_USERNAME: {
     type: String,
     optional: true
+  },
+
+  // API calls to GlobalSign are with regard to a particular domain
+  // name. This setting configures which domain to use. It's separate
+  // from BASE_DOMAIN because the DNS domain we use for testing is
+  // not the same as the GlobalSign domain that we use for testing.
+  GLOBALSIGN_DOMAIN: {
+    type: String,
+    optional: true
+  },
+
+  // API calls to GlobalSign can use their testing API ("dev") or
+  // their live API ("prod").
+  GLOBALSIGN_DEV_OR_PROD: {
+    type: String,
+    optional: true
   }
 });
 

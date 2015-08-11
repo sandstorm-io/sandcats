@@ -407,3 +407,69 @@ doUpdate = function(request, response) {
     return finishResponse(403, {'error': 'Not authorized.'}, response, plainTextOnly);
   }
 };
+
+function doGetCertificate(request, response) {
+  var requestEnded = antiCsrf(request, response);
+  if (requestEnded) {
+    return;
+  }
+
+  // doGetCertificate is only used by the Sandstorm JS flow, and does
+  // not need to support plain-text output.
+  //
+  // Therefore we don't bother with a plainText variable in this
+  // function.
+
+  var rawFormData = getFormDataFromRequest(request);
+  var validatedFormData = Mesosphere.getcertificate.validate(rawFormData);
+
+  // If there are any outright errors, respond with that.
+  if (validatedFormData.errors) {
+    return finishResponse(400,
+                          responseFromFormFailure(validatedFormData),
+                          response,
+                          plainTextOnly);
+  }
+
+  // If the response is not authorized, e.g. uses wrong client
+  // certificate, respond with that.
+  if (! validatedFormData.isAuthorized) {
+    return finishResponse(403,
+                          {'error': 'Not authorized.'},
+                          response,
+                          plainTextOnly);
+  }
+
+  // If we got this far, things look good! Let's log a note saying we're
+  // going to ask GlobalSign for the certificate.
+
+  // Send the request to GlobalSign. Note that this seems to take
+  // about 30 seconds.
+  var globalsignResponse = issueCertificate(validatedFormData.certificateSigningRequest);
+
+  // Pass the result to a helper function we can unit-test.
+  return finishGlobalsignResponse(globalsignResponse, response);
+};
+
+finishGlobalsignResponse = function(globalsignResponse, responseCallback) {
+  if (globalsignResponse.Response.OrderResponseHeader.SuccessCode != 0) {
+    var errors = globalsignResponse.Response.OrderResponseHeader.Errors;
+    console.log(JSON.stringify(errors));
+    return finishResponse(500, {'error': 'Server error'}, responseCallback, false);
+  }
+
+  var cert = globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert;
+  var ca = [];
+  if (globalsignResponse.Response.PVOrderDetail.Fulfillment.CACertificates) {
+    var globalsignCaCertificates = globalsignResponse.Response.PVOrderDetail.Fulfillment.CACertificates.CACertificate;
+    for (var i = 0; i < globalsignCaCertificates.length; i++) {
+      ca.push(globalsignCaCertificates[i].CACert);
+    }
+  }
+  // Before returning it, add a note to Mongo, so that we can FIXME.
+  return finishResponse(200, {'cert': cert, 'ca': ca}, responseCallback, false);
+};
+
+getTestCSR = function() {
+  return Assets.getText('exampleuser2.sandcatz.io.csr');
+};
