@@ -1,5 +1,6 @@
 {
   "mysql": "2.5.4",
   "pem": "1.7.2",
-  "soap": "0.9.1"
+  "soap": "0.9.1",
+  "json-stable-stringify": "1.0.0"
 }

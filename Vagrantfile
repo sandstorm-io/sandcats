@@ -24,6 +24,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # machine.
     default.vm.network "forwarded_port", guest: 443, host: 8443
 
+    # Port 8444 within the VM is used for manually testing HTTPS.
+    default.vm.network "forwarded_port", guest: 8444, host: 8444
+
     # Expose port 80 (HTTP) as 8080 (TCP) for the HTTP (non HTTPS)
     # view of the Meteor site.
     default.vm.network "forwarded_port", guest: 80, host: 8080,
@@ -37,9 +40,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     default.vm.network "forwarded_port", guest: 53, host: 8053,
                       protocol: 'udp'
 
-    # Create a private host<->guest network, mostly for NFS.
-    default.vm.network :private_network, ip: "169.254.253.2"
-    default.vm.synced_folder ".", "/vagrant", type: "nfs"
+    default.vm.synced_folder ".", "/vagrant"
 
     # Use a shell script that contains steps required to initialize a
     # sandcats server.

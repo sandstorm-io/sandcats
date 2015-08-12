@@ -65,4 +65,16 @@ Router.map(function() {
       doUpdate(this.request, this.response);
     }
   });
+
+  this.route('getcertificate', {
+    path: '/getcertificate',
+    where: 'server',
+    action: function() {
+      /* When doGetCertificate() is ready, uncomment this.
+
+      doGetCertificate(this.request, this.response);
+
+      */
+    }
+  });
 });
