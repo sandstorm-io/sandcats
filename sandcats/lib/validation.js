@@ -269,7 +269,7 @@ Mesosphere.registerRule('hostnameUnused', function (fieldValue, ruleValue) {
   var rfc2142EmailAddresses = /^(hostmaster|postmaster|usenet|news|webmaster|www|uucp|ftp|abuse|noc|security|info|marketing|sales|support)$/;
   var caOwnershipEmails = /^(ssladmin|ssladministrator|sslwebmaster|sysadmin|is|it|mis)$/;
   var otherCommonEmails = /^(noreply|no-reply|community|mailerdaemon|mailer-daemon|nobody)$/;
-  var sandstormSpecific = /^(sandcat|sandcats|sandstorm|blackrock|capnproto|capnp|garply|asheesh|paulproteus|jade|qiqing|kenton|kentonv|jason|jparyani|david|dwrensha|oasis)$/;
+  var sandstormSpecific = /^(sandcat|sandcats|sandstorm|blackrock|capnproto|capnp|garply|asheesh|paulproteus|jade|qiqing|kenton|kentonv|jason|jparyani|david|dwrensha|oasis|example)$/;
   var powerfulHostnames = /^(wpad|isatap)$/;
   var emailAutoconfigHostnames = /^(autoconfig|imap|pop|pop3)$/;
   var localhostAndFriends = /^(localhost|localdomain|broadcasthost|_tcp|_udp)$/;
