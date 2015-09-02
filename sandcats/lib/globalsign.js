@@ -4,8 +4,8 @@ var globalsignWsdls = {
   'prod': null  // for now.
 };
 
-// We use _client to cache a working SOAP client to the particular
-// GlobalSign API endpoint we need.
+// We use _clients to cache working SOAP client to the various
+// GlobalSign API endpoints we need.
 //
 // Do not access it directly. Access it via getClient() so it can be
 // created if needed.
@@ -79,8 +79,10 @@ getMsslDomainInfo = function(domain, devOrProd) {
   return usefulResult;
 }
 
-// Like _client, _myDomainInfo caches information to avoid unnecessary
-// fetching. Don't access _myDomainInfo directly; access it via
+// Like _clients, _myDomainInfo caches information to avoid
+// unnecessary fetching. Also like _clients this variable contains
+// data from the GlobalSign prod API as well as from the GlobalSign
+// dev API. Don't access _myDomainInfo directly; access it via
 // getMyDomainInfo().
 var _myDomainInfo = {};
 getMyDomainInfo = function(devOrProd) {
