@@ -70,11 +70,7 @@ Router.map(function() {
     path: '/getcertificate',
     where: 'server',
     action: function() {
-      /* When doGetCertificate() is ready, uncomment this.
-
       doGetCertificate(this.request, this.response);
-
-      */
     }
   });
 });

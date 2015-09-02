@@ -66,7 +66,14 @@ var settingsSchema = new SimpleSchema({
   // and password. The username is not a secret; the password is. It
   // is permissible to run this code without the GlobalSign username
   // configured.
-  GLOBALSIGN_USERNAME: {
+  //
+  // This setting occurs in both DEV_ and PROD_ form.
+  GLOBALSIGN_DEV_USERNAME: {
+    type: String,
+    optional: true
+  },
+
+  GLOBALSIGN_PROD_USERNAME: {
     type: String,
     optional: true
   },
@@ -80,11 +87,29 @@ var settingsSchema = new SimpleSchema({
     optional: true
   },
 
+  // A list of hostnames that will always use the GlobalSign dev API.
+  // These hostnames can use always use the GlobalSign dev API to get
+  // certificates.
+  GLOBALSIGN_DEV_HOSTNAMES: {
+    type: [String]
+  },
+
+  // A list of hostnames that will always use the GlobalSign
+  // production API. They can use the production GlobalSign API no
+  // matter if dev or prod is the default.
+  GLOBALSIGN_PROD_HOSTNAMES: {
+    type: [String]
+  },
+
   // API calls to GlobalSign can use their testing API ("dev") or
-  // their live API ("prod").
-  GLOBALSIGN_DEV_OR_PROD: {
+  // their live API ("prod"). This specifies the default.
+  //
+  // It is safe to set this to "dev" even if you don't want GlobalSign
+  // integration to work on your particular Sandcats install. It may
+  // result in some runtime exceptions, but nothing too bad.
+  GLOBALSIGN_DEFAULT: {
     type: String,
-    optional: true
+    allowedValues: ["dev", "prod"]
   }
 });
 

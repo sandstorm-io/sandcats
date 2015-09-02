@@ -4,33 +4,51 @@ var globalsignWsdls = {
   'prod': null  // for now.
 };
 
-// We use _client to cache a working SOAP client to the particular
-// GlobalSign API endpoint we need.
+// We use _clients to cache working SOAP client to the various
+// GlobalSign API endpoints we need.
 //
 // Do not access it directly. Access it via getClient() so it can be
 // created if needed.
-var _client = null;
-function getClient() {
-  if (! Meteor.settings.GLOBALSIGN_USERNAME) {
-    throw new Error("Cannot construct client since we have no username configured.");
+var _clients = {};
+getDevOrProdByHostname = function(hostname) {
+  if (_.contains(Meteor.settings.GLOBALSIGN_DEV_HOSTNAMES, hostname)) {
+    return 'dev';
   }
+  if (_.contains(Meteor.settings.GLOBALSIGN_PROD_HOSTNAMES, hostname)) {
+    return 'prod';
+  }
+  return Meteor.settings.GLOBALSIGN_DEFAULT;
+}
 
+function getUsername(devOrProd) {
+  var usernameKey = {'dev': 'GLOBALSIGN_DEV_USERNAME',
+                     'prod': 'GLOBALSIGN_PROD_USERNAME'}[devOrProd];
+  return Meteor.settings[usernameKey];
+}
+
+function getPassword(devOrProd) {
+  var passwordKey = {'dev': 'GLOBALSIGN_DEV_PASSWORD',
+                     'prod': 'GLOBALSIGN_PROD_PASSWORD'}[devOrProd];
+  return process.env[passwordKey];
+}
+
+function getClient(devOrProd) {
   if (! Meteor.settings.GLOBALSIGN_DOMAIN) {
     throw new Error("Cannot construct client since we have no domain configured.");
   }
 
-  if (! Meteor.settings.GLOBALSIGN_DEV_OR_PROD) {
-    throw new Error("Cannot construct client since we don't know if dev or prod.");
+  if (! getUsername(devOrProd)) {
+    throw new Error("Cannot construct client since we have no username configured.");
   }
 
-  if (! process.env.GLOBALSIGN_PASSWORD) {
+  if (! getPassword(devOrProd)) {
     throw new Error("Cannot construct client since we have no password available.");
   }
 
-  if (! _client) {
-    _client = Meteor.wrapAsync(soap.createClient)(globalsignWsdls[Meteor.settings.GLOBALSIGN_DEV_OR_PROD]);
+  if (! _clients[devOrProd]) {
+    _clients[devOrProd] = Meteor.wrapAsync(soap.createClient)(globalsignWsdls[devOrProd]);
   }
-  return _client;
+  return _clients[devOrProd];
 }
 
 // For custom certificate validity, GlobalSign's API wants us to
@@ -38,14 +56,14 @@ function getClient() {
 var DUMMY_MONTHS_VALUE = 6;
 
 // Use this function to get information about a domain.
-getMsslDomainInfo = function(domain) {
-  var wrapped = Meteor.wrapAsync(getClient().GetMSSLDomains);
+getMsslDomainInfo = function(domain, devOrProd) {
+  var wrapped = Meteor.wrapAsync(getClient(devOrProd).GetMSSLDomains);
   var args = {
     'Request': {
       'QueryRequestHeader': {
         'AuthToken': {
-          'UserName': Meteor.settings.GLOBALSIGN_USERNAME,
-          'Password': process.env.GLOBALSIGN_PASSWORD
+          'UserName': getUsername(devOrProd),
+          'Password': getPassword(devOrProd)
         }}}};
   var result = wrapped(args);
   var usefulResult = {};
@@ -61,15 +79,17 @@ getMsslDomainInfo = function(domain) {
   return usefulResult;
 }
 
-// Like _client, _myDomainInfo caches information to avoid unnecessary
-// fetching. Don't access _myDomainInfo directly; access it via
+// Like _clients, _myDomainInfo caches information to avoid
+// unnecessary fetching. Also like _clients this variable contains
+// data from the GlobalSign prod API as well as from the GlobalSign
+// dev API. Don't access _myDomainInfo directly; access it via
 // getMyDomainInfo().
-var _myDomainInfo;
-getMyDomainInfo = function() {
-  if (! _myDomainInfo) {
-    _myDomainInfo = getMsslDomainInfo(Meteor.settings.GLOBALSIGN_DOMAIN);
+var _myDomainInfo = {};
+getMyDomainInfo = function(devOrProd) {
+  if (! _myDomainInfo[devOrProd]) {
+    _myDomainInfo[devOrProd] = getMsslDomainInfo(Meteor.settings.GLOBALSIGN_DOMAIN, devOrProd);
   }
-  return _myDomainInfo;
+  return _myDomainInfo[devOrProd];
 }
 
 // This function generates the list of arguments we provide to PVOrder
@@ -131,14 +151,14 @@ getOrderRequestParameter = function(csrText, now) {
 // PVOrder, including the AuthToken in the
 // OrderRequestHeader. Therefore it does require secrets and can't
 // be as easily unit-tested.
-getAllSignCsrArgs = function(domainInfo, csrText) {
+getAllSignCsrArgs = function(domainInfo, csrText, devOrProd) {
   var args = {
     'MSSLDomainID': domainInfo.MSSLDomainID,
     'MSSLProfileID': domainInfo.MSSLProfileID,
     'OrderRequestHeader': {
       'AuthToken': {
-        'UserName': Meteor.settings.GLOBALSIGN_USERNAME,
-        'Password': process.env.GLOBALSIGN_PASSWORD
+        'UserName': getUsername(devOrProd),
+        'Password': getPassword(devOrProd)
       }
     },
     // Note: ContactInfo is ignored by GlobalSign in the ManagedSSL
@@ -155,10 +175,10 @@ getAllSignCsrArgs = function(domainInfo, csrText) {
   return finalArgs;
 };
 
-issueCertificate = function(csrText) {
+issueCertificate = function(csrText, devOrProd) {
   var domainInfo = getMyDomainInfo();
   var args = getAllSignCsrArgs(domainInfo, csrText);
-  var wrapped = Meteor.wrapAsync(getClient().PVOrder);
+  var wrapped = Meteor.wrapAsync(getClient(devOrProd).PVOrder);
   var globalsignResponse = wrapped(args);
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode == -1) {
     console.log(JSON.stringify(globalsignResponse.Response.OrderResponseHeader.Errors));
