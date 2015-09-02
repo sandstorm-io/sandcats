@@ -445,7 +445,8 @@ function doGetCertificate(request, response) {
 
   // Send the request to GlobalSign. Note that this seems to take
   // about 30 seconds.
-  var globalsignResponse = issueCertificate(validatedFormData.certificateSigningRequest);
+  var devOrProd = getDevOrProdByHostname(validatedFormData.rawHostname);
+  var globalsignResponse = issueCertificate(validatedFormData.certificateSigningRequest, devOrProd);
 
   // Pass the result to a helper function we can unit-test.
   return finishGlobalsignResponse(globalsignResponse, response);
