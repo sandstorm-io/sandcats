@@ -408,7 +408,7 @@ doUpdate = function(request, response) {
   }
 };
 
-function doGetCertificate(request, response) {
+doGetCertificate = function(request, response) {
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
     return;
