@@ -416,12 +416,10 @@ doGetCertificate = function(request, response) {
 
   // doGetCertificate is only used by the Sandstorm JS flow, and does
   // not need to support plain-text output.
-  //
-  // Therefore we don't bother with a plainText variable in this
-  // function.
+  var plainTextOnly = false;
 
   var rawFormData = getFormDataFromRequest(request);
-  var validatedFormData = Mesosphere.getcertificate.validate(rawFormData);
+  var validatedFormData = Mesosphere.getCertificate.validate(rawFormData);
 
   // If there are any outright errors, respond with that.
   if (validatedFormData.errors) {
