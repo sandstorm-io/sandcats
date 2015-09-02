@@ -104,8 +104,9 @@ var settingsSchema = new SimpleSchema({
   // API calls to GlobalSign can use their testing API ("dev") or
   // their live API ("prod"). This specifies the default.
   //
-  // It is optional. If it is not set at all, then we do not use
-  // the GlobalSign API for domains not whitelisted above.
+  // It is safe to set this to "dev" even if you don't want GlobalSign
+  // integration to work on your particular Sandcats install. It may
+  // result in some runtime exceptions, but nothing too bad.
   GLOBALSIGN_DEFAULT: {
     type: String,
     allowedValues: ["dev", "prod"]
