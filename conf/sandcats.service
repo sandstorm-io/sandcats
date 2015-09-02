@@ -1,3 +1,7 @@
+[Unit]
+Description=Sandcats Meteor+Node code
+After=mysql.service
+
 [Service]
 User=vagrant
 Group=vagrant
