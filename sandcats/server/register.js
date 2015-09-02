@@ -421,7 +421,7 @@ doGetCertificate = function(request, response) {
   // function.
 
   var rawFormData = getFormDataFromRequest(request);
-  var validatedFormData = Mesosphere.getcertificate.validate(rawFormData);
+  var validatedFormData = Mesosphere.getCertificate.validate(rawFormData);
 
   // If there are any outright errors, respond with that.
   if (validatedFormData.errors) {
