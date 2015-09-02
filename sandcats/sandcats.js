@@ -22,13 +22,13 @@ if (Meteor.isServer) {
 // HTTP API-type URL handling.
 
 Router.map(function() {
-  // Redirect the front page to the Sandstorm wiki.
+  // Redirect the front page to the Sandstorm documentation.
   this.route('root', {
     path: '/',
     where: 'server',
     action: function() {
       this.response.writeHead(302, {
-        'Location': 'https://github.com/sandstorm-io/sandstorm/wiki/Sandcats-dynamic-DNS'
+        'Location': 'https://docs.sandstorm.io/en/latest/administering/sandcats/'
       });
       this.response.end();
     }
