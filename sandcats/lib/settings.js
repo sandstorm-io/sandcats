@@ -107,7 +107,8 @@ var settingsSchema = new SimpleSchema({
   // It is optional. If it is not set at all, then we do not use
   // the GlobalSign API for domains not whitelisted above.
   GLOBALSIGN_DEFAULT: {
-    type: String
+    type: String,
+    allowedValues: ["dev", "prod"]
   }
 });
 
