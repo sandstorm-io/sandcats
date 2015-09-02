@@ -26,6 +26,23 @@ Jasmine.onTest(function () {
       });
     }
 
+    describe('useCorrectGlobalSignApi', function() {
+      it('should return dev for devver1', function() {
+        var x = getDevOrProdByHostname("devver1");
+        expect(x).toBe("dev");
+      });
+
+      it('should return prod for prodder1', function() {
+        var x = getDevOrProdByHostname("prodder1");
+        expect(x).toBe("prod");
+      });
+
+      it('should return dev by default', function() {
+        var x = getDevOrProdByHostname("someone-else");
+        expect(x).toBe("dev");
+      });
+    });
+
     describe('registerActionSignsCsr', function() {
       afterEach(function () {
         // This removes all data from the database that we insert as part of

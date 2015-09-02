@@ -7,5 +7,8 @@
  "POWERDNS_PASSWORD": "3Rb4k4BQqKr59Ewj",
  "UDP_PING_PORT": 8080,
  "ROOT_URL": "https://sandcats.io/",
- "EMAIL_FROM_ADDRESS": "noreply-sandcats-example@example.com"
+ "EMAIL_FROM_ADDRESS": "noreply-sandcats-example@example.com",
+ "GLOBALSIGN_DEV_HOSTNAMES": ["devver1", "devver2"],
+ "GLOBALSIGN_PROD_HOSTNAMES": ["prodder1"],
+ "GLOBALSIGN_DEFAULT": "dev"
 }
