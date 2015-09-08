@@ -57,6 +57,7 @@ Mesosphere.registerAggregate('domainExistsSoCanBeRecovered', function(fields, fo
 
 function commonNameMatchesHostname(csr, rawHostname) {
   var commonNameFromCsr = getCommonNameFromCsr(csr);
+  console.log(JSON.stringify(commonNameFromCsr));
 
   var baseDomainWithDot = "." + Meteor.settings.BASE_DOMAIN;
 
