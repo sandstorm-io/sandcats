@@ -62,7 +62,7 @@ function commonNameMatchesHostname(csr, rawHostname) {
   var baseDomainWithDot = "." + Meteor.settings.BASE_DOMAIN;
 
   // Verify that the hostname ends in our BASE_DOMAIN
-  if (! commonNameFromCsr.endsWith(baseDomainWithDot)) {
+  if (! _.endsWith(commonNameFromCsr, baseDomainWithDot)) {
     return false;
   }
 
