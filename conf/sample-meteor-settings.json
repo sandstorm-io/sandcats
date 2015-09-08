@@ -10,5 +10,6 @@
  "EMAIL_FROM_ADDRESS": "noreply-sandcats-example@example.com",
  "GLOBALSIGN_DEV_HOSTNAMES": ["devver1", "devver2"],
  "GLOBALSIGN_PROD_HOSTNAMES": ["prodder1"],
+ "GLOBALSIGN_DOMAIN": "sandcatz.io",
  "GLOBALSIGN_DEFAULT": "dev"
 }

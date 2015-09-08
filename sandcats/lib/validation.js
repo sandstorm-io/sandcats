@@ -59,9 +59,10 @@ function commonNameMatchesHostname(csr, rawHostname) {
   var commonNameFromCsr = getCommonNameFromCsr(csr);
   console.log("Found common name:", JSON.stringify(commonNameFromCsr));
 
-  var baseDomainWithDot = "." + Meteor.settings.BASE_DOMAIN;
+  var baseDomainWithDot = "." + Meteor.settings.GLOBALSIGN_DOMAIN;
 
-  // Verify that the hostname ends in our BASE_DOMAIN
+  // Verify that the hostname ends in the currently-configured domain for
+  // GlobalSign.
   if (! _.endsWith(commonNameFromCsr, baseDomainWithDot)) {
     console.log("Seems that", commonNameFromCsr, "does not end with", baseDomainWithDot);
     return false;
