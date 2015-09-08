@@ -23,7 +23,7 @@ getDevOrProdByHostname = function(hostname) {
 function getUsername(devOrProd) {
   var usernameKey = {'dev': 'GLOBALSIGN_DEV_USERNAME',
                      'prod': 'GLOBALSIGN_PROD_USERNAME'}[devOrProd];
-  return Meteor.settings[usernameKey];
+  return Meteor.settings[usernameKey] || process.env[usernameKey];
 }
 
 function getPassword(devOrProd) {
