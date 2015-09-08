@@ -63,6 +63,7 @@ function commonNameMatchesHostname(csr, rawHostname) {
 
   // Verify that the hostname ends in our BASE_DOMAIN
   if (! _.endsWith(commonNameFromCsr, baseDomainWithDot)) {
+    console.log("Seems that", commonNameFromCsr, "does not end with", baseDomainWithDot);
     return false;
   }
 
