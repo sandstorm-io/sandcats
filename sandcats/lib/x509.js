@@ -1,17 +1,17 @@
 // Code that deals with parsing data out of certificates lives here.
-merge = Meteor.npmRequire("node.extend");
-common = Meteor.npmRequire("asn1js/org/pkijs/common.js");
-_asn1js = Meteor.npmRequire("asn1js");
-_pkijs = Meteor.npmRequire("pkijs");
-_x509schema = Meteor.npmRequire("pkijs/org/pkijs/x509_schema.js");
+var merge = Meteor.npmRequire("node.extend");
+var common = Meteor.npmRequire("asn1js/org/pkijs/common.js");
+var _asn1js = Meteor.npmRequire("asn1js");
+var _pkijs = Meteor.npmRequire("pkijs");
+var _x509schema = Meteor.npmRequire("pkijs/org/pkijs/x509_schema.js");
 
 // #region Merging function/object declarations for ASN1js and PKIjs
-asn1js = merge(true, _asn1js, common);
+var asn1js = merge(true, _asn1js, common);
 
-x509schema = merge(true, _x509schema, asn1js);
+var x509schema = merge(true, _x509schema, asn1js);
 
-pkijs_1 = merge(true, _pkijs, asn1js);
-pkijs = merge(true, pkijs_1, x509schema);
+var pkijs_1 = merge(true, _pkijs, asn1js);
+var pkijs = merge(true, pkijs_1, x509schema);
 
 getCommonNameFromCsr = function(csrData) {
   var csrData = csrData.replace(/(-----(BEGIN|END) CERTIFICATE REQUEST-----|\n)/g, '');
