@@ -143,7 +143,7 @@ getOrderRequestParameter = function(csrText, now) {
       'CSR': csrText
     }
   };
-  console.log(args);
+  console.log("Created GlobalSign API parameters:", JSON.stringify(args));
   return args;
 }
 
@@ -171,7 +171,6 @@ getAllSignCsrArgs = function(domainInfo, csrText, devOrProd) {
   };
   args = _.extend(args, getOrderRequestParameter(csrText));
   var finalArgs = {'Request': args};
-  console.log(JSON.stringify(finalArgs));
   return finalArgs;
 };
 
@@ -181,7 +180,7 @@ issueCertificate = function(csrText, devOrProd) {
   var wrapped = Meteor.wrapAsync(getClient(devOrProd).PVOrder);
   var globalsignResponse = wrapped(args);
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode == -1) {
-    console.log(JSON.stringify(globalsignResponse.Response.OrderResponseHeader.Errors));
+    console.log("Received error from GlobalSign:", JSON.stringify(globalsignResponse.Response.OrderResponseHeader.Errors));
   }
   return globalsignResponse;
 };
