@@ -72,8 +72,13 @@ function commonNameMatchesHostname(csr, rawHostname) {
 
   // This converts the hostname on both sides to lowercase, doing
   // a case-insensitive comparison.
-  if (rawHostname.toLowerCase() === hostnameFromCsr.toLowerCase()) {
+  var hostnameToCheck = rawHostname.toLowerCase();
+  var csrHostnameToCheck = hostnameFromCsr.toLowerCase();
+
+  if (hostnameToCheck === csrHostnameToCheck) {
     return true;
+  } else {
+    console.log("In commonNameMatchesHostname:", hostnameToCheck, "!=", csrHostnameToCheck);
   }
 
   return false;
