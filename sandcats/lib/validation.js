@@ -143,6 +143,7 @@ function _hostnameAndPubkeyMatch(pubkey, hostname) {
   }
 
   // By default, do not permit the update.
+  console.log("Rejecting access to hostname", hostname, "from pubkey", pubkey);
   return false;
 }
 
