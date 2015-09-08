@@ -1,6 +1,9 @@
 {
   "mysql": "2.5.4",
   "pem": "1.7.2",
-  "soap": "0.9.1",
-  "json-stable-stringify": "1.0.0"
+  "soap": "0.9.0",
+  "json-stable-stringify": "1.0.0",
+  "pkijs": "1.2.3",
+  "asn1js": "1.2.2",
+  "node.extend": "1.1.5"
 }
