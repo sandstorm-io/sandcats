@@ -28,7 +28,7 @@ action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython
 	cd sandcats && python integration_tests.py
 
 action-run-unit-tests:
-	(cd sandcats ; tail --retry -f ./.meteor/local/log/jasmine-server-integration.log & (meteor --test --settings=dev-settings.json 2>&1 || true) | python ../meteor-testing-nonsense/input-filter.py )
+	(cd sandcats ; tail -c 0 --retry -f ./.meteor/local/log/jasmine-server-integration.log & (meteor --test --settings=dev-settings.json 2>&1 || true) | python ../meteor-testing-nonsense/input-filter.py )
 
 action-run-unit-tests-continuously:
 	(cd sandcats ; tail --retry -f ./.meteor/local/log/jasmine-server-integration.log & meteor --test --settings=dev-settings.json )
