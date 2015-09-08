@@ -38,19 +38,19 @@ action-run-unit-tests-continuously:
 	sudo chown -R vagrant /srv/sandcats/source
 	sudo -H -u vagrant git clone https://github.com/sandstorm-io/sandcats.git /srv/sandcats/source
 
-/opt/node-v0.10.33-linux-x64:
+/opt/node-v0.10.36-linux-x64:
 	$(eval TMPDIR := $(shell mktemp -d /tmp/nodejs.XXXXXXX))
 	# Download the tarball, and check it against a SHA that we verified earlier.
-	cd $(TMPDIR) && wget https://nodejs.org/dist/v0.10.33/node-v0.10.33-linux-x64.tar.gz
-	cd $(TMPDIR) && sha256sum node-v0.10.33-linux-x64.tar.gz | grep 159e5485d0fb5c913201baae49f68fd428a7e3b08262e9bf5003c1b399705ca8
-	cd $(TMPDIR) && tar zxf node-v0.10.33-linux-x64.tar.gz
-	cd $(TMPDIR) && sudo mv node-v0.10.33-linux-x64 /opt
+	cd $(TMPDIR) && wget https://nodejs.org/dist/v0.10.36/node-v0.10.36-linux-x64.tar.gz
+	cd $(TMPDIR) && sha256sum node-v0.10.36-linux-x64.tar.gz | grep 2bc13477684a9fe534bdc9d8f4a8caf6257a11953b57c42cad9b919ee259a0d5
+	cd $(TMPDIR) && tar zxf node-v0.10.36-linux-x64.tar.gz
+	cd $(TMPDIR) && sudo mv node-v0.10.36-linux-x64 /opt
 
-/usr/local/bin/npm: /opt/node-v0.10.33-linux-x64
-	sudo ln -sf /opt/node-v0.10.33-linux-x64/bin/npm /usr/local/bin/npm
+/usr/local/bin/npm: /opt/node-v0.10.36-linux-x64
+	sudo ln -sf /opt/node-v0.10.36-linux-x64/bin/npm /usr/local/bin/npm
 
-/usr/local/bin/node:
-	sudo ln -sf /opt/node-v0.10.33-linux-x64/bin/node /usr/local/bin/node
+/usr/local/bin/node: /opt/node-v0.10.36-linux-x64
+	sudo ln -sf /opt/node-v0.10.36-linux-x64/bin/node /usr/local/bin/node
 
 action-update-source: /usr/local/bin/node /usr/local/bin/npm /srv/sandcats/source/.git
 	# Get latest code.
