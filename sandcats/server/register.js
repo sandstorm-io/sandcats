@@ -431,7 +431,7 @@ doGetCertificate = function(request, response) {
 
   // If the response is not authorized, e.g. uses wrong client
   // certificate, respond with that.
-  if (! validatedFormData.isAuthorized) {
+  if (! validatedFormData.formData.isAuthorized) {
     return finishResponse(403,
                           {'error': 'Not authorized.'},
                           response,
@@ -443,8 +443,8 @@ doGetCertificate = function(request, response) {
 
   // Send the request to GlobalSign. Note that this seems to take
   // about 30 seconds.
-  var devOrProd = getDevOrProdByHostname(validatedFormData.rawHostname);
-  var globalsignResponse = issueCertificate(validatedFormData.certificateSigningRequest, devOrProd);
+  var devOrProd = getDevOrProdByHostname(validatedFormData.formData.rawHostname);
+  var globalsignResponse = issueCertificate(validatedFormData.formData.certificateSigningRequest, devOrProd);
 
   // Pass the result to a helper function we can unit-test.
   return finishGlobalsignResponse(globalsignResponse, response);

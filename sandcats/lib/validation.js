@@ -79,10 +79,9 @@ function commonNameMatchesHostname(csr, rawHostname) {
 
   if (hostnameToCheck === csrHostnameToCheck) {
     return true;
-  } else {
-    console.log("In commonNameMatchesHostname:", hostnameToCheck, "!=", csrHostnameToCheck);
   }
 
+  console.log("In commonNameMatchesHostname:", hostnameToCheck, "!=", csrHostnameToCheck);
   return false;
 }
 

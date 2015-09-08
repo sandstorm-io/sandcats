@@ -21,6 +21,9 @@ getDevOrProdByHostname = function(hostname) {
 }
 
 function getUsername(devOrProd) {
+  if (! devOrProd) {
+    throw new Error("getUsername needs to know if you want dev or prod.");
+  }
   var usernameKey = {'dev': 'GLOBALSIGN_DEV_USERNAME',
                      'prod': 'GLOBALSIGN_PROD_USERNAME'}[devOrProd];
   return Meteor.settings[usernameKey] || process.env[usernameKey];
@@ -175,8 +178,8 @@ getAllSignCsrArgs = function(domainInfo, csrText, devOrProd) {
 };
 
 issueCertificate = function(csrText, devOrProd) {
-  var domainInfo = getMyDomainInfo();
-  var args = getAllSignCsrArgs(domainInfo, csrText);
+  var domainInfo = getMyDomainInfo(devOrProd);
+  var args = getAllSignCsrArgs(domainInfo, csrText, devOrProd);
   var wrapped = Meteor.wrapAsync(getClient(devOrProd).PVOrder);
   var globalsignResponse = wrapped(args);
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode == -1) {
