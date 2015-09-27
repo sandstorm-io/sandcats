@@ -70,8 +70,14 @@ getMsslDomainInfo = function(domain, devOrProd) {
         }}}};
   var result = wrapped(args);
   var usefulResult = {};
-  for (var i = 0; i < result.Response.SearchMsslDomainDetails.SearchMsslDomainDetail.length; i++) {
-    var detail = result.Response.SearchMsslDomainDetails.SearchMsslDomainDetail[i];
+  var details;
+  try {
+    details = result.Response.SearchMsslDomainDetails.SearchMsslDomainDetail;
+  } catch (e) {
+    console.error("Failed to get the details we wanted", e);
+  }
+  for (var i = 0; i < detail; i++) {
+    var detail = details[i];
     if (detail.MSSLDomainName == domain) {
       usefulResult['MSSLDomainID'] = detail.MSSLDomainID;
       usefulResult['MSSLProfileID'] = detail.MSSLProfileID;
