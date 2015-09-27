@@ -215,12 +215,18 @@ logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
     throw new Error("logIssueCertificateSuccess: Missing certificate info in response. " +
                     "Received: " + globalsignResponse);
   }
-  var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
-    globalsignCertificateInfo: certificateInfo}});
-  if (numAffected != 1) {
-    throw new Error("logIssueCertificateSuccess changed " + numAffected +
-                    " documents when it meant to change 1. ID was: ",
-                    logEntryId);
+  try {
+    var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
+      globalsignCertificateInfo: certificateInfo}});
+    if (numAffected != 1) {
+      throw new Error("logIssueCertificateSuccess changed " + numAffected +
+                      " documents when it meant to change 1. ID was: ",
+                      logEntryId);
+    }
+  } catch (e) {
+    console.error("While attempting to log", certificateInfo,
+                  "ran into exception", e);
+    throw e;
   }
 }
 
