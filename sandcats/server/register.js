@@ -460,7 +460,7 @@ doGetCertificate = function(request, response) {
   var globalsignResponse = issueCertificate(csrText, devOrProd, orderRequestParameter);
   // Pass the response to a helper that logs the response to Mongo
   // then passes the info to the user.
-  return finishGlobalsignResponse(globalsignResponse, response);
+  return finishGlobalsignResponse(globalsignResponse, response, logEntryId);
 };
 
 finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId) {
