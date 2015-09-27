@@ -204,7 +204,13 @@ logIssueCertificateStart = function(devOrProd, orderRequestParameter,
 }
 
 logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
-  var certificateInfo = globalsignResponse.Response.GSPVOrderDetail.CertificateInfo;
+  try {
+    var certificateInfo = globalsignResponse.Response.GSPVOrderDetail.CertificateInfo;
+  } catch (e) {
+    console.error("Ran into", e, "while pulling data out of", globalsignResponse);
+    throw e;
+  }
+
   if (! certificateInfo) {
     throw new Error("logIssueCertificateSuccess: Missing certificate info in response. " +
                     "Received: " + globalsignResponse);
