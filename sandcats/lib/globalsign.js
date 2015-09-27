@@ -1,7 +1,7 @@
 var soap = Meteor.npmRequire('soap');
 var globalsignWsdls = {
   'dev': 'https://testsystem.globalsign.com/kb/ws/v1/ManagedSSLService?wsdl',
-  'prod': null  // for now.
+  'prod': 'https://system.globalsign.com/kb/ws/v1/ManagedSSLService?wsdl'
 };
 
 // We use _clients to cache working SOAP client to the various
