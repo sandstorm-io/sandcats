@@ -443,17 +443,36 @@ doGetCertificate = function(request, response) {
 
   // Send the request to GlobalSign. Note that this seems to take
   // about 30 seconds.
-  var devOrProd = getDevOrProdByHostname(validatedFormData.formData.rawHostname);
-  var globalsignResponse = issueCertificate(validatedFormData.formData.certificateSigningRequest, devOrProd);
+  var hostname = validatedFormData.formData.rawHostname;
+  var devOrProd = getDevOrProdByHostname(hostname);
+  var intendedUseDurationDays = 7; // At the moment, we want one-week certificates
 
-  // Pass the result to a helper function we can unit-test.
+  // Calculate parameters (specifically for custom validity period) to
+  // send as part of the GlobalSign certificate order.
+  var orderRequestParameter = getOrderRequestParameter(csrText);
+
+  // Before actually sending it, log a note that we are about to send
+  // it.
+  var logEntryId = logIssueCertificateStart(
+    devOrProd, orderRequestParameter, intendedUseDurationDays, hostname);
+  // Send it to GlobalSign & capture response.
+  var globalsignResponse = issueCertificate(
+    partialLogEntry,
+    validatedFormData.formData.certificateSigningRequest,
+    devOrProd);
+  // Pass the response to a helper that logs the response to Mongo
+  // then passes the info to the user.
   return finishGlobalsignResponse(globalsignResponse, response);
 };
 
-finishGlobalsignResponse = function(globalsignResponse, responseCallback) {
+finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId) {
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode != 0) {
     var errors = globalsignResponse.Response.OrderResponseHeader.Errors;
-    console.log(JSON.stringify(errors));
+    if (errors && logEntryId) {
+      logIssueCertificateErrors(errors, logEntryId);
+    } else {
+      console.error(JSON.stringify(errors));
+    }
     return finishResponse(500, {'error': 'Server error'}, responseCallback, false);
   }
 
@@ -465,7 +484,14 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback) {
       ca.push(globalsignCaCertificates[i].CACert);
     }
   }
-  // Before returning it, add a note to Mongo, so that we can FIXME.
+
+  // Before returning it, add a note to Mongo.
+  if (logEntryId) {
+    logIssueCertificateSuccess(globalsignResponse, logEntryId);
+  } else {
+    console.error("No logEntryId, so here was the response: " +
+                  globalsignResponse);
+  }
   return finishResponse(200, {'cert': cert, 'ca': ca}, responseCallback, false);
 };
 

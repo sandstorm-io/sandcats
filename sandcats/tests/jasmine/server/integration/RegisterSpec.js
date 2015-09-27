@@ -107,6 +107,59 @@ Jasmine.onTest(function () {
         expect(!! validatedFormData.formData.isAuthorized).toBe(true, "Should be authorized.");
       });
 
+      it('should store a note in Mongo when a cert gets requested', function() {
+        var hostname = "host" + Math.floor(Math.random() * 1000000);
+        expect(CertificateRequests.find({hostname: hostname}).count()).toBe(0);
+        var intendedUseDurationDays = 7; // sample # of days
+        // Pull this out of a real CSR.
+        var orderRequestParameter = getOrderRequestParameter(csr);
+        //console.log(orderRequestParameter);
+        var logEntryId = logIssueCertificateStart(
+          "dev", orderRequestParameter, intendedUseDurationDays, hostname);
+        // Check that we logged anything at all.
+        expect(CertificateRequests.find({hostname: hostname}).count()).toBe(1);
+        var loggedThing = CertificateRequests.findOne({hostname: hostname});
+
+        // Check one attribute to make sure it is what I would expect.
+        expect(loggedThing.intendedUseDurationDays).toBe(7);
+
+        // Demonstrate we haven't accidentally logged a response somehow.
+        expect(!! loggedThing.globalsignCertificateInfo).toBe(false);
+
+        // Simulate logging a successful response from GlobalSign.
+        var sampleResponse = {
+          'Response': {
+            'GSPVOrderDetail': {
+              'CertificateInfo': {
+                'CertificateStatus': 4, // "Issue Completed"
+                'StartDate': 'Next Friday', // Sample "Date"
+                'EndDate': 'In a month', // Sample "Date"
+                'CommonName': hostname,
+                'SerialNumber': 'five',
+                'SubjectName': hostname,
+                'DNSNames': hostname
+              }
+            }
+          }
+        };
+
+        logIssueCertificateSuccess(sampleResponse, logEntryId);
+
+        // Get the new log entry.
+        loggedThing = CertificateRequests.findOne({_id: logEntryId});
+        // Make sure we managed to log the response.
+        expect(!! loggedThing.globalsignCertificateInfo).toBe(true);
+        // Make sure we didn't throw anything away in an obvious way.
+        expect(loggedThing.intendedUseDurationDays).toBe(7);
+
+        var sampleFailureResponse = {
+          'Response': {
+            'OrderResponseHeader': {
+              'StatusCode': -1,
+              'Errors': ['globalsign error text']}}};
+
+      });
+
       it('should log errors if GlobalSign gives us errors', function() {
         var responseData = null;
         var mockResponse = (
@@ -116,7 +169,7 @@ Jasmine.onTest(function () {
               end: function(data) { responseData = data; }
             };
           })();
-        console.log = jasmine.createSpy('log');
+        console.error = jasmine.createSpy('error');
 
         finishGlobalsignResponse({
           'Response': {
@@ -126,7 +179,7 @@ Jasmine.onTest(function () {
                                  mockResponse);
         expect(stable_stringify(JSON.parse(responseData))).toBe(
           stable_stringify({'error': 'Server error'}));
-        expect(console.log).toHaveBeenCalledWith(JSON.stringify(['globalsign error text']));
+        expect(console.error).toHaveBeenCalledWith(JSON.stringify(['globalsign error text']));
       });
 
       it('should return a certificate if there is one', function() {
