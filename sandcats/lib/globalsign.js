@@ -109,8 +109,9 @@ getOrderRequestParameter = function(csrText, now) {
   // function operates in the case of various times.
   if (! now) {
     now = new Date();
+  } else {
+    now = new Date(now.getTime() + (1000 * 1000));
   }
-  now = new Date(now.getTime() + (1000 * 1000));
 
   // The end date is set to 9 days in the future. This is due to a
   // limitation of the GlobalSign API. Particularly:
