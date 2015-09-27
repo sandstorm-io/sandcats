@@ -77,7 +77,7 @@ getMsslDomainInfo = function(domain, devOrProd) {
     console.error("Failed to get the details we wanted", e);
     throw e;
   }
-  for (var i = 0; i < detail; i++) {
+  for (var i = 0; i < details.length; i++) {
     var detail = details[i];
     if (detail.MSSLDomainName == domain) {
       usefulResult['MSSLDomainID'] = detail.MSSLDomainID;
