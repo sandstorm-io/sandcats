@@ -75,7 +75,7 @@ getMsslDomainInfo = function(domain, devOrProd) {
     details = result.Response.SearchMsslDomainDetails.SearchMsslDomainDetail;
   } catch (e) {
     console.error("Failed to get the details we wanted", e);
-    console.error("Got this response, to our surprise:", result);
+    console.error("Got this response, to our surprise:", JSON.stringify(result));
     throw e;
   }
   for (var i = 0; i < details.length; i++) {
