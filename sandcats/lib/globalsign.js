@@ -155,7 +155,7 @@ getOrderRequestParameter = function(csrText, now) {
 // PVOrder, including the AuthToken in the
 // OrderRequestHeader. Therefore it does require secrets and can't
 // be as easily unit-tested.
-getAllSignCsrArgs = function(domainInfo, csrText, devOrProd) {
+getAllSignCsrArgs = function(domainInfo, csrText, devOrProd, orderRequestParameter) {
   var args = {
     'MSSLDomainID': domainInfo.MSSLDomainID,
     'MSSLProfileID': domainInfo.MSSLProfileID,
@@ -173,15 +173,71 @@ getAllSignCsrArgs = function(domainInfo, csrText, devOrProd) {
       'Phone': '+1 585-506-8865',
       'Email': 'certmaster@sandstorm.io'}
   };
-  args = _.extend(args, getOrderRequestParameter(csrText));
+  args = _.extend(args, orderRequestParameter);
   var finalArgs = {'Request': args};
   return finalArgs;
 };
 
-issueCertificate = function(csrText, devOrProd) {
-  var domainInfo = getMyDomainInfo(devOrProd);
-  var args = getAllSignCsrArgs(domainInfo, csrText, devOrProd);
+logIssueCertificateStart = function(devOrProd, orderRequestParameter,
+                                    intendedUseDurationDays, hostname) {
+  // This function does not hit the GlobalSign API and is therefore
+  // safe to call from unit tests or the Meteor shell.
+  if (! orderRequestParameter) {
+    throw new Exception("Missing required parameter: orderRequestParameter.");
+  }
+  var data = {
+    requestCreationDate: new Date(),
+    devOrProd: devOrProd,
+    hostname: hostname,
+    intendedUseDurationDays: intendedUseDurationDays,
+    globalsignValidityPeriod: (
+      orderRequestParameter.OrderRequestParameter.ValidityPeriod)
+  };
+  var stringifiedData = JSON.stringify(data);
+  var logEntryId = CertificateRequests.insert(data);
+  if (! logEntryId) {
+    throw new Exception(
+      "logIssueCertificateStart: Failed to create log entry for: " +
+        stringifiedData);
+  }
+  return logEntryId;
+}
+
+logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
+  var certificateInfo = globalsignResponse.Response.GSPVOrderDetail.CertificateInfo;
+  if (! certificateInfo) {
+    throw new Error("logIssueCertificateSuccess: Missing certificate info in response. " +
+                    "Received: " + globalsignResponse);
+  }
+  var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
+    globalsignCertificateInfo: certificateInfo}});
+  if (numAffected != 1) {
+    throw new Error("logIssueCertificateSuccess changed " + numAffected +
+                    " documents when it meant to change 1. ID was: ",
+                    logEntryId);
+  }
+}
+
+logIssueCertificateErrors = function(errorList, logEntryId) {
+  var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
+    globalsignErrors: errorList}});
+  if (numAffected != 1) {
+    throw new Error("logIssueCertificateErrors changed " + numAffected +
+                    " documents when it meant to change 1. ID was: ",
+                    logEntryId);
+  }
+}
+
+issueCertificate = function(partialLogEntry, csrText, devOrProd, orderRequestParameter) {
+  // Create wrapped PVOrder function to call.
   var wrapped = Meteor.wrapAsync(getClient(devOrProd).PVOrder);
+
+  // Download information the GlobalSign API will need for us to
+  // submit the order.
+  var domainInfo = getMyDomainInfo(devOrProd);
+
+  // Send the request.
+  var args = getAllSignCsrArgs(domainInfo, csrText, devOrProd, orderRequestParameter);
   var globalsignResponse = wrapped(args);
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode == -1) {
     console.log("Received error from GlobalSign:", JSON.stringify(globalsignResponse.Response.OrderResponseHeader.Errors));

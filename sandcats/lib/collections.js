@@ -1,3 +1,11 @@
+// We use "hostname" in a few places in the schemas, so here we define
+// what it means to be a hostname.
+var hostnameType = {
+  type: String,
+  max: 20,
+  min: 1
+};
+
 // Compound data type used within UserRegistrations.
 var recoveryTokenSchema = new SimpleSchema({
   recoveryToken: {
@@ -14,11 +22,7 @@ var recoveryTokenSchema = new SimpleSchema({
 
 UserRegistrations = new Mongo.Collection("userRegistrations");
 UserRegistrations.attachSchema(new SimpleSchema({
-  hostname: {
-    type: String,
-    max: 20,
-    min: 1
-  },
+  hostname: hostnameType,
   ipAddress: {
     // We use a String here for convenience. We rely on Mesosphere to
     // validate that this is actually an IP address.
@@ -45,6 +49,67 @@ UserRegistrations.attachSchema(new SimpleSchema({
     // .recoveryData.recoveryToken as a string which can be used
     // to set the domain to a new public key.
     type: recoveryTokenSchema,
+    optional: true
+  }
+}));
+
+CertificateRequests = new Mongo.Collection("certificateRequests");
+CertificateRequests.attachSchema(new SimpleSchema({
+  requestCreationDate: {
+    type: Date
+  },
+  devOrProd: {
+    type: String,
+    allowedValues: ["dev", "prod"]
+  },
+  hostname: hostnameType,
+  intendedUseDurationDays: {
+    type: Number
+  },
+  globalsignValidityPeriod: {
+    type: Object
+  },
+  globalsignErrorMessages: {
+    type: [String],
+    optional: true
+  },
+  "globalsignValidityPeriod.Months": {
+    type: Number
+  },
+  "globalsignValidityPeriod.NotBefore": {
+    type: String,
+    optional: true
+  },
+  "globalsignValidityPeriod.NotAfter": {
+    type: String
+  },
+  globalsignCertificateInfo: {
+    type: Object,
+    optional: true
+  },
+  "globalsignCertificateInfo.CertificateStatus": {
+    type: Number
+  },
+  "globalsignCertificateInfo.StartDate": {
+    type: String
+  },
+  "globalsignCertificateInfo.EndDate": {
+    type: String
+  },
+  "globalsignCertificateInfo.CommonName": {
+    type: String
+  },
+  "globalsignCertificateInfo.SerialNumber": {
+    type: String
+  },
+  "globalsignCertificateInfo.SubjectName": {
+    type: String
+  },
+  "globalsignCertificateInfo.DNSNames": {
+    type: String
+  },
+  receivedCertificateDate: {
+    type: Date,
     optional: true
   }
 }));
