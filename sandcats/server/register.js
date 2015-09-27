@@ -457,10 +457,7 @@ doGetCertificate = function(request, response) {
   var logEntryId = logIssueCertificateStart(
     devOrProd, orderRequestParameter, intendedUseDurationDays, hostname);
   // Send it to GlobalSign & capture response.
-  var globalsignResponse = issueCertificate(
-    partialLogEntry,
-    csrText,
-    devOrProd);
+  var globalsignResponse = issueCertificate(csrText, devOrProd, orderRequestParameter);
   // Pass the response to a helper that logs the response to Mongo
   // then passes the info to the user.
   return finishGlobalsignResponse(globalsignResponse, response);

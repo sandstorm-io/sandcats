@@ -228,7 +228,7 @@ logIssueCertificateErrors = function(errorList, logEntryId) {
   }
 }
 
-issueCertificate = function(partialLogEntry, csrText, devOrProd, orderRequestParameter) {
+issueCertificate = function(csrText, devOrProd, orderRequestParameter) {
   // Create wrapped PVOrder function to call.
   var wrapped = Meteor.wrapAsync(getClient(devOrProd).PVOrder);
 
