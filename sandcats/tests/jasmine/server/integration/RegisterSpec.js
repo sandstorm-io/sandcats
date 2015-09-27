@@ -136,8 +136,7 @@ Jasmine.onTest(function () {
                 'EndDate': 'In a month', // Sample "Date"
                 'CommonName': hostname,
                 'SerialNumber': 'five',
-                'SubjectName': hostname,
-                'DNSNames': hostname
+                'SubjectName': hostname
               }
             }
           }

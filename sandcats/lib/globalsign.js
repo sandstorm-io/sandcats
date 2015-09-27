@@ -216,6 +216,13 @@ logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
                     "Received: " + globalsignResponse);
   }
   try {
+    var logEntry = {
+      CertificateStatus: certificateInfo.CertificateStatus,
+      StartDate: certificateInfo.StartDate,
+      EndDate: certificateInfo.EndDate,
+      SerialNumber: certificateInfo.SerialNumber,
+      SubjectName: certificateInfo.SubjectName
+    };
     var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
       globalsignCertificateInfo: certificateInfo}});
     if (numAffected != 1) {

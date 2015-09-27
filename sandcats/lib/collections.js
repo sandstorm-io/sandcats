@@ -105,9 +105,6 @@ CertificateRequests.attachSchema(new SimpleSchema({
   "globalsignCertificateInfo.SubjectName": {
     type: String
   },
-  "globalsignCertificateInfo.DNSNames": {
-    type: String
-  },
   receivedCertificateDate: {
     type: Date,
     optional: true
