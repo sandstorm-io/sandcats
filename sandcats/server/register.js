@@ -449,6 +449,7 @@ doGetCertificate = function(request, response) {
 
   // Calculate parameters (specifically for custom validity period) to
   // send as part of the GlobalSign certificate order.
+  var csrText = validatedFormData.formData.certificateSigningRequest;
   var orderRequestParameter = getOrderRequestParameter(csrText);
 
   // Before actually sending it, log a note that we are about to send
@@ -458,7 +459,7 @@ doGetCertificate = function(request, response) {
   // Send it to GlobalSign & capture response.
   var globalsignResponse = issueCertificate(
     partialLogEntry,
-    validatedFormData.formData.certificateSigningRequest,
+    csrText,
     devOrProd);
   // Pass the response to a helper that logs the response to Mongo
   // then passes the info to the user.
