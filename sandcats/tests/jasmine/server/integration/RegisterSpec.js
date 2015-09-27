@@ -129,7 +129,7 @@ Jasmine.onTest(function () {
         // Simulate logging a successful response from GlobalSign.
         var sampleResponse = {
           'Response': {
-            'GSPVOrderDetail': {
+            'PVOrderDetail': {
               'CertificateInfo': {
                 'CertificateStatus': 4, // "Issue Completed"
                 'StartDate': 'Next Friday', // Sample "Date"

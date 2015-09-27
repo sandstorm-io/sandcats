@@ -205,7 +205,7 @@ logIssueCertificateStart = function(devOrProd, orderRequestParameter,
 
 logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
   try {
-    var certificateInfo = globalsignResponse.Response.GSPVOrderDetail.CertificateInfo;
+    var certificateInfo = globalsignResponse.Response.PVOrderDetail.CertificateInfo;
   } catch (e) {
     console.error("Ran into", e, "while pulling data out of", globalsignResponse);
     throw e;
