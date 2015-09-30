@@ -150,7 +150,7 @@ getOrderRequestParameter = function(csrText, now) {
           'OptionName': 'VPC',
           'OptionValue': 'true'
         }}],
-      'BaseOptions': [
+      'BaseOption': [
         {'Option': {
           'OptionName': 'wildcard',
           'OptionValue': 'true'
