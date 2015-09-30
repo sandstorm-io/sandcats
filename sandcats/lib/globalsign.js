@@ -139,6 +139,7 @@ getOrderRequestParameter = function(csrText, now) {
   var args = {
     'OrderRequestParameter': {
       'ProductCode': 'PV_SHA2',
+      'BaseOption': 'wildcard',
       'OrderKind': 'new',
       'ValidityPeriod': {
         'Months': DUMMY_MONTHS_VALUE,
@@ -148,11 +149,6 @@ getOrderRequestParameter = function(csrText, now) {
       'Options': [
         {'Option': {
           'OptionName': 'VPC',
-          'OptionValue': 'true'
-        }}],
-      'BaseOption': [
-        {'Option': {
-          'OptionName': 'wildcard',
           'OptionValue': 'true'
         }}],
       'CSR': csrText
