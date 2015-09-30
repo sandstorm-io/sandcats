@@ -138,7 +138,7 @@ getOrderRequestParameter = function(csrText, now) {
   var end = new Date(now.getTime() + (9*86400000));
   var args = {
     'OrderRequestParameter': {
-      'ProductCode': 'PV',
+      'ProductCode': 'PV_SHA2',
       'OrderKind': 'new',
       'ValidityPeriod': {
         'Months': DUMMY_MONTHS_VALUE,
