@@ -231,7 +231,9 @@ logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
       SubjectName: certificateInfo.SubjectName
     };
     var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
-      globalsignCertificateInfo: certificateInfo}});
+      globalsignCertificateInfo: certificateInfo,
+      receivedCertificateDate: new Date()
+    }});
     if (numAffected != 1) {
       throw new Error("logIssueCertificateSuccess changed " + numAffected +
                       " documents when it meant to change 1. ID was: ",
