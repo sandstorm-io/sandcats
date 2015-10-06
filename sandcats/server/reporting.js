@@ -59,6 +59,7 @@ function sendAnyUnsentReports(unsentBasePath, sentBasePath) {
     var subject = body.split('\n')[0].trim();
 
     var emailData = {
+      from: process.env.SANDCATS_MAIL_FROM || 'sandcats-auto@corp.sandstorm.io',
       to: recipients,
       subject: subject,
       text: body
@@ -76,7 +77,7 @@ function sendAnyUnsentReports(unsentBasePath, sentBasePath) {
 function pushHostnamesFromQueryAsBulletedList(query, reportLines) {
   var hostnames = [];
   query.forEach(function(doc) {
-    hostnames.push(doc.hostname + " " + doc.requestCreationDate.toISOString().split("T")[0]);
+    hostnames.push(doc.requestCreationDate.toISOString().split("T")[0] + " " + doc.hostname);
   });
   var sortedHostnames = hostnames.sort();
 
