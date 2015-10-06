@@ -15,7 +15,7 @@ MAIL_URL=smtp://localhost:2500/ MONGO_URL=mongodb://localhost/sandcats_mongo met
 popd
 
 # Wait for Meteor to come online, up to N seconds.
-set +x
+set -x
 for i in $(seq 90)
 do
   nc -z localhost 3000
