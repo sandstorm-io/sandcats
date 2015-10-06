@@ -27,7 +27,7 @@ function pushHostnamesSinceTimestamp(start, end, devOrProd, reportLines) {
     devOrProd: devOrProd, globalsignCertificateInfo: {$exists: true},
     receivedCertificateDate: {$gte: start, $lte: end}
   }, {
-    fields: {'hostname': 1}});
+    fields: {'hostname': 1, 'requestCreationDate': 1}});
   return pushHostnamesFromQueryAsBulletedList(query, reportLines);
 }
 
@@ -76,7 +76,7 @@ function sendAnyUnsentReports(unsentBasePath, sentBasePath) {
 function pushHostnamesFromQueryAsBulletedList(query, reportLines) {
   var hostnames = [];
   query.forEach(function(doc) {
-      hostnames.push(doc.hostname);
+    hostnames.push(doc.hostname + " " + doc.requestCreationDate.toISOString().split("T")[0]);
   });
   var sortedHostnames = hostnames.sort();
 
@@ -139,7 +139,7 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
       devOrProd: options[i], globalsignCertificateInfo: {$exists: false},
       requestCreationDate: {$gte: startDate, $lte: endDate}
   }, {
-    fields: {'hostname': 1}});
+    fields: {'hostname': 1, 'requestCreationDate': 1}});
     pushHostnamesFromQueryAsBulletedList(query, reportLines);
   }
 
