@@ -94,7 +94,8 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
   var now = new Date();
 
   var reportLines = [];
-  reportLines.push("HTTPS certificate usage report for " + Meteor.settings.GLOBALSIGN_DOMAIN);
+  reportLines.push("HTTPS certificate usage report for " + Meteor.settings.GLOBALSIGN_DOMAIN +
+                   " (" + endDate.toISOString().split("T")[0] + ")");
   reportLines.push('');
   reportLines.push("Report generated on " + now);
   reportLines.push("       covering time from " + startDate);
