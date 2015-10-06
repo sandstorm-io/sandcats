@@ -62,7 +62,8 @@ function sendAnyUnsentReports(unsentBasePath, sentBasePath) {
       from: process.env.SANDCATS_MAIL_FROM || 'sandcats-auto@corp.sandstorm.io',
       to: recipients,
       subject: subject,
-      text: body
+      text: body,
+      html: '<pre>' + body + '</pre>'
     };
     if (Meteor.settings.DAILY_REPORT_DONT_ACTUALLY_SEND) {
       console.log(emailData);
@@ -93,7 +94,8 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
   var now = new Date();
 
   var reportLines = [];
-  reportLines.push("HTTPS certificate usage report for " + Meteor.settings.GLOBALSIGN_DOMAIN);
+  reportLines.push("HTTPS certificate usage report for " + Meteor.settings.GLOBALSIGN_DOMAIN +
+                   " (" + endDate.toISOString().split("T")[0] + ")");
   reportLines.push('');
   reportLines.push("Report generated on " + now);
   reportLines.push("       covering time from " + startDate);
