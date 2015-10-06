@@ -6,13 +6,20 @@ set -x
 ln -s /etc/sandcats-meteor-settings.json sandcats/dev-settings.json
 make action-run-unit-tests
 
+# Kill some processes that may or may not be lingering.
+sudo killall phantomjs
+sudo killall mongod
+
 # Now run the full-on integration tests, which do DNS queries and do
 # real timeouts so run somewhat slowly at the moment, requiring a
 # working nginx setup etc.
 
+set -e  # failure not OK
 pushd /vagrant/sandcats
 MAIL_URL=smtp://localhost:2500/ MONGO_URL=mongodb://localhost/sandcats_mongo meteor run --settings /etc/sandcats-meteor-settings.json &
 popd
+set +x  # failure OK
+
 
 # Wait for Meteor to come online, up to N seconds.
 for i in $(seq 90)
@@ -34,7 +41,7 @@ sudo service nginx stop
 sudo service nginx start
 for i in $(seq 90)
 do
-  curl -k -m 1 --silent --fail https://localhost:443/ -o /dev/null
+  curl --fail --silent -k https://precise64/
   retval=$?
   if [[ $retval == "0" ]]; then
     echo -n '+'
