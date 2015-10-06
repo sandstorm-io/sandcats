@@ -2,14 +2,10 @@
 //
 // - There's a function to generate a report.
 //
-// - We call it daily and store its content in
-//   $HOME/globalsign-reports/$(date -I).txt
+// - Daily we save a report to ~/globalsign-reports/unsent/$(date -I)
 //
-// - After creating that file, we email it to
-//  Meteor.settings.DAILY_REPORT_RECIPIENTS.
-//
-// - If it's a Monday, we *also* email it to
-//   Meteor.settings.WEEKLY_REPORT_RECIPIENTS.
+// - We send an email to the right recipients and rename the file into
+//   .../sent/$(date -I).
 
 var Fs = Npm.require("fs");
 
@@ -26,27 +22,6 @@ function mkdirOkIfExists(dir) {
 
 Reporting = {}
 
-/*
- * Might as well show orders that never made it from
- * status:in-progress to status:completed, while we're printing stuff.
- *
- * Proposed plan:
- *
- * Once a day, send a usage log to an internal Sandstorm list, so we
- * can make sure that it is generally working OK. (Maybe disable this
- * after a while.)
- *
- * On Mondays, that usage log also gets sent to GlobalSign (probably
- * by having the software send to a different Google Group on Mondays,
- * where GlobalSign people have been added to that group).
- *
- * The Monday email would contain # of certificate-weeks that we've
- * used total against the production API.
- *
- * The every-day email would contain # of certificate-weeks used
- * total, as well as the # issued in the past 7 days, for both
- * GlobalSign's production & dev APIs.
- */
 function pushHostnamesSinceTimestamp(start, end, devOrProd, reportLines) {
   var query = CertificateRequests.find({
     devOrProd: devOrProd, globalsignCertificateInfo: {$exists: true},
@@ -54,6 +29,48 @@ function pushHostnamesSinceTimestamp(start, end, devOrProd, reportLines) {
   }, {
     fields: {'hostname': 1}});
   return pushHostnamesFromQueryAsBulletedList(query, reportLines);
+}
+
+function sendAnyUnsentReports(unsentBasePath, sentBasePath) {
+  // Look in unsent/ and for every report there, send it to
+  // Meteor.settings.DAILY_REPORT_RECIPIENTS and then move it to
+  // sent/.
+  //
+  // Note that if if the report is for a Monday, also add
+  // Meteor.settings.WEEKLY_REPORT_RECIPIENTS to the email recipients.
+
+  var files = Fs.readdirSync(unsentBasePath);
+  for (var i = 0; i < files.length; i++) {
+    var filename = files[i];
+    var filenameAbsolute = unsentBasePath + '/' + filename;
+    var filenameAfterRename = sentBasePath + '/' + filename;
+    var reportDate = new Date(filename + "T00:00:00Z");
+    var recipients = Meteor.settings.DAILY_REPORT_RECIPIENTS;
+    if (reportDate.toUTCString().indexOf('Mon, ') == 0) {
+      Meteor.settings.WEEKLY_REPORT_RECIPIENTS.forEach(function(address) {
+        recipients.push(address);
+      });
+    }
+    if (recipients.length == 0) {
+      throw new Error("Somehow there are 0 recipients. Should not happen.");
+    }
+
+    var body = Fs.readFileSync(filenameAbsolute, 'utf-8');
+    var subject = body.split('\n')[0].trim();
+
+    var emailData = {
+      to: recipients,
+      subject: subject,
+      text: body
+    };
+    if (Meteor.settings.DAILY_REPORT_DONT_ACTUALLY_SEND) {
+      console.log(emailData);
+    } else {
+      Email.send(emailData);
+    }
+
+    Fs.renameSync(filenameAbsolute, filenameAfterRename);
+  }
 }
 
 function pushHostnamesFromQueryAsBulletedList(query, reportLines) {
@@ -136,7 +153,7 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
   return reportLines.join("\n");
 }
 
-Reporting.generateAllNeededReports = function(unsentBasePath) {
+Reporting.generateAllNeededReports = function(unsentBasePath, sentBasePath) {
   // This gets function gets called every hour.
   var startDate = new Date("Tue, 01 Sep 2015 00:00:00 GMT").getTime();
 
@@ -148,21 +165,22 @@ Reporting.generateAllNeededReports = function(unsentBasePath) {
   // reports are backward-looking 7 days, so might as well add 1 week
   // to the startDate.
   var possibleReportToGenerate = startDate + oneWeekInMilliseconds;
-  console.log("now", new Date(now));
-  console.log("possibleReportToGenerate", new Date(possibleReportToGenerate));
   while (possibleReportToGenerate < now) {
     // Check if this report exists. If so, then keep looping
     var formattedReportDate = new Date(possibleReportToGenerate).toISOString().split(
       "T")[0];
     var reportFilename = unsentBasePath + "/" + formattedReportDate;
-    if (Fs.existsSync(reportFilename)) {
+    var sentReportFilename = sentBasePath + "/" + formattedReportDate;
+    if (Fs.existsSync(reportFilename) ||
+        Fs.existsSync(sentReportFilename)) {
       possibleReportToGenerate += oneDayInMilliseconds;
       continue;
     }
 
     // OK! So we need to generate a report from the timestamp
     // possibleReportToGenerate up to one week before it.
-    console.log("Generating GlobalSign report for", new Date(), "into filename", reportFilename);
+    console.log("Generating GlobalSign report for", new Date(possibleReportToGenerate),
+                "into filename", reportFilename);
     var timePeriodEnd = possibleReportToGenerate;
     var previousWeekStart = (timePeriodEnd - oneWeekInMilliseconds + 1);
     // Define previousWeekStart as millisecond #1 in the week, since
@@ -174,10 +192,13 @@ Reporting.generateAllNeededReports = function(unsentBasePath) {
     possibleReportToGenerate += oneDayInMilliseconds;
     // Keep looping.
   }
+
+  // Trigger a check to see if any of the newly-generated reports need
+  // to be sent by email.
+  sendAnyUnsentReports(unsentBasePath, sentBasePath);
 };
 
-
-Meteor.startup(function() {
+Meteor.startup(function() { Meteor.setTimeout(function () {
   // Strategy for repeated tasks where we don't care when it runs, but
   // we do care that it always runs with the same offset.
   //
@@ -197,19 +218,29 @@ Meteor.startup(function() {
   // * TODO(soon): When we successfuly send the report to email
   //   recipients, move it into a slightly different path to indicate
   //   that.
-  var basePath = process.env.HOME + "/globalsign-reports";
-  mkdirOkIfExists(basePath);
-
-  var unsentBasePath = basePath + "/unsent";
-  mkdirOkIfExists(unsentBasePath);
-
-  function doAndQueueReportGeneration() {
+  function doAndQueueReportGeneration(unsentBasePath, sentBasePath) {
     // Do...
-    Reporting.generateAllNeededReports(unsentBasePath);
+    Reporting.generateAllNeededReports(unsentBasePath, sentBasePath);
     /// and queue.
     var oneHourinMilliseconds = 1000 * 60 * 60;
-    Meteor.setTimeout(doAndQueueReportGeneration, oneHourinMilliseconds);
+    Meteor.setTimeout(function() {
+      doAndQueueReportGeneration(unsentBasePath, sentBasePath);
+    }, oneHourinMilliseconds);
   }
 
-  doAndQueueReportGeneration();
-});
+  if ((Meteor.settings.DAILY_REPORT_RECIPIENTS.length > 0) ||
+      (Meteor.settings.WEEKLY_REPORT_RECIPIENTS.length > 0)) {
+    var basePath = process.env.HOME + "/globalsign-reports";
+    mkdirOkIfExists(basePath);
+
+    var unsentBasePath = basePath + "/unsent";
+    mkdirOkIfExists(unsentBasePath);
+
+    var sentBasePath = basePath + "/sent";
+    mkdirOkIfExists(sentBasePath);
+
+    doAndQueueReportGeneration(unsentBasePath, sentBasePath);
+  } else {
+    console.log("Not attempting to generate reports because no one will read them.");
+  }
+}, 10 * 1000)});

@@ -110,6 +110,25 @@ var settingsSchema = new SimpleSchema({
   GLOBALSIGN_DEFAULT: {
     type: String,
     allowedValues: ["dev", "prod"]
+  },
+
+  // A list of strings of email addresses to send daily GlobalSign
+  // usage reports to. This is required, but you can set it to the
+  // empty list.
+  DAILY_REPORT_RECIPIENTS: {
+    type: [String]
+  },
+
+  // A list of strings of email addresses to send the "weekly report"
+  // (Monday's daily report) to. This is required, but you can set it
+  // to the empty list.
+  WEEKLY_REPORT_RECIPIENTS: {
+    type: [String]
+  },
+
+  DAILY_REPORT_DONT_ACTUALLY_SEND: {
+    type: Boolean,
+    optional: true
   }
 });
 
