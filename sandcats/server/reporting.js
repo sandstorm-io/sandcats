@@ -26,22 +26,27 @@ function mkdirOkIfExists(dir) {
 
 Reporting = {}
 
-
 /*
-   Might as well show orders that never made it from status:in-progress to status:completed, while we're printing stuff.
-
-   Proposed plan:
-
-   Once a day, send a usage log to an internal Sandstorm list, so we can make sure that it is generally working OK. (Maybe disable this after a while.)
-
-   On Mondays, that usage log also gets sent to GlobalSign (probably by having the software send to a different Google Group on Mondays, where GlobalSign people have been added to that group).
-
-   The Monday email would contain # of certificate-weeks that we've used total against the production API.
-
-   The every-day email would contain # of certificate-weeks used total, as well as the # issued in the past 7 days, for both GlobalSign's production & dev APIs.
-*/
-var baseDir = null;
-
+ * Might as well show orders that never made it from
+ * status:in-progress to status:completed, while we're printing stuff.
+ *
+ * Proposed plan:
+ *
+ * Once a day, send a usage log to an internal Sandstorm list, so we
+ * can make sure that it is generally working OK. (Maybe disable this
+ * after a while.)
+ *
+ * On Mondays, that usage log also gets sent to GlobalSign (probably
+ * by having the software send to a different Google Group on Mondays,
+ * where GlobalSign people have been added to that group).
+ *
+ * The Monday email would contain # of certificate-weeks that we've
+ * used total against the production API.
+ *
+ * The every-day email would contain # of certificate-weeks used
+ * total, as well as the # issued in the past 7 days, for both
+ * GlobalSign's production & dev APIs.
+ */
 function pushHostnamesSinceTimestamp(start, end, devOrProd, reportLines) {
   var query = CertificateRequests.find({
     devOrProd: devOrProd, globalsignCertificateInfo: {$exists: true},
@@ -81,7 +86,7 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
   reportLines.push('');
   reportLines.push("Report generated on " + now);
   reportLines.push("       covering time from " + startDate);
-  reportLines.push("                     to   " + endDate);
+  reportLines.push("                       to " + endDate);
   reportLines.push('');
 
   var options = ['dev', 'prod'];
