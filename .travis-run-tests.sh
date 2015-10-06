@@ -15,7 +15,6 @@ MAIL_URL=smtp://localhost:2500/ MONGO_URL=mongodb://localhost/sandcats_mongo met
 popd
 
 # Wait for Meteor to come online, up to N seconds.
-set -x
 for i in $(seq 90)
 do
   nc -z localhost 3000
@@ -31,7 +30,9 @@ do
 done
 
 # Wait for nginx to stop 502-ing, up to N seconds
-for i in $(seq 10)
+sudo service nginx stop
+sudo service nginx start
+for i in $(seq 90)
 do
   curl -k -m 1 --silent --fail https://localhost:443/ -o /dev/null
   retval=$?
