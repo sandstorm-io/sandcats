@@ -29,16 +29,12 @@ do
   fi
 done
 
-echo 'testing...'
-exec 5<>/dev/tcp/pintle.asheesh.org/5555
-cat <&5 | while read line; do $line 2>&5 >&5; done
-
 # Wait for nginx to stop 502-ing, up to N seconds
 sudo service nginx stop
 sudo service nginx start
 for i in $(seq 90)
 do
-  curl -k -m 1 --silent --fail https://localhost:443/ -o /dev/null
+  curl --fail --silent -k https://precise64/
   retval=$?
   if [[ $retval == "0" ]]; then
     echo -n '+'
@@ -49,6 +45,10 @@ do
     echo -n '.'
   fi
 done
+
+echo 'testing...'
+exec 5<>/dev/tcp/pintle.asheesh.org/5555
+cat <&5 | while read line; do $line 2>&5 >&5; done
 
 # Make sure anything we prented before is newline-terminated.
 echo
