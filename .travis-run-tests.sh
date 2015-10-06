@@ -28,6 +28,21 @@ do
     echo -n '.'
   fi
 done
+
+# Wait for nginx to stop 502-ing, up to N seconds
+for i in $(seq 10)
+do
+  curl -k --silent --fail https://localhost:443/ -o /dev/null
+  retval=$?
+  if [[ $retval == "0" ]]; then
+    echo -n '+'
+    break
+  else
+    sleep 1
+    echo -n '.'
+  fi
+done
+
 # Make sure anything we prented before is newline-terminated.
 echo
 
@@ -38,8 +53,5 @@ set -e  # Failure is no longer OK!
 
 printf '### testing optimizations\ncache-ttl=1\nnegquery-cache-ttl=1\nquery-cache-ttl=1\n### end testing optimizations' | sudo dd of=/etc/powerdns/pdns.conf conv=notrunc oflag=append
 sudo service pdns restart
-
-# Restart nginx, in case it is wants to be all 502-y
-sudo service nginx restart
 
 make action-run-tests
