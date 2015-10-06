@@ -160,8 +160,8 @@ Reporting.generateAllNeededReports = function(unsentBasePath) {
       continue;
     }
 
-    // OK! So we need to generate a report from the timestamp possibleReportToGenerate
-    // up to one week before it.
+    // OK! So we need to generate a report from the timestamp
+    // possibleReportToGenerate up to one week before it.
     console.log("Generating GlobalSign report for", new Date(), "into filename", reportFilename);
     var timePeriodEnd = possibleReportToGenerate;
     var previousWeekStart = (timePeriodEnd - oneWeekInMilliseconds + 1);
