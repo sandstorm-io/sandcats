@@ -22,6 +22,7 @@ do
   retval=$?
   if [[ $retval == "0" ]]; then
     echo -n '+'
+    echo -n " - Meteor has bound the port OK"
     break
   else
     sleep 1
@@ -32,10 +33,11 @@ done
 # Wait for nginx to stop 502-ing, up to N seconds
 for i in $(seq 10)
 do
-  curl -k --silent --fail https://localhost:443/ -o /dev/null
+  curl -k -m 1 --silent --fail https://localhost:443/ -o /dev/null
   retval=$?
   if [[ $retval == "0" ]]; then
     echo -n '+'
+    echo -n " - nginx responds with OK"
     break
   else
     sleep 1
