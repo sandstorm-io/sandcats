@@ -22,7 +22,7 @@ do
   retval=$?
   if [[ $retval == "0" ]]; then
     echo -n '+'
-    echo -n " - Meteor has bound the port OK"
+    echo " - Meteor has bound the port OK"
     break
   else
     sleep 1
@@ -37,7 +37,7 @@ do
   retval=$?
   if [[ $retval == "0" ]]; then
     echo -n '+'
-    echo -n " - nginx responds with OK"
+    echo " - nginx responds with OK"
     break
   else
     sleep 1
@@ -49,6 +49,7 @@ done
 echo
 
 set -e  # Failure is no longer OK!
+set -x  # Be verbose again.
 
 # Adjust pdns configuration so the cache TTL is shorter. This way, the
 # tests run faster.
