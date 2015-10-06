@@ -62,7 +62,8 @@ function sendAnyUnsentReports(unsentBasePath, sentBasePath) {
       from: process.env.SANDCATS_MAIL_FROM || 'sandcats-auto@corp.sandstorm.io',
       to: recipients,
       subject: subject,
-      text: body
+      text: body,
+      html: '<pre>' + body + '</pre>'
     };
     if (Meteor.settings.DAILY_REPORT_DONT_ACTUALLY_SEND) {
       console.log(emailData);
