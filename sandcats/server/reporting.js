@@ -59,7 +59,7 @@ function sendAnyUnsentReports(unsentBasePath, sentBasePath) {
     var subject = body.split('\n')[0].trim();
 
     var emailData = {
-      from: 'sandcats-auto@corp.sandstorm.io',
+      from: process.env.SANDCATS_MAIL_FROM || 'sandcats-auto@corp.sandstorm.io',
       to: recipients,
       subject: subject,
       text: body
