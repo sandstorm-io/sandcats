@@ -78,16 +78,9 @@ function pushHostnamesFromQueryAsBulletedList(query, reportLines) {
   query.forEach(function(doc) {
       hostnames.push(doc.hostname);
   });
-  var uniqueHostnames = hostnames.sort().filter(function(item, position, dataset) {
-    // Since it's sorted, we can throw away anything that is the
-    // same as the thing before it.
-    if (dataset[position-1] == item) {
-      return false;
-    }
-    return true;
-  });
+  var sortedHostnames = hostnames.sort();
 
-  uniqueHostnames.map(function(s) {
+  sortedHostnames.map(function(s) {
     reportLines.push("* " + s);
   });
 }
