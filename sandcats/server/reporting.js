@@ -104,7 +104,7 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
 
   var options = ['dev', 'prod'];
   for (var i = 0; i < options.length; i++) {
-    var line = "Total certificate-weeks issued so far against " + options[i] + ": ";
+    var line = "Total certificate-weeks issued so far (" + options[i] + "): ";
     // We store the intended use period in the database, but it's
     // always 7 days, so we don't have to bother querying it.
     line += CertificateRequests.find({
@@ -119,7 +119,7 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
   reportLines.push("");
 
   for (var i = 0; i < options.length; i++) {
-    var line = "In the time period " + options[i] + ", we issued: ";
+    var line = "In the time period, we issued (" + options[i] + "): ";
     line += CertificateRequests.find({
       devOrProd: options[i], globalsignCertificateInfo: {$exists: true},
       receivedCertificateDate: {$gte: startDate, $lte: endDate}
