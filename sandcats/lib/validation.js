@@ -95,7 +95,7 @@ function hostnameIsWithinReasonableCertificateIssuanceLimits(hostname) {
   // Definition of "makes sense":
   //
   // Look at all the CertificateRequests objects we have made for this
-  // hostname. If the user has >= 3 currently valid certificates,
+  // hostname. If the user has >= 4 currently valid certificates,
   // refuse to issue more.
   //
   // A currently-valid certificate is one where now >= StartDate
@@ -121,7 +121,7 @@ function hostnameIsWithinReasonableCertificateIssuanceLimits(hostname) {
 
   console.log("Found", currentlyValidCertificateCount, "certs for", hostname);
 
-  if (currentlyValidCertificateCount >= 3) {
+  if (currentlyValidCertificateCount >= 4) {
     // too many!
     return false;
   }
