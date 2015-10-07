@@ -8,7 +8,6 @@ make action-run-unit-tests
 
 # Kill some processes that may or may not be lingering.
 sudo killall phantomjs
-sudo killall mongod
 
 # Now run the full-on integration tests, which do DNS queries and do
 # real timeouts so run somewhat slowly at the moment, requiring a
