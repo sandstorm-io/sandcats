@@ -89,6 +89,46 @@ function commonNameMatchesHostname(csr, rawHostname) {
   return false;
 }
 
+function hostnameIsWithinReasonableCertificateIssuanceLimits(hostname) {
+  // Return if it makes sense for this hostname to ask for another certificate.
+  //
+  // Definition of "makes sense":
+  //
+  // Look at all the CertificateRequests objects we have made for this
+  // hostname. If the user has >= 3 currently valid certificates,
+  // refuse to issue more.
+  //
+  // A currently-valid certificate is one where now >= StartDate
+  // and EndDate >= now.
+  //
+  // We only look for CertificateRequests objects that have a
+  // globalsignCertificateInfo attribute, since that's how we know
+  // they're properly issued.
+  var matches = CertificateRequests.find({
+    'hostname': hostname,
+    globalsignCertificateInfo: {$exists: true}
+  });
+  var currentlyValidCertificateCount = 0;
+  var now = new Date();
+  matches.forEach(function(doc) {
+    var startDate = new Date(doc.globalsignCertificateInfo.StartDate);
+    var endDate = new Date(doc.globalsignCertificateInfo.EndDate);
+    if ((now >= startDate)  &&
+        (endDate >= now)) {
+      currentlyValidCertificateCount += 1;
+    }
+  });
+
+  console.log("Found", currentlyValidCertificateCount, "certs for", hostname);
+
+  if (currentlyValidCertificateCount >= 3) {
+    // too many!
+    return false;
+  }
+
+  return true;
+}
+
 Mesosphere.registerAggregate('getCertificateIsAuthorized', function(fields, formFieldsObject) {
   var csr = formFieldsObject.certificateSigningRequest;
   if (!csr) {
@@ -102,7 +142,12 @@ Mesosphere.registerAggregate('getCertificateIsAuthorized', function(fields, form
     return false;
   }
 
-  return commonNameMatchesHostname(csr, hostname);
+
+  if ( ! commonNameMatchesHostname(csr, hostname)) {
+    return false;
+  }
+
+  return hostnameIsWithinReasonableCertificateIssuanceLimits(hostname);
 });
 
 Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFieldsObject) {
