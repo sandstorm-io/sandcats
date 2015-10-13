@@ -52,5 +52,14 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+
+        # Make /privacy and /terms work for /privacy.html /terms.html.
+        #
+        # We do this so Meteor can serve the files (so they're auto-
+        # updated with every release if needed) but so that tos-pp's
+        # default link format of not suffixing *.html to things also
+        # works.
+        rewrite ^(/terms)$ /terms.html last;
+        rewrite ^(/privacy)$ /privacy.html last;
     }
 }
