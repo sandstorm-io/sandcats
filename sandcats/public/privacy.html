@@ -8,7 +8,7 @@
       function showTerms() {
         document.body.className = "terms";
         if (history.replaceState) {
-          history.replaceState({}, "Sandstorm Sandcats: Terms of Service", "/terms.html");
+          history.replaceState({}, "Sandstorm Sandcats: Terms of Service", "/terms");
         } else {
           document.title = "Sandstorm Sandcats: Terms of Service";
         }
@@ -16,7 +16,7 @@
       function showPrivacy() {
         document.body.className = "privacy";
         if (history.replaceState) {
-          history.replaceState({}, "Sandstorm Sandcats: Privacy Policy", "/privacy.html");
+          history.replaceState({}, "Sandstorm Sandcats: Privacy Policy", "/privacy");
         } else {
           document.title = "Sandstorm Sandcats: Privacy Policy";
         }
@@ -110,7 +110,7 @@ body.privacy #terms > *, body.terms #privacy > * {
 
 <p>Sandstorm is a platform for server-oriented and web-based applications. Sandstorm the platform is open source; anyone can run Sandstorm on their own personal server hardware. When you run Sandstorm on your own hardware, you can do anything you want with it: Sandstorm the platform is licensed under the Apache 2.0 open source license which places no restrictions on usage.</p>
 
-<p>Sandstorm the company (Sandstorm Development Group, Inc.) also offers a DNS service called Sandcats. Sandcats makes it easy to obtain a hostname and TLS certificate for your personal Sandstorm server, as a subdomain of sandcats.io. Sandstorm owns the domain sandcats.io but delegates a subdomain, such as "example.sandcats.io", to you for free. The purpose of the service is to make it easy for you and your friends to easily find your Sandstorm server on the network and ensure that they are communicating with it securely. Basically, it acts like a phone book. The Sandcats service never sees any of the content of your server nor any of the traffic to your server.</p>
+<p>Sandstorm Development Group, Inc., is the company that distributes the Sandstorm software. It also offers a DNS service called Sandcats. Sandcats makes it easy to obtain a hostname and TLS certificate for your personal Sandstorm server, as a subdomain of sandcats.io. Sandstorm Development Group, Inc., owns the domain sandcats.io but delegates a subdomain, such as "example.sandcats.io", to you for free. The purpose of the service is to make it easy for you and your friends to easily find your Sandstorm server on the network and ensure that they are communicating with it securely. Basically, it acts like a phone book. The Sandcats service never sees any of the content of your server nor any of the traffic to your server.</p>
     </section>
     <section id="terms" onclick="showTerms()">
 <h1>Terms of Service</h1>
@@ -133,7 +133,7 @@ body.privacy #terms > *, body.terms #privacy > * {
 <li>You may not choose a hostname that is intended to deceive others about the server's content, such as for the purposes of spam, phishing, or otherwise.</li>
 </ul>
 
-<p>If we, in our sole discression, determine that you are using Sandcats in a way that violates these rules, we may stop providing service for your Sandcats subdomain. If we take such an action, we will e-mail you at the address you provided upon registering your subdomain (unless we are prohibited by law from doing so). For minor violations (in our sole judgment), we may notify you in advance to give you a chance to correct the problem before we take action.</p>
+<p>If we, in our sole discretion, determine that you are using Sandcats in a way that violates these rules, we may stop providing service for your Sandcats subdomain. If we take such an action, we will e-mail you at the address you provided upon registering your subdomain (unless we are prohibited by law from doing so). For minor violations (in our sole judgment), we may notify you in advance to give you a chance to correct the problem before we take action.</p>
 
 <h2>Law Enforcement Actions</h2>
 
@@ -222,7 +222,7 @@ Palo Alto, CA 94306
 
 <h2>Data gathered from you, and how we use it</h2>
 
-<p>When you run a Sandstorm server that uses Sandcats, the service gathers two pieces of information about you:</p>
+<p>When you run a Sandstorm server that uses Sandcats, the service gathers these pieces of information about you:</p>
 
 <ul>
 <li>Your server's IP address. This address will be published to the world via the DNS protocol, as is the purpose of the service.</li>
