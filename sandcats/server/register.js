@@ -133,11 +133,52 @@ doRegister = function(request, response) {
   // Great! It passed all our validation, including the
   // Sandcats-specific validation. In that case, let's store an item
   // in our Mongo collection and also update DNS.
-  createUserRegistration(validatedFormData.formData);
+  var recoveryToken = createUserRegistration(validatedFormData.formData);
 
   // Give the user an indication of our success.
   return finishResponse(200, {
-    'success': true, 'text': "Successfully registered!"
+    'success': true, 'text': "Successfully registered!",
+  }, response, plainTextOnly);
+}
+
+doReserve = function(request, response) {
+  // Reserving a domain name is where you give us a name+email address
+  // for a domain, and get a recoveryToken back (which we call a
+  // domainRegistrationCode), and we don't store any particular client
+  // cert in the registration object.
+  //
+  // Everyone is allowed to reserve a domain. If people start to abuse
+  // it, we can check for reserved domains that never got a valid cert
+  // attached. We don't store timestamps at the moment, but we could
+  // start to if abuse happens. Or we could add IP address validation
+  // rules to limit what IPs are allowed to call /reserve.
+  console.log("Beginning domain reservation process.");
+
+  var requestEnded = antiCsrf(request, response);
+  if (requestEnded) {
+    return;
+  }
+
+  var rawFormData = getFormDataFromRequest(request);
+  var plainTextOnly = wantsPlainText(
+
+  var validatedFormData = Mesosphere.halfRegisterForm.validate(rawFormData);
+  if (validatedFormData.errors) {
+    return finishResponse(400,
+                          responseFromFormFailure(validatedFormData),
+                          response,
+                          plainTextOnly);
+  }
+
+  // Great! It passed all our validation, including the
+  // Sandcats-specific validation. In that case, let's store an item
+  // in our Mongo collection and also update DNS.
+  var recoveryToken = createHalfRegisteredUser(validatedFormData.formData);
+
+  // Give the user an indication of our success.
+  return finishResponse(200, {
+    'success': true, 'text': "Successfully registered!",
+    'recoveryToken': recoveryToken,
   }, response, plainTextOnly);
 }
 
@@ -318,6 +359,12 @@ function createUserRegistration(formData) {
     emailAddress: formData.email
   });
 
+  // Provide some non-empty recovery token, and return that to the
+  // createUserRegistration caller. This value finds its way into the
+  // JSON response.
+
+  var recoveryToken = addRecoveryData(formData);
+
   var userRegistration = UserRegistrations.findOne({_id: userRegistrationId});
 
   // We also probably want to send a confirmation URL. FIXME.
@@ -330,6 +377,8 @@ function createUserRegistration(formData) {
     mysqlQuery,
     userRegistration.hostname,
     userRegistration.ipAddress);
+
+  return recoveryToken;
 }
 
 function addRecoveryData(formData) {

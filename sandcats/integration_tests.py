@@ -341,14 +341,17 @@ def send_recovery_token_to_benb():
         return get_recoveryToken_from_subprocess(p)
 
 
-def recover_benb3_with_fake_recovery_token_and_fresh_cert():
+def recover_benb3_with_fake_recovery_token_and_fresh_cert(
+        token=None,
+        rawHostname='benb3'):
+    # The following fake recoveryToken is 40 chars long, which passes
+    # the input validation, but is not a working recovery token.
+    if token is None:
+        recoveryToken='abcdefghijabcdefghijabcdefghijabcdefghij'
     return _make_api_call(
         path='recover',
-        # the following fake recoveryToken is 40 chars long, which
-        # passes the input validation, but is not a working recovery
-        # token.
-        recoveryToken='abcdefghijabcdefghijabcdefghijabcdefghij',
-        rawHostname='benb3',
+        recoveryToken=token,
+        rawHostname=rawHostname,
         external_ip=True,
         key_number=4,
         accept_mime_type='text/plain')
@@ -382,7 +385,7 @@ def recover_benb3_with_fresh_cert_with_no_recovery_token():
         accept_mime_type='text/plain')
 
 
-def recover_benb3_via_recovery_token_and_stale_cert(recoveryToken):
+def recover_benb3_via_recovery_token_and_stale_cert(recoveryToken, rawHostname='benb3'):
     return _make_api_call(
         path='recover',
         rawHostname='benb3',
@@ -398,6 +401,21 @@ def update_benb3_after_recovery(external_ip=True):
         external_ip=external_ip,
         rawHostname='benb3',
         key_number=4,
+        accept_mime_type='text/plain')
+
+
+def reserve_benb4():
+    return _make_api_call(
+        path='reserve',
+        rawHostname='benb4',
+        key_number=None)
+
+
+def recover_benb4():
+    return _make_api_call(
+        path='recover',
+        rawHostname='benb4',
+        key_number=5,
         accept_mime_type='text/plain')
 
 
@@ -618,6 +636,29 @@ def test_register():
     assert str(dns_response.rrset) == 'ben-b2.sandcatz.io. 60 IN A 127.0.0.1'
 
 
+def test_reserve_domain():
+    # Per sandcats issue #119, we support half-registering a domain,
+    # which generates a "domain registration token", which then can be
+    # used to do a recovery.
+    response = reserve_benb4()
+    parsed_content = response.json()
+
+    # Make sure we got back some kind of reasonable, non-empty token.
+    token = parsed_content['token']
+    assert len(token) == 40
+
+    # Attempt to steal this domain using some irrelevant cert.
+    response = recover_benb3_via_recovery_token_and_stale_cert(
+        token=token, rawHostname='benb4')
+    assert response.status_code == 403, response.content
+
+    # Demonstrate that /recover returns status 200. If that is true, we
+    # rely on test_recovery() to make sure that further updates work after
+    # /recover succeeds.
+    response = recover_benb4()
+    assert response.status_code == 200, response.content
+
+
 def test_recovery():
     # Per sandcats issue #49, we support the ability for users to
     # request an email to be sent to them that grants them
@@ -779,4 +820,5 @@ if __name__ == '__main__':
     test_register()
     test_recovery()
     test_update()
+    test_reserve_domain()
     test_udp_protocol()

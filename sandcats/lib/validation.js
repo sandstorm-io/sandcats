@@ -390,6 +390,46 @@ Mesosphere({
   }
 });
 
+// Create halfRegisterForm validator.
+Mesosphere({
+  name: 'halfRegisterForm',
+  fields: {
+    rawHostname: {
+      required: true,
+      format: /^[0-9a-zA-Z-]+$/,
+      transforms: ["clean", "toLowerCase"],
+      rules: {
+        minLength: 1,
+        maxLength: 20,
+        hostnameUnused: true,
+        extraHyphenRegexes: true,
+      }
+    },
+    certificateSigningRequest: {
+      required: false
+    },
+    ipAddress: {
+      required: true,
+      format: "ipv4",
+      rules: {
+        ipAddressNotOverused: true
+      }
+    },
+    email: {
+      required: true,
+      format: "email"
+    },
+    pubkey: {
+      required: true,
+      rules: {
+        minLength: 40,
+        maxLength: 40,
+        keyFingerprintUnique: true
+      },
+    }
+  }
+});
+
 // Create validator for an IP address update request.
 Mesosphere({
   name: 'updateForm',

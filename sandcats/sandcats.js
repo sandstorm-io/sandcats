@@ -42,6 +42,14 @@ Router.map(function() {
     }
   });
 
+  this.route('halfregister', {
+    path: '/haflregister',
+    where: 'server',
+    action: function() {
+      doHalfRegister(this.request, this.response);
+    }
+  });
+
   this.route('sendrecoverytoken', {
     path: '/sendrecoverytoken',
     where: 'server',
