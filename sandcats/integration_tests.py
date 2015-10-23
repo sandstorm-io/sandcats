@@ -144,12 +144,16 @@ def _add_real_client_cert(n, requests_kwargs):
 def _make_api_call(rawHostname, key_number, path='register',
                    provide_x_sandcats=True, external_ip=False,
                    http_method='post', accept_mime_type=None,
+                   domainReservationToken=None,
                    email='benb@benb.org', recoveryToken=None,
                    x_forwarded_for=None):
     '''This internal helper function allows code-reuse within the tests.'''
     submitted_form_data = {}
     if rawHostname is not None:
         submitted_form_data['rawHostname'] = rawHostname
+
+    if domainReservationToken is not None:
+        submitted_form_data['domainReservationToken'] = domainReservationToken
 
     if email is not None:
         submitted_form_data['email'] = email
@@ -409,6 +413,13 @@ def update_benb3_after_recovery(external_ip=True):
         accept_mime_type='text/plain')
 
 
+def reserve_benb4():
+    return _make_api_call(
+        path='reserve',
+        rawHostname='benb4',
+        key_number=None)
+
+
 def get_resolver():
     resolver = dns.resolver.Resolver()
     resolver.reset()
@@ -426,8 +437,12 @@ def reset_app_state():
     # - Restart the sandcats service, if it is enabled.
     os.system('''echo 'drop database if exists sandcats_pdns;' | mysql -uroot''')
     os.system('''cd .. ; make stage-mysql-setup''')
+    # Remove data from the Mongo collections that we use.
     os.system('''printf '\n\ndb.userRegistrations.remove({}); \n\nexit \n ' | mongo sandcats_mongo''')
-    os.system('sudo service sandcats restart')
+    os.system('''printf '\n\ndb.domainReservations.remove({}); \n\nexit \n ' | mongo sandcats_mongo''')
+
+    # Restart the service if it is running via systemd.
+    os.system('sudo service sandcats restart || true')
 
     # We require a restart of the app, if it's in development mode.
     os.system('killall -INT node')
@@ -646,6 +661,69 @@ def test_register():
     assert str(dns_response.rrset) == 'ben-b2.sandcatz.io. 60 IN A 127.0.0.1'
 
 
+def test_reserve_domain():
+    # Per sandcats issue #119, we support reserving a domain, which generates a "domain registration
+    # token", which then can be used against the /registerreserved API to actually set up the
+    # sandcats key and generate a HTTPS keypair.
+
+    # Test some things that should fail to reserve properly.
+
+    # Expect error for a domain name in the blacklist.
+    response = _make_api_call(path='reserve', key_number=None, rawHostname='ftp')
+    assert response.status_code == 400, response.content
+
+    # Expect error for a domain name that is already in use.
+    response = _make_api_call(path='reserve', key_number=None, rawHostname='benb3')
+    assert response.status_code == 400, response.content
+
+    # Expect error for a domain name that is not in use, but forgot to submit email address.
+    response = _make_api_call(path='reserve', key_number=None, email=None, rawHostname='benb4')
+    assert response.status_code == 400, response.content
+
+    # Expect success for an unreserved & unused domain.
+    response = reserve_benb4()
+    assert response.status_code == 200, response.content
+    parsed_content = response.json()
+
+    # Since we need to allow web browsers to POST to /reserve from JS running on any domain, expect
+    # that the happy success response comes with the right CORS header.
+    cors_header = response.headers.get('Access-Control-Allow-Origin', '')
+    assert cors_header == '*', cors_header
+
+    # Expect error attempting to call /register on a reserved domain.
+    response = _make_api_call(path='register', rawHostname='benb4', key_number=5)
+    assert response.status_code == 400, response.content
+
+    # Expect error for reserving the same domain again.
+    response = reserve_benb4()
+    assert response.status_code == 400, response.content
+
+    # Make sure we got back some kind of reasonable, non-empty token.
+    token = parsed_content['token']
+    assert len(token) == 40
+
+    # Demonstrate that /recover returns status 400 even for the "right" token.
+    response = _make_api_call(path='recover',
+                              recoveryToken=('a' * 40),
+                              rawHostname='benb4',
+                              key_number=5)
+    assert response.status_code == 400, response.content
+
+
+    # Demonstrate that /registerreserved returns 400 for wrong token and 200 for right token.
+    response = _make_api_call(path='registerreserved',
+                              domainReservationToken=('a' * 40),
+                              rawHostname='benb4',
+                              key_number=5)
+    assert response.status_code == 400, response.content
+
+    response = _make_api_call(path='registerreserved',
+                              domainReservationToken=token,
+                              rawHostname='benb4',
+                              key_number=5)
+    assert response.status_code == 200, response.content
+
+
 def test_recovery():
     # Per sandcats issue #49, we support the ability for users to
     # request an email to be sent to them that grants them
@@ -811,4 +889,5 @@ if __name__ == '__main__':
     test_register()
     test_recovery()
     test_update()
+    test_reserve_domain()
     test_udp_protocol()

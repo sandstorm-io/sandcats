@@ -1,4 +1,4 @@
-function finishResponse(status, jsonData, response, plainTextOnly) {
+finishResponse = function(status, jsonData, response, plainTextOnly) {
   if (plainTextOnly) {
     // If the client really really wants plain text, then we hope that
     // the jsonData object has a 'text' property.
@@ -21,7 +21,7 @@ function finishResponse(status, jsonData, response, plainTextOnly) {
   response.end(JSON.stringify(jsonData));
 }
 
-function responseFromFormFailure(validatedFormData) {
+responseFromFormFailure = function(validatedFormData) {
   var response = {error: validatedFormData.errors};
 
   // The response['text'] is information that we show to a person
@@ -57,7 +57,7 @@ function responseFromFormFailure(validatedFormData) {
   return response;
 }
 
-function antiCsrf(request, response) {
+antiCsrf = function(request, response) {
   // Two mini anti-cross-site request forgery checks: POST and a
   // custom HTTP header.
   var requestEnded = false;
@@ -72,7 +72,7 @@ function antiCsrf(request, response) {
   return requestEnded;
 }
 
-function getFormDataFromRequest(request) {
+getFormDataFromRequest = function(request) {
   // The form data is the request body, plus some extra data that we
   // add as if the user submitted it, for convenience of our own
   // processing.
@@ -89,7 +89,7 @@ function getFormDataFromRequest(request) {
   return rawFormData;
 }
 
-function getClientIpFromRequest(request) {
+getClientIpFromRequest = function(request) {
   // The X-Real-IP header contains the client's IP address, and since
   // it's a non-standard header, the Meteor built-in proxy does not
   // mess with it. We assume nginx is going to give this to us.
@@ -97,7 +97,7 @@ function getClientIpFromRequest(request) {
   return clientIp || "";
 }
 
-function wantsPlainText(request) {
+wantsPlainText = function(request) {
   // If the HTTP client can only handle a text/plain response, the
   // Sandcats code honors that by throwing away everything but the
   // 'text' key in the object we were going to respond with.
@@ -137,7 +137,7 @@ doRegister = function(request, response) {
 
   // Give the user an indication of our success.
   return finishResponse(200, {
-    'success': true, 'text': "Successfully registered!"
+    'success': true, 'text': "Successfully registered!",
   }, response, plainTextOnly);
 }
 
@@ -304,7 +304,8 @@ doRecover = function(request, response) {
   }
 }
 
-function createUserRegistration(formData) {
+createUserRegistration = function(formData) {
+  console.log("YOW", JSON.stringify(formData));
   // To create a user registration, we mostly copy data from the form.
   // We do also need to store a public key "fingerprint", which for
   // now we calculated as deadbeaf.
@@ -318,6 +319,12 @@ function createUserRegistration(formData) {
     emailAddress: formData.email
   });
 
+  // Provide some non-empty recovery token, and return that to the
+  // createUserRegistration caller. This value finds its way into the
+  // JSON response.
+
+  var recoveryToken = addRecoveryData(formData);
+
   var userRegistration = UserRegistrations.findOne({_id: userRegistrationId});
 
   // We also probably want to send a confirmation URL. FIXME.
@@ -330,6 +337,15 @@ function createUserRegistration(formData) {
     mysqlQuery,
     userRegistration.hostname,
     userRegistration.ipAddress);
+
+  return recoveryToken;
+}
+
+generateRecoveryData = function() {
+  var recoveryData = {}
+  recoveryData.recoveryToken = Random.id(40);
+  recoveryData.timestamp = new Date();
+  return recoveryData;
 }
 
 function addRecoveryData(formData) {
@@ -340,9 +356,7 @@ function addRecoveryData(formData) {
   // as we can send them a token by email.
 
   // Generate some recovery data.
-  var recoveryData = {}
-  recoveryData.recoveryToken = Random.id(40);
-  recoveryData.timestamp = new Date();
+  var recoveryData = generateRecoveryData();
 
   // Always just toss it onto the corresponding UserRegistration
   // record. (We will only send the recoveryToken to email address
