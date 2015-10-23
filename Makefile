@@ -25,7 +25,10 @@ action-run-dev:
 	(cd sandcats ; MAIL_URL=smtp://localhost:2500 meteor run --settings=dev-settings.json )
 
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
-	cd sandcats && python integration_tests.py
+	cd sandcats && python -u integration_tests.py
+
+action-reset-app-state: /tmp/can-reset-state /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
+	cd sandcats && echo 'reset_app_state()' | python -i integration_tests.py
 
 action-run-unit-tests:
 	(cd sandcats ; tail -c 0 --retry -f ./.meteor/local/log/jasmine-server-integration.log & (meteor --test --settings=dev-settings.json 2>&1 || true) | python ../meteor-testing-nonsense/input-filter.py )
@@ -186,3 +189,10 @@ stage-certificate-configure: /usr/share/doc/ssl-cert
 	# Run meteor --version as ourselves, whoever we are, just to make
 	# sure that it is fully installed for us, too.
 	meteor --version 2>/dev/null
+
+### Pseudo-target - you must touch this file yourself, since I really don't
+### want this getting executed in production.
+/tmp/can-reset-state:
+	@echo "You must run:"
+	@echo '$$ touch /tmp/can-reset-state'
+	exit 1
