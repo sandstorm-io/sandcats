@@ -18,6 +18,8 @@ if (Meteor.isServer) {
   });
 }
 
+
+
 // Always route all URLs, though we carefully set where: 'server' for
 // HTTP API-type URL handling.
 
@@ -31,6 +33,18 @@ Router.map(function() {
         'Location': 'https://docs.sandstorm.io/en/latest/administering/sandcats/'
       });
       this.response.end();
+    }
+  });
+
+  this.route('crashforlocalhost', {
+    path: '/crashforlocalhost',
+    where: 'server',
+    action: function() {
+      if ((this.request.headers['x-real-ip'] === '127.0.0.1') ||
+          (this.request.headers['x-real-ip'] === '10.0.2.2')) {
+        throw new Error("This view crashes when accessed via localhost. Use only for tests!");
+      }
+      this.response.end("You are accessing this from not-localhost. Hooray.");
     }
   });
 

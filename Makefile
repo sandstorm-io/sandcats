@@ -26,7 +26,9 @@ action-run-dev:
 	# games with loopback mounts.
 	mkdir -p /tmp/meteor-local
 	if mount | grep -q vboxsf ; then if ! mount | grep -q /vagrant/sandcats/.meteor/local ; then sudo mount --bind /tmp/meteor-local /vagrant/sandcats/.meteor/local ; fi; fi
-	(cd sandcats ; MAIL_URL=smtp://localhost:2500 meteor run --settings=dev-settings.json )
+	# If we have the systemd service running, stop it.
+	sudo service sandcats stop || true
+	(cd sandcats ; while ( : ) ; do MAIL_URL=smtp://localhost:2500 meteor run --settings=dev-settings.json ; echo 'Restarting...' ; sleep 1 ; done)
 
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
 	cd sandcats && python -u integration_tests.py
