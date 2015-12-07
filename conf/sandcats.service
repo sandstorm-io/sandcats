@@ -12,6 +12,7 @@ SyslogIdentifier=sandcats-meteor
 Environment=PORT=3000 MONGO_URL=mongodb://localhost/sandcats_mongo ROOT_URL=http://localhost/
 EnvironmentFile=-/etc/sandcats.environ
 ExecStart=/bin/bash -c 'METEOR_SETTINGS="$(cat /etc/sandcats-meteor-settings.json)" /usr/local/bin/node main.js'
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
