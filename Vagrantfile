@@ -7,7 +7,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Base ourselves on a reasonable-seeming Debian base box. Jessie so
   # we can have systemd.
-  config.vm.box = "debian/jessie64"
+  config.vm.box = "sandstorm/debian-jessie64"
 
   # Avoid 'stdin is not a tty' pseudo-error.
   config.ssh.pty = true
