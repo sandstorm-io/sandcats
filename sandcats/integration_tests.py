@@ -64,9 +64,16 @@ def testing_smtpd():
 
     assert port_2500_was_opened
 
-    # Run whatever code we are context-managing, allowing that code to
-    # control the 'p'rocess.
+    # Run whatever code we are context-managing, allowing that code to control the 'p'rocess.
     yield p
+
+    # Finally, if the process is still around, teminate it so that we can start it again later if
+    # needed.
+    try:
+        p.terminate()
+    except OSError as e:
+        if e.errno != 3:
+            raise
 
 def make_url(path, external_ip=False):
     BASE_URL = ''
