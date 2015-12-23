@@ -7,6 +7,7 @@ import StringIO
 import time
 import socket
 import subprocess
+import sys
 
 import logging
 import httplib
@@ -432,6 +433,26 @@ def reset_app_state():
     os.system('killall -INT node')
 
     time.sleep(1)  # Make sure the restart gets a chance to start, to avoid HTTP 502.
+
+    # Busy-loop waiting for / to get a HTTP response. This way, we avoid restarting nginx
+    # until the service is online.
+    RESOLUTION = 0.5
+    WAIT_SECONDS = 120  # Note that it could be at worst 2x this, since requests.get() blocks for
+                        # timeout=RESOLUTION as well.
+    got_success = False
+    sys.stdout.write('waiting ')
+    sys.stdout.flush()
+    for i in range(int(WAIT_SECONDS * 1/RESOLUTION)):
+        try:
+            requests.get('http://localhost:3000', timeout=RESOLUTION)
+            got_success = True
+            break  # stop the loop since we got what we needed
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
+            sys.stdout.write('.')
+            sys.stdout.flush()
+            continue  # keep looping, maybe it'll work next time!
+    assert got_success, "Bailing out - service failed to come up"
+
     os.system('sudo service nginx restart')
     os.system('sudo service pdns restart')
     # Attempt to get the homepage, which will mean that Meteor is back, waiting at most 10 seconds.
@@ -783,6 +804,10 @@ def test_udp_protocol():
 
 
 if __name__ == '__main__':
+    if '--reset-app-state' in sys.argv:
+        reset_app_state()
+        sys.exit(0)
+
     test_register()
     test_recovery()
     test_update()

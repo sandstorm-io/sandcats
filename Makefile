@@ -22,13 +22,17 @@ action-deploy-app: stage-install-service action-update-source
 	if sudo grep -q systemd /proc/1/exe ; then sudo systemctl restart sandcats.service ; fi
 
 action-run-dev:
+	# If we are using VirtualBox file sharing, work around race conditions in vboxsf by playing
+	# games with loopback mounts.
+	mkdir -p /tmp/meteor-local
+	if mount | grep -q vboxsf ; then if ! mount | grep -q /vagrant/sandcats/.meteor/local ; then sudo mount --bind /tmp/meteor-local /vagrant/sandcats/.meteor/local ; fi; fi
 	(cd sandcats ; MAIL_URL=smtp://localhost:2500 meteor run --settings=dev-settings.json )
 
 action-run-tests: /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
 	cd sandcats && python -u integration_tests.py
 
 action-reset-app-state: /tmp/can-reset-state /usr/share/doc/python-requests /usr/share/doc/python-dnspython /usr/share/doc/python-netifaces /usr/share/doc/python-twisted
-	cd sandcats && echo 'reset_app_state()' | python -i integration_tests.py
+	cd sandcats && python integration_tests.py --reset-app-state
 
 action-run-unit-tests:
 	(cd sandcats ; tail -c 0 --retry -f ./.meteor/local/log/jasmine-server-integration.log & (meteor --test --settings=dev-settings.json 2>&1 || true) | python ../meteor-testing-nonsense/input-filter.py )
