@@ -42,6 +42,22 @@ Router.map(function() {
     }
   });
 
+  this.route('reserve', {
+    path: '/reserve',
+    where: 'server',
+    action: function() {
+      doReserve(this.request, this.response);
+    }
+  });
+
+  this.route('registerreserved', {
+    path: '/registerreserved',
+    where: 'server',
+    action: function() {
+      doRegisterReserved(this.request, this.response);
+    }
+  });
+
   this.route('sendrecoverytoken', {
     path: '/sendrecoverytoken',
     where: 'server',

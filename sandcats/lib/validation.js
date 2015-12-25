@@ -1,5 +1,5 @@
-// Provide a "public key must be unique" rule, for validating the
-// public key. Mesosphere handles making sure it is the right length.
+// Provide a "public key must be unique" rule, for validating the public key. Mesosphere handles
+// making sure it is the right length.
 Mesosphere.registerRule('keyFingerprintUnique', function (fieldValue, ruleValue) {
   if (! ruleValue) {
     // if the user does something like pubkeyUnique:
@@ -16,14 +16,11 @@ Mesosphere.registerRule('keyFingerprintUnique', function (fieldValue, ruleValue)
   return true;
 });
 
-// Provide a "public key must be unique" rule, for validating the
-// public key. Mesosphere handles making sure it is the right length.
-// Add extra constraints about hyphen use: can't start with a hyphen; can't end with
-// a hyphen; can't have two hyphens next to each other.
+// Add extra constraints about hyphen use: can't start with a hyphen; can't end with a hyphen; can't
+// have two hyphens next to each other.
 Mesosphere.registerRule('extraHyphenRegexes', function (fieldValue, ruleValue) {
   if (! ruleValue) {
-    // if the user does something like extraHyphenRegexes: false, they
-    // don't need us to validate.
+    // if the user does something like extraHyphenRegexes: false, they don't need us to validate.
     return true;
   }
 
@@ -150,12 +147,25 @@ Mesosphere.registerAggregate('getCertificateIsAuthorized', function(fields, form
   return hostnameIsWithinReasonableCertificateIssuanceLimits(hostname);
 });
 
+makeTokenExpirationChecker = function(maxStalenessInSeconds) {
+  return function(recoveryData) {
+    var staleness_ms = Date.now() - recoveryData.timestamp.getTime();
+    var staleness = Math.floor(staleness_ms / 1000);
+    if (staleness > maxStalenessInSeconds) {
+      return false;
+    }
+    return true;
+  };
+};
+
+recoveryDataHasAcceptableStaleness = makeTokenExpirationChecker(RECOVERY_TIME_PERIOD_IN_SECONDS);
+
 Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFieldsObject) {
   // Recovery is authorized under the following circumstances.
   //
   // - The domain in question has an entry in UserRegistrations.
   //
-  // - The UserRegistrations has a recoveryData attribute
+  // - The object has a recoveryData attribute.
   //
   // - The recoveryData's timestamp is less than
   //   RECOVERY_TIME_PERIOD_IN_SECONDS old.
@@ -163,6 +173,7 @@ Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFields
   // - The recoveryToken we are given is the same as the one in the
   //   recoveryData.
   var userRegistration = UserRegistrations.findOne({'hostname': formFieldsObject.rawHostname});
+
   if (! userRegistration) {
     return false;
   }
@@ -172,9 +183,7 @@ Mesosphere.registerAggregate('recoveryIsAuthorized', function(fields, formFields
     return false;
   }
 
-  var staleness_ms = Date.now() - recoveryData.timestamp.getTime();
-  var staleness = Math.floor(staleness_ms / 1000);
-  if (staleness > RECOVERY_TIME_PERIOD_IN_SECONDS) {
+  if (! recoveryDataHasAcceptableStaleness(recoveryData)) {
     return false;
   }
 
@@ -362,6 +371,7 @@ Mesosphere({
         minLength: 1,
         maxLength: 20,
         hostnameUnused: true,
+        hostnameNotReserved: true,
         extraHyphenRegexes: true,
       }
     },
