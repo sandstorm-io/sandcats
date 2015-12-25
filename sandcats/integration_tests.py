@@ -702,9 +702,15 @@ def test_reserve_domain():
     token = parsed_content['token']
     assert len(token) == 40
 
-    # Demonstrate that /recover returns status 400 even for the "right" token.
+    # Demonstrate that /recover returns status 400 for both the wrong token and the "right" token.
     response = _make_api_call(path='recover',
                               recoveryToken=('a' * 40),
+                              rawHostname='benb4',
+                              key_number=5)
+    assert response.status_code == 400, response.content
+
+    response = _make_api_call(path='recover',
+                              recoveryToken=token,
                               rawHostname='benb4',
                               key_number=5)
     assert response.status_code == 400, response.content
