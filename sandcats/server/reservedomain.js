@@ -115,7 +115,7 @@ Mesosphere.registerAggregate('domainReservationTokenUseIsAuthorized', function(f
     return false;
   }
 
-  if (formFieldsObject.domainReservationToken == recoveryData.recoveryToken) {
+  if (formFieldsObject.domainReservationToken.trim() === recoveryData.recoveryToken.trim()) {
     return true;  // hooray!
   }
 
