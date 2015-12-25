@@ -318,12 +318,6 @@ createUserRegistration = function(formData) {
     emailAddress: formData.email
   });
 
-  // Provide some non-empty recovery token, and return that to the
-  // createUserRegistration caller. This value finds its way into the
-  // JSON response.
-
-  var recoveryToken = addRecoveryData(formData);
-
   var userRegistration = UserRegistrations.findOne({_id: userRegistrationId});
 
   // We also probably want to send a confirmation URL. FIXME.
@@ -336,8 +330,6 @@ createUserRegistration = function(formData) {
     mysqlQuery,
     userRegistration.hostname,
     userRegistration.ipAddress);
-
-  return recoveryToken;
 }
 
 generateRecoveryData = function() {
