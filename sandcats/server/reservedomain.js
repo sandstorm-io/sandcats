@@ -184,7 +184,7 @@ doRegisterReserved = function(request, response) {
 
   // Give the user an indication of our success.
   return finishResponse(200, {
-    'success': true, 'text': "Successfully registered!",
+    'success': true, 'text': "Successfully registered using a pre-reserved domain!",
   }, response, plainTextOnly);
 
 }
@@ -236,7 +236,7 @@ doReserve = function(request, response) {
 
   // Give the user an indication of our success.
   return finishResponse(200, {
-    'success': true, 'text': "Successfully registered!",
+    'success': true, 'text': "Successfully reserved domain name!",
     'token': recoveryToken,
   }, response, plainTextOnly);
 }
