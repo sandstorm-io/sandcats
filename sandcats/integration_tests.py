@@ -416,6 +416,7 @@ def update_benb3_after_recovery(external_ip=True):
 def reserve_benb4():
     return _make_api_call(
         path='reserve',
+        provide_x_sandcats=False,
         rawHostname='benb4',
         key_number=None)
 
