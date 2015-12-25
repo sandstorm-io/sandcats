@@ -305,12 +305,8 @@ doRecover = function(request, response) {
 }
 
 createUserRegistration = function(formData) {
-  // To create a user registration, we mostly copy data from the form.
-  // We do also need to store a public key "fingerprint", which for
-  // now we calculated as deadbeaf.
-
-  // FIXME: Attach this to the form data via a validator, as an
-  // aggregate, to avoid double-computing it.
+  // To create a user registration, we mostly copy data from the form. We allow SimpleSchema to
+  // validate it.
   var userRegistrationId = UserRegistrations.insert({
     hostname: formData.rawHostname,
     ipAddress: formData.ipAddress,
@@ -318,18 +314,17 @@ createUserRegistration = function(formData) {
     emailAddress: formData.email
   });
 
+  // Make sure it stuck, and log that it worked.
   var userRegistration = UserRegistrations.findOne({_id: userRegistrationId});
-
-  // We also probably want to send a confirmation URL. FIXME.
-  // Arguably we should do this with Meteor accounts. Hmm.
-
-  // Now, publish the UserRegistration to DNS.
   console.log("Created UserRegistration with these details: %s",
               JSON.stringify(userRegistration));
+
+  // Publish the UserRegistration to DNS.
   publishOneUserRegistrationToDns(
     mysqlQuery,
     userRegistration.hostname,
     userRegistration.ipAddress);
+  // TODO(someday): We could send a confirmation email if we wanted.
 }
 
 generateRecoveryData = function() {
