@@ -14,7 +14,7 @@ var recoveryTokenSchema = new SimpleSchema({
     max: 40
   },
   timestamp: {
-    // Rely in Javascript+Mongo+etc. to avoid timezone problems, since
+    // Rely on Javascript+Mongo+etc. to avoid timezone problems, since
     // in JS, date objects are timezone-aware by default.
     type: Date
   }
@@ -44,12 +44,30 @@ UserRegistrations.attachSchema(new SimpleSchema({
     // validate that this is actually an email address.
     type: String
   },
+}));
+
+// We have a separate collection for reserved domain names, rather
+// than storing them in UserRegistrations somehow. This is because:
+//
+// 1. https://blog.engineyard.com/2011/5-subtle-ways-youre-using-mysql-as-a-queue-and-why-itll-bite-you/
+//
+// 2. It makes the logic simpler. This way, I don't have to create a
+//    special fake value for the required publicKeyId parameter, etc.
+
+DomainReservations = new Mongo.Collection("domainReservations");
+DomainReservations.attachSchema(new SimpleSchema({
+  hostname: hostnameType,
+  emailAddress: {
+    // We use a string here for convenience. We rely on Mesosphere to
+    // validate that this is actually an email address.
+    type: String
+  },
   recoveryData: {
-    // If there is an object here, then we allow the use of the
-    // .recoveryData.recoveryToken as a string which can be used
-    // to set the domain to a new public key.
-    type: recoveryTokenSchema,
-    optional: true
+    // Reserved domains MUST have recoveryData. We call this a domain
+    // reservation code publicly since the purpose is to create a
+    // domain for the first time. As an implementation detail, it is
+    // the same as a recovery token.
+    type: recoveryTokenSchema
   }
 }));
 
