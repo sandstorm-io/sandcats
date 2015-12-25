@@ -40,9 +40,6 @@ Mesosphere({
       required: true,
       format: "email"
     }
-  },
-  aggregates: {
-    updateIsAuthorized: ['hostnameAndPubkeyMatch', ['rawHostname', 'pubkey']]
   }
 });
 
