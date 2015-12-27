@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Example hosting provider</title>
+
+    <!-- Slate theme from Bootswatch -->
+    <link rel="stylesheet" href="https://bootswatch.com/slate/bootstrap.min.css">
+
+    <!-- jQuery (required for bootstrap JS) from Google CDN. -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Styling for this form -->
+    <style type="text/css">
+      .steps { display: block; list-style-type: none; padding-left: 0;}
+      .implementation-note { background-color: #aaaaff; color: black; }
+      code { display: block; }
+    </style>
+    <!-- Sample Javascript code to interact with our API. -->
+    <script src="script.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="jumbotron">
+        <h1>Example Hosting Company lets you run Sandstorm in a snap</h1>
+
+        <p class="lead">
+          You sell Linux VMs; Sandstorm provides software that makes VMs easy and safe for your
+          customers.
+        </p>
+
+        <p>
+          The example form on this page is something you could copy-paste onto your own hosting
+          control panel and show to your own customers. The example form works! You are free to play
+          with it.  It is tied to the sandcats.io dev instance, so it is OK to create domains
+          willy-nilly.
+        </p>
+
+        <p>It uses the domain reservation API of sandcats.io, which allows a hosting company
+          reserve <code>username.sandcats.io</code> domains on behalf of
+          customers. <code>sandcats.io</code>, a service provided
+          by <a href="https://sandstorm.io/">Sandstorm.io</a>, provides auto-provisioned dynamic DNS
+          and HTTPS certificates, free of cost. The domain reservation API creates a token that you
+          can pass to the Sandstorm install script for a fully-unattended setup. The token lasts 30
+          minutes. That API is currently in (open beta soon), no API key required. You can email
+          support@sandstorm.io for help.
+        </p>
+
+      </div>
+
+      <div class="row">
+        <div class="col-lg-12">
+          <form class="form-horizontal" id="signup-form">
+            <fieldset>
+              <legend>Show your customers a form like this, hosted on yourdomain.com</legend>
+              <h3>Enjoy a world of web apps without risking your data</h3>
+              <h4>Create your own cloud server
+              running <a href="https://sandstorm.io/">Sandstorm</a>, with dynamic DNS and free HTTPS
+              provided by the Sandstorm.io team. When you click submit, we will create a VM and this
+              page will update to show you how to log in using a browser and via SSH.</h4>
+              <div class="form-group">
+                <label for="inputEmail" class="col-lg-2 control-label">Email</label>
+                <div class="col-lg-10">
+                  <input type="text" class="form-control" id="inputEmail" placeholder="Email">
+                  <div class="help-block implementation-note">Implementation note: As a hosting provider, you probably have the user's email address on file. Feel free to remove this prompt, but know that the sandcats.io domain reservation API needs the user's email address.
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="inputHostname" class="col-lg-2 control-label">Hostname</label>
+                <div class="col-lg-10">
+                  <input type="text" placeholder="Example: myawesomebox" class="form-control" id="inputHostname"></input>
+                  <div class="checkbox">
+                    <label>
+                      <input id="inputTos" name="inputTos" value="yes" type="checkbox"> I agree to the <a href="http://sandcats.io/terms">sandcats.io terms of service</a> &amp; <a href="http://sandcats.io/privacy">privacy policy</a>
+                    </label>
+                  <div class="help-block">Choose any subdomain of <span class="sandcats-base-domain">sandcats.io</span>. Here's how it works: We've partnered with the Sandstorm.io team to give you a free subdomain of <span class="sandcats-base-domain">sandcats.io</span> and free HTTPS certificates. Your server will have a hostname like: <code>https://myawesomebox.<span class="sandcats-base-domain">sandcats.io</span></code></div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label">Resources</label>
+                <div class="col-lg-10">
+                  <div class="radio">
+                    <label>
+                      <input type="radio" name="optionsRadios" id="optionsRadios1" value="option1" checked="">
+                      1 GB of RAM, 10 GB of storage: $50/mo
+                    </label>
+                  </div>
+                  <div class="radio">
+                    <label>
+                      <input type="radio" name="optionsRadios" id="optionsRadios2" value="option2">
+                      2 GB of RAM, 20 GB of storage: $100/mo
+                    </label>
+                  </div>
+                  <div class="help-block implementation-note">Implementation note: on this sample form, these radio
+                    buttons do nothing. You probably want something like this as a way to ask users
+                    which of your VPS products they need. Sandstorm works OK on a VPS with 1 GB of
+                    RAM if you enable swap, so please enable swap (approximately 50% of system RAM)
+                    in your default virtual machine image. Sandstorm benefits from 2 GB of
+                    RAM.</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-lg-10 col-lg-offset-2">
+                  <button type="submit" class="btn btn-primary pull-right">Create VM</button>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <form class="form-horizontal">
+          <div class="col-lg-12 form-group">
+            <div class="col-lg-2 visible-lg">
+              <strong class="pull-right">Debug info</strong>
+            </div>
+            <div class="col-lg-10">
+              <ul class="steps">
+                <li class="hide-after-submit">Click "Create VM" above to begin.</li>
+              </ul>
+              <ul class="steps implementation-note">
+                <li class="validate-email hidden">Validating email...</li>
+                <li class="validate-hostname hidden">Validating hostname...</li>
+                <li class="validate-sandcats-tos hidden">Checking for agreement with sandcats ToS...</li>
+                <li class="hidden reserve-domain-name">Reserving domain name with <span class="sandcats-base-domain">sandcats.io</span>... (real in this demo!)</li>
+                <li class="hidden got-token">Got domain reservation token! <span class="domain-reservation-token">sandcats.io</span> (real in this demo!)</li>
+                <li class="hidden generate-admin-token">Generating admin token... <span class="admin-token">...</span></li>
+              </ul>
+
+              <div class="hidden got-token implementation-note">
+                If this were a real hosting service, you would presumably already have a Sandstorm
+                VM somewhere with the install script on it. For now, you can run this command on
+                any Linux machine:
+                <code>
+                  mkdir -p /tmp/sandstorm-installer/ <br>
+                  chmod 0700 /tmp/sandstorm-installer/ <br>
+                  wget https://raw.githubusercontent.com/sandstorm-io/sandstorm/install.sh-support-domain-reservation-token/install.sh -O /tmp/sandstorm-installer/install.sh
+                </code>
+              </div>
+
+              <div class="hidden got-token implementation-note">
+                If this were a real hosting service, the next thing you would do is run the
+                Sandstorm install script behind the scenes, on a VM, with the following parameters.
+              </div>
+              <div class="got-admin-token implementation-note">
+                <code class="hidden got-admin-token">sudo
+                  CHOSEN_INSTALL_MODE=1 \<br>
+                  ADMIN_TOKEN=<span class='admin-token'>REPLACEME</span> \<br>
+                  SANDCATS_DOMAIN_RESERVATION_TOKEN=<span class="domain-reservation-token">REPLACEME</span> \<br>
+                  DESIRED_SANDCATS_NAME=<span class="confirmed-sandcats-hostname">REPLACEME</span> \<br>
+                  <span class="hidden show-if-not-prod">
+                    OVERRIDE_SANDCATS_BASE_DOMAIN=sandcats-dev.sandstorm.io \<br>
+                    OVERRIDE_SANDCATS_API_BASE=https://sandcats-dev-machine.sandstorm.io \<br>
+                  </span>
+                  bash /tmp/sandstorm-installer/install.sh -d
+                </code>
+              </div>
+
+              <ul class="steps implementation-note">
+                <li class="hidden after-2-seconds">Creating VM... (fake in this demo)</li>
+                <li class="hidden after-4-seconds">Installing Sandstorm... (fake in this demo)</li>
+                <li class="hidden after-6-seconds">Provisioning domain name & HTTPS certificates... (real in this demo!)</li>
+                <li class="hidden after-8-seconds">All done!</li>
+              </ul>
+            </div>
+          </div>
+        </form>
+      </div>
+  </body>
+</html>
