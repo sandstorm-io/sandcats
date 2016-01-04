@@ -18,8 +18,6 @@ if (Meteor.isServer) {
   });
 }
 
-
-
 // Always route all URLs, though we carefully set where: 'server' for
 // HTTP API-type URL handling.
 
