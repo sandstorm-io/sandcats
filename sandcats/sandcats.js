@@ -41,6 +41,15 @@ Router.map(function() {
       if ((this.request.headers['x-real-ip'] === '127.0.0.1') ||
           (this.request.headers['x-real-ip'] === '10.0.2.2')) {
         console.log("About to crash...");
+        console.log("First, adding an exception handler...");
+
+        process.on('uncaughtException', function (err) {
+          console.error("Asheesh's exception handler says:");
+          console.error((new Date).toUTCString() + ' uncaughtException:', err.message)
+          console.error(err.stack)
+          process.exit(1)
+        });
+
         setTimeout(function() {
           throw new Error("This view crashes when accessed via localhost. Use only for tests!");
         }, 0.1);
