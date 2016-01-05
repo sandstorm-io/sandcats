@@ -40,9 +40,13 @@ Router.map(function() {
     action: function() {
       if ((this.request.headers['x-real-ip'] === '127.0.0.1') ||
           (this.request.headers['x-real-ip'] === '10.0.2.2')) {
-        throw new Error("This view crashes when accessed via localhost. Use only for tests!");
+        console.log("About to crash...");
+        setTimeout(function() {
+          throw new Error("This view crashes when accessed via localhost. Use only for tests!");
+        }, 0.1);
+        return;
       }
-      this.response.end("You are accessing this from not-localhost. Hooray.");
+        this.response.end("You are accessing this from not-localhost. Hooray.");
     }
   });
 
