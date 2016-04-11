@@ -273,8 +273,9 @@ issueCertificate = function(csrText, devOrProd, orderRequestParameter) {
         err.message.code === 'ETIMEDOUT') {
       console.log("GlobalSign API timed out. Retrying just once...");
       var globalsignResponse = wrapped(args);
-    } else
+    } else {
       throw e;
+    }
   }
 
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode == -1) {
