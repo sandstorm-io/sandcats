@@ -274,7 +274,7 @@ issueCertificate = function(csrText, devOrProd, orderRequestParameter) {
       console.log("GlobalSign API timed out. Retrying just once...");
       var globalsignResponse = wrapped(args);
     } else {
-      throw e;
+      throw err;
     }
   }
 
