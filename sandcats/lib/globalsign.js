@@ -266,7 +266,18 @@ issueCertificate = function(csrText, devOrProd, orderRequestParameter) {
 
   // Send the request.
   var args = getAllSignCsrArgs(domainInfo, csrText, devOrProd, orderRequestParameter);
-  var globalsignResponse = wrapped(args);
+  try {
+    var globalsignResponse = wrapped(args);
+  } catch (err) {
+    if (err && err.message && err.message.code &&
+        err.message.code === 'ETIMEDOUT') {
+      console.log("GlobalSign API timed out. Retrying just once...");
+      var globalsignResponse = wrapped(args);
+    } else {
+      throw err;
+    }
+  }
+
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode == -1) {
     console.log("Received error from GlobalSign:", JSON.stringify(globalsignResponse.Response.OrderResponseHeader.Errors));
   }
