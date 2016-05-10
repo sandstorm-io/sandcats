@@ -462,7 +462,8 @@ doGetCertificate = function(request, response) {
   // then passes the info to the user.
   var temporaryHackOverride = false;
   if (hostname === "rose.sandcats.io" ||
-      hostname === "*.rose.sandcats.io") {
+      hostname === "*.rose.sandcats.io" ||
+      hostname === "rose") {
     console.log("Since hostname is rose, I think, based on hostname:", hostname,
 		"I will enable the temporary hack override.");
     temporaryHackOverride = true;
