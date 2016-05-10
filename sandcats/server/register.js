@@ -460,11 +460,44 @@ doGetCertificate = function(request, response) {
   var globalsignResponse = issueCertificate(csrText, devOrProd, orderRequestParameter);
   // Pass the response to a helper that logs the response to Mongo
   // then passes the info to the user.
-  return finishGlobalsignResponse(globalsignResponse, response, logEntryId);
+  var temporaryHackOverride = false;
+  if (hostname === "rose.sandcats.io" ||
+      hostname === "*.rose.sandcats.io") {
+    console.log("Since hostname is rose, I think, based on hostname:", hostname,
+		"I will enable the temporary hack override.");
+    temporaryHackOverride = true;
+  }
+
+  return finishGlobalsignResponse(globalsignResponse, response, logEntryId, temporaryHackOverride);
 };
 
-finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId) {
+finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId, temporaryHackOverride) {
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode != 0) {
+
+    // If the first error code is -9978, this is a spurious GlobalSign half-rejection of a commonName
+    // that starts with `*`. FWIW they do actually return a certificate; they just provide an error
+    // message as well. Weirdly, they didn't used to do this. Also weirdly, this only seems to happen
+    // for domains that are already registered, aka our pseudo-renewals. (Pseudo-renewals because this
+    // code always requests a "new" certificate via the GlobalSign API, for implementation simplicity.)
+    var ignoreError = false;
+    if (temporaryHackOverride &&
+	result.Response &&
+	result.Response.OrderResponseHeader &&
+	result.Response.OrderResponseHeader.Errors &&
+	result.Response.OrderResponseHeader.Errors.Error &&
+	result.Response.OrderResponseHeader.Errors.Error[0] &&
+	result.Response.OrderResponseHeader.Errors.Error[0].ErrorCode &&
+	result.Response.OrderResponseHeader.Errors.Error[0].ErrorCode === -9978) {
+      console.log("Because temporaryHackOverride enabled, acting as though there was no error at all.");
+      console.log("BTW, true/false: Did we find an actual certificate in the response?",
+		  !! (result.Response &&
+		      result.Response.PVOrderDetail &&
+		      result.Response.PVOrderDetail.Fulfillment &&
+		      result.Response.PVOrderDetail.Fulfillment.ServerCertificate &&
+		      result.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert));
+      ignoreError = true;
+    }
+
     var responseStringified = "(attempting to stringify...)";
     try {
       responseStringified = JSON.stringify(globalsignResponse);
@@ -478,7 +511,11 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEnt
     } else {
       console.error(JSON.stringify(errors));
     }
-    return finishResponse(500, {'error': 'Server error'}, responseCallback, false);
+    if (ignoreError) {
+      console.log("Continuing despite error.");
+    } else {
+      return finishResponse(500, {'error': 'Server error'}, responseCallback, false);
+    }
   }
 
   var cert = globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert;
