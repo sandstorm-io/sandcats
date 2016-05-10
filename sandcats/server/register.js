@@ -490,7 +490,7 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEnt
 	globalsignResponse.Response.OrderResponseHeader.Errors.Error &&
 	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0] &&
 	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode &&
-	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode === -9978) {
+	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode === "-9978") {
       console.log("Because temporaryHackOverride enabled, acting as though there was no error at all.");
       console.log("BTW, true/false: Did we find an actual certificate in the response?",
 		  !! (globalsignResponse.Response &&
