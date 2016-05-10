@@ -466,6 +466,8 @@ doGetCertificate = function(request, response) {
     console.log("Since hostname is rose, I think, based on hostname:", hostname,
 		"I will enable the temporary hack override.");
     temporaryHackOverride = true;
+  } else {
+    console.log("Skipping hack override due to hostname", hostname);
   }
 
   return finishGlobalsignResponse(globalsignResponse, response, logEntryId, temporaryHackOverride);
