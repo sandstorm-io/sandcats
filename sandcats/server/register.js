@@ -484,20 +484,20 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEnt
     // code always requests a "new" certificate via the GlobalSign API, for implementation simplicity.)
     var ignoreError = false;
     if (temporaryHackOverride &&
-	result.Response &&
-	result.Response.OrderResponseHeader &&
-	result.Response.OrderResponseHeader.Errors &&
-	result.Response.OrderResponseHeader.Errors.Error &&
-	result.Response.OrderResponseHeader.Errors.Error[0] &&
-	result.Response.OrderResponseHeader.Errors.Error[0].ErrorCode &&
-	result.Response.OrderResponseHeader.Errors.Error[0].ErrorCode === -9978) {
+	globalsignResponse.Response &&
+	globalsignResponse.Response.OrderResponseHeader &&
+	globalsignResponse.Response.OrderResponseHeader.Errors &&
+	globalsignResponse.Response.OrderResponseHeader.Errors.Error &&
+	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0] &&
+	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode &&
+	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode === -9978) {
       console.log("Because temporaryHackOverride enabled, acting as though there was no error at all.");
       console.log("BTW, true/false: Did we find an actual certificate in the response?",
-		  !! (result.Response &&
-		      result.Response.PVOrderDetail &&
-		      result.Response.PVOrderDetail.Fulfillment &&
-		      result.Response.PVOrderDetail.Fulfillment.ServerCertificate &&
-		      result.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert));
+		  !! (globalsignResponse.Response &&
+		      globalsignResponse.Response.PVOrderDetail &&
+		      globalsignResponse.Response.PVOrderDetail.Fulfillment &&
+		      globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate &&
+		      globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert));
       ignoreError = true;
     }
 
