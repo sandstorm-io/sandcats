@@ -460,21 +460,10 @@ doGetCertificate = function(request, response) {
   var globalsignResponse = issueCertificate(csrText, devOrProd, orderRequestParameter);
   // Pass the response to a helper that logs the response to Mongo
   // then passes the info to the user.
-  var temporaryHackOverride = false;
-  if (hostname === "rose.sandcats.io" ||
-      hostname === "*.rose.sandcats.io" ||
-      hostname === "rose") {
-    console.log("Since hostname is rose, I think, based on hostname:", hostname,
-		"I will enable the temporary hack override.");
-    temporaryHackOverride = true;
-  } else {
-    console.log("Skipping hack override due to hostname", hostname);
-  }
-
-  return finishGlobalsignResponse(globalsignResponse, response, logEntryId, temporaryHackOverride);
+  return finishGlobalsignResponse(globalsignResponse, response, logEntryId);
 };
 
-finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId, temporaryHackOverride) {
+finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId) {
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode != 0) {
 
     // If the first error code is -9978, this is a spurious GlobalSign half-rejection of a commonName
@@ -483,16 +472,15 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEnt
     // for domains that are already registered, aka our pseudo-renewals. (Pseudo-renewals because this
     // code always requests a "new" certificate via the GlobalSign API, for implementation simplicity.)
     var ignoreError = false;
-    if (temporaryHackOverride &&
-	globalsignResponse.Response &&
+    if (globalsignResponse.Response &&
 	globalsignResponse.Response.OrderResponseHeader &&
 	globalsignResponse.Response.OrderResponseHeader.Errors &&
 	globalsignResponse.Response.OrderResponseHeader.Errors.Error &&
 	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0] &&
 	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode &&
 	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode === "-9978") {
-      console.log("Because temporaryHackOverride enabled, acting as though there was no error at all.");
-      console.log("BTW, true/false: Did we find an actual certificate in the response?",
+      console.log("[pseudo-error] found -9978, acting as though there was no error at all.");
+      console.log("[pseudo-error] BTW, true/false: Did we find an actual certificate in the response?",
 		  !! (globalsignResponse.Response &&
 		      globalsignResponse.Response.PVOrderDetail &&
 		      globalsignResponse.Response.PVOrderDetail.Fulfillment &&
