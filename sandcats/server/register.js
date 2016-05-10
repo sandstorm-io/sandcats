@@ -465,6 +465,13 @@ doGetCertificate = function(request, response) {
 
 finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId) {
   if (globalsignResponse.Response.OrderResponseHeader.SuccessCode != 0) {
+    var responseStringified = "(attempting to stringify...)";
+    try {
+      responseStringified = JSON.stringify(globalsignResponse);
+    } catch (e) {
+      console.error("Eek, failed to stringify response", e);
+    }
+    console.log("Aiee, logging full non-success GlobalSign response", responseStringified);
     var errors = globalsignResponse.Response.OrderResponseHeader.Errors;
     if (errors && logEntryId) {
       logIssueCertificateErrors(errors, logEntryId);
