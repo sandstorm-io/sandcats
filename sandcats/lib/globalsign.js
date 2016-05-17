@@ -207,6 +207,7 @@ logIssueCertificateStart = function(devOrProd, orderRequestParameter,
       "logIssueCertificateStart: Failed to create log entry for: " +
         stringifiedData);
   }
+
   return logEntryId;
 }
 

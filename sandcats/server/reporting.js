@@ -146,6 +146,18 @@ Reporting.generateReport = function(startTimestamp, endTimestamp) {
     pushHostnamesFromQueryAsBulletedList(query, reportLines);
   }
 
+  reportLines.push("");
+  for (var i = 0; i < options.length; i++) {
+    reportLines.push("Hostnames requested in the period w/ response AND w/ errors (" + options[i] + "):");
+    var query = CertificateRequests.find({
+      devOrProd: options[i], globalsignCertificateInfo: {$exists: true},
+      globalsignErrors: {$exists: true},
+      requestCreationDate: {$gte: startDate, $lte: endDate}
+  }, {
+    fields: {'hostname': 1, 'requestCreationDate': 1}});
+    pushHostnamesFromQueryAsBulletedList(query, reportLines);
+  }
+
   return reportLines.join("\n");
 }
 
