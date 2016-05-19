@@ -94,8 +94,9 @@ CertificateRequests.attachSchema(new SimpleSchema({
   globalsignValidityPeriod: {
     type: Object
   },
-  globalsignErrorMessages: {
-    type: [String],
+  globalsignErrors: {
+    type: Object,
+    blackbox: true,
     optional: true
   },
   "globalsignValidityPeriod.Months": {

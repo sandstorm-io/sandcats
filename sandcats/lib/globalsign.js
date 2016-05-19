@@ -249,8 +249,8 @@ logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
 
 logIssueCertificateErrors = function(errorList, logEntryId) {
   console.log("Attempting to store", errorList, "w/r/t", logEntryId);
-  var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
-    globalsignErrors: errorList}});
+  var numAffected = CertificateRequests.update({_id: logEntryId},
+                                               {$set: {globalsignErrors: errorList}});
   if (numAffected != 1) {
     throw new Error("logIssueCertificateErrors changed " + numAffected +
                     " documents when it meant to change 1. ID was: ",
