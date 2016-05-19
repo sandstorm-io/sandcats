@@ -492,6 +492,18 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback, logErr
   var shouldProceed = (foundCertificate && (
     globalsignResponse.Response.OrderResponseHeader.SuccessCode === 0 ||
       globalsignResponse.Response.OrderResponseHeader.SuccessCode === 1));
+  var shouldLogResponse = ! (
+    globalsignResponse.Response.OrderResponseHeader.SuccessCode === 0);
+
+  if (shouldLogResponse) {
+    var responseStringified = "(attempting to stringify...)";
+    try {
+      responseStringified = JSON.stringify(globalsignResponse);
+    } catch (e) {
+      responseStringified = console.error("Eek, failed to stringify response", e);
+    }
+    console.log("[ERROR] Got an error or a warning, or no certificate. Logging full non-success GlobalSign response", responseStringified);
+  }
 
   // Check for any error text that we need to store. GlobalSign places
   // warning information into the same Errors field.
@@ -504,15 +516,6 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback, logErr
   }
 
   if (! shouldProceed) {
-    var responseStringified = "(attempting to stringify...)";
-    try {
-      responseStringified = JSON.stringify(globalsignResponse);
-    } catch (e) {
-      responseStringified = console.error("Eek, failed to stringify response", e);
-    } finally {
-      console.log("[ERROR] No certificate found in response. Logging full non-success GlobalSign response", responseStringified);
-    }
-
     return finishResponse(500, {'error': 'Server error'}, responseCallback, false);
   }
 
