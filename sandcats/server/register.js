@@ -452,63 +452,73 @@ doGetCertificate = function(request, response) {
   var csrText = validatedFormData.formData.certificateSigningRequest;
   var orderRequestParameter = getOrderRequestParameter(csrText);
 
-  // Before actually sending it, log a note that we are about to send
-  // it.
+  // Before actually sending it, log a note that we are about to send it.
   var logEntryId = logIssueCertificateStart(
     devOrProd, orderRequestParameter, intendedUseDurationDays, hostname);
+
   // Send it to GlobalSign & capture response.
   var globalsignResponse = issueCertificate(csrText, devOrProd, orderRequestParameter);
+
+  // Create a way for finishGlobalsignResponse to update that note to store any errors, and to store
+  // success.
+  var logErrorCallback = function(errors) {
+    return logIssueCertificateErrors(errors, logEntryId);
+  };
+  var logSuccessCallback = function(globalsignResponse) {
+    return logIssueCertificateSuccess(globalsignResponse, logEntryId);
+  };
+
   // Pass the response to a helper that logs the response to Mongo
   // then passes the info to the user.
-  return finishGlobalsignResponse(globalsignResponse, response, logEntryId);
+  return finishGlobalsignResponse(globalsignResponse, response, logErrorCallback, logSuccessCallback);
 };
 
-finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEntryId) {
-  if (globalsignResponse.Response.OrderResponseHeader.SuccessCode != 0) {
+finishGlobalsignResponse = function(globalsignResponse, responseCallback, logErrorCallback, logSuccessCallback) {
+  if (! logErrorCallback) {
+    throw new Error("You called me without a way to store errors. Refusing to continue.");
+  }
+  if (! logSuccessCallback) {
+    throw new Error("You called me without a way to store success. Refusing to continue.");
+  }
 
-    // If the first error code is -9978, this is a spurious GlobalSign half-rejection of a commonName
-    // that starts with `*`. FWIW they do actually return a certificate; they just provide an error
-    // message as well. Weirdly, they didn't used to do this. Also weirdly, this only seems to happen
-    // for domains that are already registered, aka our pseudo-renewals. (Pseudo-renewals because this
-    // code always requests a "new" certificate via the GlobalSign API, for implementation simplicity.)
-    var ignoreError = false;
-    if (globalsignResponse.Response &&
-	globalsignResponse.Response.OrderResponseHeader &&
-	globalsignResponse.Response.OrderResponseHeader.Errors &&
-	globalsignResponse.Response.OrderResponseHeader.Errors.Error &&
-	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0] &&
-	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode &&
-	globalsignResponse.Response.OrderResponseHeader.Errors.Error[0].ErrorCode === "-9978") {
-      console.log("[pseudo-error] found -9978, acting as though there was no error at all.");
-      console.log("[pseudo-error] BTW, true/false: Did we find an actual certificate in the response?",
-		  !! (globalsignResponse.Response &&
-		      globalsignResponse.Response.PVOrderDetail &&
-		      globalsignResponse.Response.PVOrderDetail.Fulfillment &&
-		      globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate &&
-		      globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert));
-      ignoreError = true;
-    }
+  // shouldProceed is true if there is a certificate in the response and we got
+  // either 0 or 1, aka success or warning.
+  var foundCertificate = !! (
+    globalsignResponse.Response &&
+      globalsignResponse.Response.PVOrderDetail &&
+      globalsignResponse.Response.PVOrderDetail.Fulfillment &&
+      globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate &&
+      globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert);
+  var shouldProceed = (foundCertificate && (
+    globalsignResponse.Response.OrderResponseHeader.SuccessCode === 0 ||
+      globalsignResponse.Response.OrderResponseHeader.SuccessCode === 1));
 
+  // Check for any error text that we need to store. GlobalSign places
+  // warning information into the same Errors field.
+  var errors = (globalsignResponse &&
+                globalsignResponse.Response &&
+                globalsignResponse.Response.OrderResponseHeader &&
+                globalsignResponse.Response.OrderResponseHeader.Errors);
+  if (errors) {
+    logErrorCallback(errors);
+  }
+
+  if (! shouldProceed) {
     var responseStringified = "(attempting to stringify...)";
     try {
       responseStringified = JSON.stringify(globalsignResponse);
     } catch (e) {
-      console.error("Eek, failed to stringify response", e);
+      responseStringified = console.error("Eek, failed to stringify response", e);
+    } finally {
+      console.log("[ERROR] No certificate found in response. Logging full non-success GlobalSign response", responseStringified);
     }
-    console.log("Aiee, logging full non-success GlobalSign response", responseStringified);
-    var errors = globalsignResponse.Response.OrderResponseHeader.Errors;
-    if (errors && logEntryId) {
-      logIssueCertificateErrors(errors, logEntryId);
-    } else {
-      console.error(JSON.stringify(errors));
-    }
-    if (ignoreError) {
-      console.log("Continuing despite error.");
-    } else {
-      return finishResponse(500, {'error': 'Server error'}, responseCallback, false);
-    }
+
+    return finishResponse(500, {'error': 'Server error'}, responseCallback, false);
   }
 
+  // We have a valid response!
+
+  // Reformat the data so that Sandstorm servers can use it.
   var cert = globalsignResponse.Response.PVOrderDetail.Fulfillment.ServerCertificate.X509Cert;
   var ca = [];
   if (globalsignResponse.Response.PVOrderDetail.Fulfillment.CACertificates) {
@@ -518,13 +528,9 @@ finishGlobalsignResponse = function(globalsignResponse, responseCallback, logEnt
     }
   }
 
-  // Before returning it, add a note to Mongo.
-  if (logEntryId) {
-    logIssueCertificateSuccess(globalsignResponse, logEntryId);
-  } else {
-    console.error("No logEntryId, so here was the response: " +
-                  globalsignResponse);
-  }
+  // Log the signed certificate etc. in Mongo, now that all the risky operations have completed.
+  logSuccessCallback(globalsignResponse);
+
   return finishResponse(200, {'cert': cert, 'ca': ca}, responseCallback, false);
 };
 

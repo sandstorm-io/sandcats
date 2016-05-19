@@ -175,7 +175,10 @@ Jasmine.onTest(function () {
             'OrderResponseHeader': {
               'StatusCode': -1,
               'Errors': ['globalsign error text']}}},
-                                 mockResponse);
+                                 mockResponse,
+                                 function (errors) { console.error(JSON.stringify(errors)); },
+                                 function (globalsignResponse) {}
+                                );
         expect(stable_stringify(JSON.parse(responseData))).toBe(
           stable_stringify({'error': 'Server error'}));
         expect(console.error).toHaveBeenCalledWith(JSON.stringify(['globalsign error text']));
@@ -191,6 +194,8 @@ Jasmine.onTest(function () {
             };
           })();
         var cert = '-----BEGIN CERTIFICATE-----\r\nMIIFaDCCBFCgAwIBAgIQMvEFlcrw7X8kOaXgD4wACDANBgkqhkiG9w0BAQUFADB/\r\nMQswCQYDVQQGEwJCRTEfMB0GA1UECxMWRm9yIFRlc3QgUHVycG9zZXMgT25seTEZ\r\nMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTE0MDIGA1UEAxMrR2xvYmFsU2lnbiBP\r\ncmdhbml6YXRpb24gVmFsaWRhdGlvbiBDQVQgLSBHMjAeFw0xNTA4MTAyMDU0NDJa\r\nFw0xNTA4MjAwNDU5NTlaMIGFMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZv\r\ncm5pYTESMBAGA1UEBxMJUGFsbyBBbHRvMSowKAYDVQQKEyFTYW5kc3Rvcm0gRGV2\r\nZWxvcG1lbnQgR3JvdXAsIEluYy4xITAfBgNVBAMTGGp1c3QtdGVzdGluZy5zYW5k\r\nY2F0cy5pbzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALnRmVGAepUZ\r\nd/9tOkab6sP9fWMxux+ejjlWqMxJ1hYS4TQRcYmxNdlMN8kNiUdZEzM82MXBo4YC\r\nBrVserjv+yIQ9WRTwfnRNCymSqhWTNX8tg+KlctbJ9rV9VgvaPXUBYtW/9PQjf9S\r\nX2stfmwhXebzVow1D0bndE6uxSUtBYRl/BSNHWD2gUvQn8VB2YioleBR5kfPrmnw\r\nTdpSjS4oFeU3qnsxisn14f3VGRvhScLv4U9VyZaS4H+xDcLe/ouvmJseGR5bdpyj\r\n4D3VZ1jC/3lP2TDYF9/T30Nn1W7OwkwjI85ndLfjzCUN+24tITylRKHhZeVjBaRy\r\ndaJsmCTc7CECAwEAAaOCAdcwggHTMA4GA1UdDwEB/wQEAwIFoDBJBgNVHSAEQjBA\r\nMD4GBmeBDAECAjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWdu\r\nLmNvbS9yZXBvc2l0b3J5LzAjBgNVHREEHDAaghhqdXN0LXRlc3Rpbmcuc2FuZGNh\r\ndHMuaW8wCQYDVR0TBAIwADAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIw\r\nSAYDVR0fBEEwPzA9oDugOYY3aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9ncy9n\r\nc29yZ2FuaXphdGlvbnZhbGNhdGcyLmNybDCBnAYIKwYBBQUHAQEEgY8wgYwwSgYI\r\nKwYBBQUHMAKGPmh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dz\r\nb3JnYW5pemF0aW9udmFsY2F0ZzIuY3J0MD4GCCsGAQUFBzABhjJodHRwOi8vb2Nz\r\ncDIuZ2xvYmFsc2lnbi5jb20vZ3Nvcmdhbml6YXRpb252YWxjYXRnMjAdBgNVHQ4E\r\nFgQU3T3TARV/KBauY0hb/R2R5g76TmYwHwYDVR0jBBgwFoAUwIAS7yXnVMj6Akni\r\n92/ftKsEHq8wDQYJKoZIhvcNAQEFBQADggEBAH55Obs2FJ3HftclSAHZyg5KCZde\r\nejAo5qEO877UYUGAFPFNdFiYZ4Iclwl56f5gr4eYT2AMsKCVyFyLjpnmmpfFoH1T\r\nh8eQUVaeX+hPzIft3x8wmjrue3PB2EvdOIeLkqiATWW9W5ty+dhQFBo3+/IqnKM6\r\nauQ1MHpQyK/gijhvxsbOVLHf0VEfyPT2l5RmTwwoU+KA0o11IaOhuQhtJ0LJszP5\r\n0pMExmvb1G3BCMfTKoKtRbDx6yxNLt8Uy6UpThy+/1X+peKV/aYEBSpOXYJiaqgY\r\n773S966a1QWM1Z9Pgn4Cux4mOJ3SOigMFEGu0ke+1ksUqUjTyzokM9fOvdI=\r\n-----END CERTIFICATE-----';
+        var loggedSuccess = false;
+        var logSuccessToDatabase = function() { loggedSuccess = true; };
 
         finishGlobalsignResponse({
           'Response': {
@@ -205,9 +210,13 @@ Jasmine.onTest(function () {
                 'ServerCertificate': {
                   'X509Cert': cert
                 }}}}},
-                                 mockResponse);
+                                 mockResponse,
+                                 function(errors) { console.log("Weird, got some errors", error); },
+                                 logSuccessToDatabase
+                                );
         expect(stable_stringify(JSON.parse(responseData))).toBe(
           stable_stringify({'cert': cert, ca: ['1', '2']}));
+        expect(loggedSuccess).toBe(true);
       });
 
       it('time to exit', function() {
