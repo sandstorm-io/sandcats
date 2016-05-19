@@ -248,6 +248,7 @@ logIssueCertificateSuccess = function(globalsignResponse, logEntryId) {
 }
 
 logIssueCertificateErrors = function(errorList, logEntryId) {
+  console.log("Attempting to store", errorList, "w/r/t", logEntryId);
   var numAffected = CertificateRequests.update({'_id': logEntryId}, {$set: {
     globalsignErrors: errorList}});
   if (numAffected != 1) {
