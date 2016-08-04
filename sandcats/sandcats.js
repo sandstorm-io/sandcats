@@ -89,4 +89,13 @@ Router.map(function() {
       doGetCertificate(this.request, this.response);
     }
   });
+
+  this.route('generate500', {
+    path: '/generate500',
+    where: 'server',
+    action: function() {
+      this.response.writeHead(500);
+      this.response.end("500: Fake server error. You have reached an intentional HTTP 500 error page. This server-side route is used for testing.");
+    }
+  });
 });
