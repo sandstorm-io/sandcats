@@ -408,6 +408,44 @@ doUpdate = function(request, response) {
   }
 };
 
+function addAcmeChallenge(formData) {
+  // We don't bother to store the ACME challenge in Mongo since it's short-lived. Just publish
+  // the records to MySQL...
+
+  publishAcmeChallengeToDns(
+    mysqlQuery,
+    formData.rawHostname,
+    formData.value);
+}
+
+doAcmeChallenge = function(request, response) {
+  var requestEnded = antiCsrf(request, response);
+  if (requestEnded) {
+    return;
+  }
+
+  // doAcmeChallenge is only used by the Sandstorm JS flow, and does
+  // not need to support plain-text output.
+  var plainTextOnly = false;
+
+  var rawFormData = getFormDataFromRequest(request);
+  var validatedFormData = Mesosphere.acmeChallenge.validate(rawFormData);
+
+  if (validatedFormData.errors) {
+    return finishResponse(400,
+                          responseFromFormFailure(validatedFormData),
+                          response,
+                          plainTextOnly);
+  }
+
+  if (validatedFormData.formData.isAuthorized) {
+    addAcmeChallenge(validatedFormData.formData);
+    return finishResponse(200, {'text': 'Update successful.'}, response, plainTextOnly);
+  } else {
+    return finishResponse(403, {'error': 'Not authorized.'}, response, plainTextOnly);
+  }
+}
+
 doGetCertificate = function(request, response) {
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {

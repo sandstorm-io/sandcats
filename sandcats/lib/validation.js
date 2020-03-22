@@ -462,6 +462,39 @@ Mesosphere({
   }
 });
 
+// Create validator for an ACME challenge request.
+Mesosphere({
+  name: 'acmeChallenge',
+  fields: {
+    rawHostname: {
+      required: true,
+      format: /^[0-9a-zA-Z-]+$/,
+      transforms: ["clean", "toLowerCase"],
+      rules: {
+        minLength: 1,
+        maxLength: 20
+      }
+    },
+    value: {
+      required: false,
+      format: /^[ -~]*$/,
+      rules: {
+        maxLength: 255
+      }
+    },
+    pubkey: {
+      required: true,
+      rules: {
+        minLength: 40,
+        maxLength: 40
+      },
+    }
+  },
+  aggregates: {
+    isAuthorized: ['hostnameAndPubkeyMatch', ['rawHostname', 'pubkey']]
+  }
+});
+
 // Create validator for recovery token sending request.
 Mesosphere({
   name: 'recoverDomainForm',
