@@ -82,6 +82,14 @@ Router.map(function() {
     }
   });
 
+  this.route('acme-challenge', {
+    path: '/acme-challenge',
+    where: 'server',
+    action: function() {
+      doAcmeChallenge(this.request, this.response);
+    }
+  });
+
   this.route('getcertificate', {
     path: '/getcertificate',
     where: 'server',

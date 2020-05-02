@@ -78,6 +78,26 @@ publishOneUserRegistrationToDns = function(mysqlQuery, hostname, ipAddress) {
   bumpSoaRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN);
 }
 
+function deleteSpecialHostRecords(wrappedQuery, domain, host) {
+  var result = wrappedQuery(
+    "DELETE from `records` WHERE (domain_id = (SELECT `id` from `domains` WHERE `name` = ?)) AND " +
+      "name = ?",
+    [domain, host]);
+  console.log("Successfully deleted record(s) for " + host + "." + "with status " + JSON.stringify(result) + ".");
+};
+
+publishAcmeChallengeToDns = function(mysqlQuery, hostname, value) {
+  // Push two TXT records to _acme-challenge.hostname.
+
+  var txtHost = '_acme-challenge.' + hostname + '.' + Meteor.settings.BASE_DOMAIN;
+
+  if (value) {
+    rawCreateRecord(mysqlQuery, Meteor.settings.BASE_DOMAIN, txtHost, 'TXT', value);
+  } else {
+    deleteSpecialHostRecords(mysqlQuery, Meteor.settings.BASE_DOMAIN, txtHost);
+  }
+}
+
 // Private functions.
 
 // This function adds a DNS record to PowerDNS's MySQL data store.
