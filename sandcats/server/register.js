@@ -447,6 +447,12 @@ doAcmeChallenge = function(request, response) {
 }
 
 doGetCertificate = function(request, response) {
+  return finishResponse(410,
+                        {'error': "Sandcats no longer issues TLS certificates. Please update to " +
+                                  "the latest version of Sandstorm and enable Let's Encrypt instead."},
+                        response,
+                        false);
+
   var requestEnded = antiCsrf(request, response);
   if (requestEnded) {
     return;
